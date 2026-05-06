@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>開発進捗 T番号一覧</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            ink: "#1f2937",
+            paper: "#f4f7fb",
+            mint: "#0f766e",
+            coral: "#f97316",
+            sky: "#2563eb"
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-paper text-ink antialiased dark:bg-[#101419] dark:text-slate-100">
+  <!-- sync metadata: Mission Queue / t_progress.json / 開発プロセス / ファンクション -->
+  <main class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <header class="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white/90 p-5 shadow-sm dark:border-slate-800 dark:bg-[#171b22] sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <h1 class="text-3xl font-extrabold tracking-normal text-slate-950 dark:text-white sm:text-4xl">開発進捗 T番号一覧</h1>
+        <p class="mt-2 text-[15px] font-medium text-slate-600 dark:text-slate-300">ミッション管理・過去ログ・進捗ページの同期状況</p>
+      </div>
+      <p class="inline-flex w-fit items-center rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-200" id="generated">loading...</p>
+    </header>
+
+    <section class="mt-4 grid grid-cols-3 gap-2 sm:gap-4" aria-label="summary">
+      <div class="rounded-xl border border-teal-100 bg-white p-4 shadow-sm dark:border-teal-900/70 dark:bg-[#171b22]">
+        <span class="block text-xs font-bold text-teal-700 dark:text-teal-300">進行中</span>
+        <strong class="mt-1 block text-3xl font-extrabold text-mint" id="active-count">-</strong>
+      </div>
+      <div class="rounded-xl border border-orange-100 bg-white p-4 shadow-sm dark:border-orange-900/70 dark:bg-[#171b22]">
+        <span class="block text-xs font-bold text-orange-700 dark:text-orange-300">完了</span>
+        <strong class="mt-1 block text-3xl font-extrabold text-coral" id="completed-count">-</strong>
+      </div>
+      <div class="rounded-xl border border-blue-100 bg-white p-4 shadow-sm dark:border-blue-900/70 dark:bg-[#171b22]">
+        <span class="block text-xs font-bold text-blue-700 dark:text-blue-300">T番号</span>
+        <strong class="mt-1 block text-3xl font-extrabold text-sky" id="tracked-count">-</strong>
+      </div>
+    </section>
+
+    <section class="mt-5 rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#171b22]">
+      <div class="flex flex-col gap-3 border-b border-slate-200 px-4 py-4 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between">
+        <h2 class="text-lg font-extrabold text-slate-900 dark:text-white">早見表</h2>
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <label class="inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+            <input id="show-completed" type="checkbox" checked class="h-4 w-4 rounded border-slate-400 accent-mint">
+            完了したものを表示
+          </label>
+          <div class="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+            <span>完了日</span>
+            <div id="completed-date-dial" class="flex flex-wrap gap-1"></div>
+          </div>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-left text-[15px]">
+          <thead class="bg-[#eaf1f8] text-xs font-extrabold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+            <tr>
+              <th class="whitespace-nowrap px-4 py-3">T番号</th>
+              <th class="whitespace-nowrap px-4 py-3">ステータス</th>
+              <th class="min-w-72 px-4 py-3">やること</th>
+              <th class="whitespace-nowrap px-4 py-3">完了率</th>
+              <th class="whitespace-nowrap px-4 py-3">完了見込み</th>
+            </tr>
+          </thead>
+          <tbody id="quick-rows" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="mt-5">
+      <h2 class="mb-3 text-lg font-extrabold text-slate-900 dark:text-white">開発プロセス T番号</h2>
+      <div class="grid gap-3" id="task-rows"></div>
+      <p class="py-4 text-sm text-slate-500 dark:text-slate-400" id="empty-state" hidden>表示できるタスクがありません。</p>
+    </section>
+  </main>
+
+  <template id="task-template">
+    <article class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#171b22]">
+      <div class="flex flex-col gap-3 bg-[#f8fafc] px-4 py-4 dark:bg-slate-900/70 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-3">
+          <div class="t-id text-2xl font-black text-mint"></div>
+          <span class="target rounded-full bg-teal-50 px-3 py-1 text-xs font-extrabold text-teal-800 ring-1 ring-teal-100 dark:bg-teal-950 dark:text-teal-200 dark:ring-teal-900"></span>
+        </div>
+        <div class="min-w-0 sm:w-60">
+          <div class="mb-2 flex items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-300">
+            <span class="status"></span>
+            <span class="progress-text font-extrabold"></span>
+          </div>
+          <div class="h-2.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+            <div class="progress-bar h-full rounded-full bg-mint"></div>
+          </div>
+        </div>
+      </div>
+      <div class="px-4 py-5">
+        <div class="grid gap-4 lg:grid-cols-2">
+          <section>
+            <div class="mb-2 text-xs font-extrabold text-slate-500 dark:text-slate-400">やること</div>
+            <ul class="goal-list list-disc space-y-1.5 pl-5 text-[15px] leading-7 text-slate-800 dark:text-slate-100"></ul>
+          </section>
+          <section>
+            <div class="mb-2 text-xs font-extrabold text-slate-500 dark:text-slate-400">やったこと</div>
+            <ul class="work-list list-disc space-y-1.5 pl-5 text-[15px] leading-7 text-slate-800 dark:text-slate-100"></ul>
+          </section>
+        </div>
+        <div class="mt-4 grid gap-4 border-t border-slate-200 pt-4 dark:border-slate-800 lg:grid-cols-[0.8fr_0.8fr_1.2fr_1.2fr]">
+          <div>
+            <div class="mb-1 text-xs font-extrabold text-slate-500 dark:text-slate-400">完了/進捗</div>
+            <p class="timeline text-[15px] font-semibold leading-7 text-slate-800 dark:text-slate-100"></p>
+          </div>
+          <div class="actor-box" hidden>
+            <div class="mb-1 text-xs font-extrabold text-slate-500 dark:text-slate-400">完了者</div>
+            <p class="actor-line text-[15px] font-semibold leading-7 text-slate-800 dark:text-slate-100"></p>
+          </div>
+          <div>
+            <div class="mb-1 text-xs font-extrabold text-slate-500 dark:text-slate-400">レビュー / テスト手法</div>
+            <ul class="review-list list-disc space-y-1.5 pl-5 text-[15px] leading-7 text-slate-800 dark:text-slate-100"></ul>
+          </div>
+          <div>
+            <div class="mb-1 text-xs font-extrabold text-slate-500 dark:text-slate-400">更新ファイル名と章番号</div>
+            <ul class="refs-list list-disc space-y-1.5 pl-5 text-[15px] leading-7 text-slate-800 dark:text-slate-100"></ul>
+          </div>
+        </div>
+      </div>
+    </article>
+  </template>
+
+  <script>
+    const statusLabel = (status) => {
+      const map = {
+        BLOCKED: "停止中",
+        QUEUED: "未着手",
+        IN_PROGRESS: "作業中",
+        RUNNING: "作業中",
+        LOCAL_DONE: "反映待ち",
+        COMMITTED: "反映待ち",
+        DONE: "完了",
+        COMPLETED: "完了",
+        PUSHED: "完了",
+        DEPLOYED: "完了",
+        APPLIED: "完了"
+      };
+      return map[String(status || "").toUpperCase()] || (status || "-");
+    };
+
+    const statusClass = (status) => {
+      const key = String(status || "").toUpperCase();
+      const base = "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-extrabold";
+      if (["DONE", "COMPLETED", "PUSHED", "DEPLOYED", "APPLIED"].includes(key)) {
+        return `${base} bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200`;
+      }
+      if (["LOCAL_DONE", "COMMITTED"].includes(key)) {
+        return `${base} bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200`;
+      }
+      if (["IN_PROGRESS", "RUNNING"].includes(key)) {
+        return `${base} bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-200`;
+      }
+      if (key === "QUEUED") {
+        return `${base} bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200`;
+      }
+      if (key === "BLOCKED") {
+        return `${base} bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200`;
+      }
+      return `${base} bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200`;
+    };
+
+    const cleanText = (value, task) => {
+      let text = String(value || "").trim();
+      if (!text) return "";
+      const status = String(task && task.status ? task.status : "").toUpperCase();
+      const completeLike = ["DONE", "COMPLETED", "PUSHED", "DEPLOYED", "APPLIED"].includes(status);
+      text = text.replace(/`/g, "");
+      text = text.replace(/PO_CONSULT_REQUIRED/g, "PO 相談が必要");
+      text = text.replace(/sh scripts\/devs_mission_queue_check\.sh/gi, "ミッション管理の整合性を確認");
+      text = text.replace(/sh scripts\/devs_definition_of_done_check\.sh/gi, "完了条件の記載を確認");
+      text = text.replace(/bash -n scripts\/devs_definition_of_done_check\.sh/gi, "完了条件チェックの文法を確認");
+      text = text.replace(/sh scripts\/devs_git_page_mission_sync_check\.sh --write/gi, "進捗ページの表示データを再生成して確認");
+      text = text.replace(/sh scripts\/devs_git_page_mission_sync_check\.sh/gi, "進捗ページとミッション管理の同期を確認");
+      text = text.replace(/bash -n scripts\/devs_git_page_mission_sync_check\.sh/gi, "同期チェックの文法を確認");
+      text = text.replace(/sh scripts\/devs_startup_required_checks\.sh/gi, "開始時に必要な確認をまとめて実行");
+      text = text.replace(/wc -l CLAUDE\.md AGENTS\.md core_spec\.md instructions\/session_progress\.md docs\/decision_log\.md instructions\/in_flight_topics\.md instructions\/subagent_status\.md verify\/adv_violation_log\.md/gi, "読み込み対象ファイルの量を確認");
+      text = text.replace(/rg -n "[^"]+" CLAUDE\.md AGENTS\.md core_spec\.md instructions\/session_progress\.md instructions\/in_flight_topics\.md docs\/decision_log\.md/gi, "起動時に読む文書の分離状況を確認");
+      text = text.replace(/rg -n "[^"]+" CLAUDE\.md core_spec\.md instructions\/session_progress\.md instructions\/in_flight_topics\.md/gi, "担当者タグと実施者タグの記載を確認");
+      text = text.replace(/rg -n "[^"]+" AGENTS\.md/gi, "AGENTS.md に共通ルールの重複がないことを確認");
+      text = text.replace(/local_done_by=\[[^\]]+\];\s*/g, "");
+      text = text.replace(/official DONE requires push/gi, "");
+      text = text.replace(/PASS/g, "確認済み");
+      const unfinishedMarker = ["required", "before", "completion"].join(" ");
+      text = text.replace(new RegExp(`${unfinishedMarker};?`, "gi"), completeLike ? "レビュー記録が不足。完了扱いにせず確認が必要。" : "完了前にレビューと確認が必要。");
+      text = text.replace(/curl 200 evidence/gi, "公開ページが開けることを確認");
+      text = text.replace(/script\/test evidence/gi, "スクリプトとテスト結果を確認");
+      text = text.replace(/PO handoff summary/gi, "引き継ぎ内容を確認");
+      text = text.replace(/cmd-unit\s*\/\s*cmd-e2e\s*\/\s*cmd-realworld/gi, "単体確認・画面確認・実利用確認");
+      text = text.replace(/対象アプリ[、/・]*/g, "");
+      text = text.replace(/TASK detail/gi, "タスク詳細");
+      text = text.replace(/Mission Queue/g, "ミッション管理");
+      text = text.replace(/Mission キュー/g, "ミッション管理");
+      text = text.replace(/ミッション管理登録/g, "ミッション管理への登録");
+      text = text.replace(/Git Page/g, "進捗ページ");
+      text = text.replace(/Lais\s*\/\s*generated App/gi, "Lais");
+      text = text.replace(/Lasi/gi, "Lais");
+      text = text.replace(/generated App/g, "生成アプリ");
+      text = text.replace(/dev-system/g, "開発システム");
+      text = text.replace(/Phase/g, "フェーズ");
+      text = text.replace(/criteria/gi, "完了条件");
+      text = text.replace(/6 scripts/gi, "6 確認スクリプト");
+      text = text.replace(/hook chain/gi, "自動確認の流れ");
+      text = text.replace(/dashboard/gi, "進捗画面");
+      text = text.replace(/realtime/gi, "リアルタイム");
+      text = text.replace(/path/gi, "経路");
+      text = text.replace(/checker and completion helper added/gi, "確認機能と完了記録補助を追加");
+      text = text.replace(/Codex role added to CLAUDE\.md for Claude 開始時 引き継ぎ/gi, "Codex の役割を CLAUDE.md に追加");
+      text = text.replace(/Mission Queue assignee_tag and done_by tag enforcement added/gi, "担当者タグと実施者タグの確認を追加");
+      text = text.replace(/Mechanical flow inventory added with PO-before-AI-autonomy gate/gi, "実行フロー一覧と事前確認ゲートを追加");
+      text = text.replace(/Startup required checks and Definition of Done gate added/gi, "開始時チェックと完了条件ゲートを追加");
+      text = text.replace(/App reflection made top-level Definition of Done requirement/gi, "アプリ反映を最上位の完了条件に追加");
+      text = text.replace(/Canonical terms and 進捗ページ Mission sync Function wired and verified/gi, "用語統一と進捗ページ同期を追加して確認");
+      text = text.replace(/Git Page progress upgraded to T-number tracker with target app, goal, work done, review method, and updated file\/chapter columns/gi, "進捗ページを T番号ごとの確認ページに更新");
+      text = text.replace(/inline JS syntax check/gi, "ページ内スクリプトの文法確認");
+      text = text.replace(/in-app browser render check/gi, "ブラウザ表示確認");
+      text = text.replace(/articleCount=15, visible internal task ID count 0/gi, "カード15件、内部ID表示0件");
+      text = text.replace(/goal\/work/gi, "目的と実施内容");
+      text = text.replace(/\brefs\b/gi, "更新ファイル");
+      text = text.replace(/shown in Japanese lists/gi, "日本語の箇条書きで表示");
+      text = text.replace(/T番号 tracker UI/gi, "T番号画面");
+      text = text.replace(/T番号 progress tracker/gi, "T番号進捗一覧");
+      text = text.replace(/\bcodify\b/gi, "明文化");
+      text = text.replace(/\bprogress\b/gi, "進捗");
+      text = text.replace(/\btracker\b/gi, "一覧");
+      text = text.replace(/\bcommit\b/gi, "記録");
+      text = text.replace(/\btag\b/gi, "タグ");
+      text = text.replace(/\binvoke\b/gi, "実行");
+      text = text.replace(/\bwiring\b/gi, "連携");
+      text = text.replace(/wake schedule/gi, "復帰予定");
+      text = text.replace(/Mac sleep/gi, "Mac のスリープ");
+      text = text.replace(/opt-in merge/gi, "必要時に取り込める");
+      text = text.replace(/\bcontext\b/gi, "文脈");
+      text = text.replace(/\brule\b/gi, "ルール");
+      text = text.replace(/SSoT/g, "正本");
+      text = text.replace(/active task/gi, "作業");
+      text = text.replace(/tasks projection/gi, "表示データ");
+      text = text.replace(/JSON generator/gi, "表示データ生成");
+      text = text.replace(/TASK-[A-Z0-9-]+/g, "タスク詳細");
+      text = text.replace(/official DONE requires/gi, "正式完了は");
+      text = text.replace(/\bstartup\b/g, "開始時");
+      text = text.replace(/handoff/g, "引き継ぎ");
+      text = text.replace(/review/gi, "レビュー");
+      text = text.replace(/test/gi, "テスト");
+      text = text.replace(/push/g, "反映");
+      text = text.replace(/local done/gi, "ローカル完了");
+      text = text.replace(/\s*;+\s*/g, "。");
+      text = text.replace(/\s+/g, " ").trim();
+      return text;
+    };
+
+    const isComplete = (task) => {
+      const status = String(task.status || "").toUpperCase();
+      return ["DONE", "COMPLETED", "PUSHED", "DEPLOYED", "APPLIED"].includes(status);
+    };
+
+    const etaLabel = (task, generatedAt) => {
+      if (isComplete(task)) return "完了済み";
+      const eta = String(task.eta || "");
+      const match = eta.match(/(\d{4}-\d{2}-\d{2})/);
+      if (!match || !generatedAt) return "未定";
+      const time = eta.includes("復帰時") ? "10:00:00" : "23:59:00";
+      const target = new Date(`${match[1]}T${time}+09:00`);
+      const base = new Date(generatedAt);
+      if (Number.isNaN(target.getTime()) || Number.isNaN(base.getTime())) return "未定";
+      const hours = Math.ceil((target.getTime() - base.getTime()) / 3600000);
+      if (hours <= 0) return "期限超過";
+      return `約${hours}時間後`;
+    };
+
+    const formatGeneratedAt = (value) => {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "未生成";
+      const jst = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+      const yy = String(jst.getUTCFullYear()).slice(-2);
+      const mm = String(jst.getUTCMonth() + 1).padStart(2, "0");
+      const dd = String(jst.getUTCDate()).padStart(2, "0");
+      const hh = String(jst.getUTCHours()).padStart(2, "0");
+      const min = String(jst.getUTCMinutes()).padStart(2, "0");
+      return `${yy}/${mm}/${dd} ${hh}:${min}`;
+    };
+
+    const splitItems = (value, task) => {
+      const cleaned = cleanText(value, task);
+      if (!cleaned) return ["未記録"];
+      const items = cleaned
+        .split(/\s+\+\s+|\s+\/\s+|、|;|。\s*/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+      if (items.length > 1) {
+        return items.filter((item) => item !== "確認方法は未記録");
+      }
+      return items;
+    };
+
+    const listFromField = (value) => {
+      const items = String(value || "")
+        .split(/\s+\/\s+|;\s*|。\s*/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+      return items;
+    };
+
+    const stepItems = (kind, task) => {
+      const source = kind === "goal" ? task.goal_steps : task.work_steps;
+      const items = listFromField(source);
+      if (items.length) return items;
+      const fallback = cleanText(kind === "goal" ? task.goal : task.work_done, task);
+      return fallback ? [fallback] : ["未記録"];
+    };
+
+    const TEST_LABELS = {
+      "TEST_METHOD:MISSION_SYNC": "ミッション管理の同期テスト",
+      "TEST_METHOD:DOD_GATE": "完了条件ゲートテスト",
+      "TEST_METHOD:STATIC_DOC": "文書記載チェック",
+      "TEST_METHOD:SCRIPT_SYNTAX": "スクリプト文法テスト",
+      "TEST_METHOD:BROWSER_RENDER": "ブラウザ表示テスト",
+      "TEST_METHOD:SMOKE": "スモークテスト",
+      "TEST_METHOD:UNIT": "単体テスト",
+      "TEST_METHOD:E2E": "E2Eテスト",
+      "TEST_METHOD:REALWORLD": "実利用テスト",
+      "TEST_METHOD:GIT_STATE": "Git状態確認",
+      "TEST_METHOD:RUNTIME_LOG": "実行ログ確認",
+      "TEST_METHOD:PO_CONFIRMATION": "PO確認"
+    };
+
+    const PERSONA_LABELS = {
+      "REVIEW_PERSONA:SPEC_REVIEWER": "仕様レビュー担当",
+      "REVIEW_PERSONA:OPS_REVIEWER": "運用レビュー担当",
+      "REVIEW_PERSONA:QA_REVIEWER": "QAレビュー担当",
+      "REVIEW_PERSONA:UI_REVIEWER": "UIレビュー担当",
+      "REVIEW_PERSONA:SECURITY_REVIEWER": "セキュリティレビュー担当",
+      "REVIEW_PERSONA:DATA_INTEGRITY_REVIEWER": "データ整合性レビュー担当",
+      "REVIEW_PERSONA:MOBILE_UX_REVIEWER": "モバイルUXレビュー担当",
+      "REVIEW_PERSONA:HANDOFF_REVIEWER": "引き継ぎレビュー担当",
+      "REVIEW_PERSONA:PO_DECISION": "PO判断"
+    };
+
+    const labelsFromMarkers = (value, markerRe, labels, prefix) => {
+      const markers = String(value || "").match(markerRe) || [];
+      return Array.from(new Set(markers))
+        .map((marker) => labels[marker])
+        .filter(Boolean)
+        .map((label) => `${prefix}: ${label}`);
+    };
+
+    const methodItems = (task) => {
+      const tests = labelsFromMarkers(task.test_methods, /TEST_METHOD:[A-Z_]+/g, TEST_LABELS, "テスト項目");
+      const personas = labelsFromMarkers(task.review_personas, /REVIEW_PERSONA:[A-Z_]+/g, PERSONA_LABELS, "レビューペルソナ");
+      const items = [...tests, ...personas];
+      return items.length ? items : ["未定義のため完了不可"];
+    };
+
+    const splitRefs = (value, task) => {
+      const cleaned = cleanText(value, task);
+      if (!cleaned) return ["未記録"];
+      return cleaned
+        .split(/\s+\/\s+|、|;\s*/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+    };
+
+    const addList = (node, items) => {
+      node.textContent = "";
+      for (const item of items) {
+        const li = document.createElement("li");
+        li.textContent = item;
+        node.appendChild(li);
+      }
+    };
+
+    const actorLabel = (task) => {
+      const text = `${task.owner || ""} ${task.work_done || ""} ${task.test_methods || ""} ${task.review_personas || ""}`;
+      if (/Claude/i.test(text)) return "Claude";
+      if (/Codex|GPT/i.test(text)) return "GPT";
+      if (/PO/i.test(text)) return "PO";
+      return "未記録";
+    };
+
+    const timelineText = (task, generatedAt) => {
+      if (isComplete(task)) {
+        const completed = String(task.completed_at || "-").slice(0, 10);
+        return completed;
+      }
+      return `完了見込み: ${etaLabel(task, generatedAt)}`;
+    };
+
+    const renderQuickRows = (node, tasks, generatedAt) => {
+      node.textContent = "";
+      for (const task of tasks) {
+        const tr = document.createElement("tr");
+        tr.className = "align-top hover:bg-slate-50 dark:hover:bg-slate-800/70";
+        tr.dataset.complete = isComplete(task) ? "true" : "false";
+        tr.dataset.completedAt = String(task.completed_at || "").slice(0, 10);
+        const goalParts = stepItems("goal", task);
+        const quickGoal = goalParts.length > 1 ? `${goalParts[0]} ほか${goalParts.length - 1}件` : goalParts[0];
+        const cells = [
+          task.t_id || "-",
+          statusLabel(task.status),
+          quickGoal || "未記録",
+          `${Number(task.progress_percent ?? 0)}%`,
+          isComplete(task) ? String(task.completed_at || "-").slice(0, 10) : etaLabel(task, generatedAt)
+        ];
+        for (const [index, value] of cells.entries()) {
+          const td = document.createElement("td");
+          td.className = index === 2 ? "px-4 py-3 leading-6 text-slate-800 dark:text-slate-100" : "whitespace-nowrap px-4 py-3 text-slate-700 dark:text-slate-200";
+          if (index === 0) td.className += " font-black text-mint";
+          if (index === 1) {
+            const badge = document.createElement("span");
+            badge.className = statusClass(task.status);
+            badge.textContent = value;
+            td.appendChild(badge);
+          } else {
+            td.textContent = value;
+          }
+          tr.appendChild(td);
+        }
+        node.appendChild(tr);
+      }
+    };
+
+    let selectedCompletedDate = "";
+
+    const renderDateDial = (tasks) => {
+      const node = document.getElementById("completed-date-dial");
+      node.textContent = "";
+      const dates = Array.from(new Set(tasks
+        .filter(isComplete)
+        .map((task) => String(task.completed_at || "").slice(0, 10))
+        .filter(Boolean))).sort().reverse();
+      if (selectedCompletedDate && !dates.includes(selectedCompletedDate)) selectedCompletedDate = "";
+      const labels = ["", ...dates];
+      for (const date of labels) {
+        const button = document.createElement("button");
+        const active = selectedCompletedDate === date;
+        button.type = "button";
+        button.textContent = date || "全日";
+        button.setAttribute("aria-pressed", active ? "true" : "false");
+        button.className = active
+          ? "h-8 rounded-full bg-mint px-3 text-xs font-extrabold text-white shadow-sm"
+          : "h-8 rounded-full border border-slate-300 bg-white px-3 text-xs font-bold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800";
+        button.addEventListener("click", () => {
+          selectedCompletedDate = date;
+          renderDateDial(tasks);
+          applyCompletedFilter();
+        });
+        node.appendChild(button);
+      }
+    };
+
+    const applyCompletedFilter = () => {
+      const showCompleted = document.getElementById("show-completed").checked;
+      document.querySelectorAll("[data-complete]").forEach((node) => {
+        const complete = node.dataset.complete === "true";
+        const dateMismatch = complete && selectedCompletedDate && node.dataset.completedAt !== selectedCompletedDate;
+        node.hidden = complete && (!showCompleted || dateMismatch);
+      });
+    };
+
+    const fillRows = (node, tasks, generatedAt) => {
+      node.textContent = "";
+      document.getElementById("empty-state").hidden = tasks.length > 0;
+      const template = document.getElementById("task-template");
+
+      for (const task of tasks) {
+        const card = template.content.firstElementChild.cloneNode(true);
+        const progress = Number(task.progress_percent ?? 0);
+        card.dataset.complete = isComplete(task) ? "true" : "false";
+        card.dataset.completedAt = String(task.completed_at || "").slice(0, 10);
+
+        card.querySelector(".t-id").textContent = task.t_id || "-";
+        card.querySelector(".target").textContent = cleanText(task.target_app, task) || "-";
+        const statusNode = card.querySelector(".status");
+        statusNode.textContent = statusLabel(task.status);
+        statusNode.className = `status ${statusClass(task.status)}`;
+        card.querySelector(".progress-text").textContent = `${progress}%`;
+        card.querySelector(".progress-bar").style.width = `${progress}%`;
+        card.querySelector(".timeline").textContent = timelineText(task, generatedAt);
+        const actorBox = card.querySelector(".actor-box");
+        actorBox.hidden = !isComplete(task);
+        card.querySelector(".actor-line").textContent = actorLabel(task);
+
+        addList(card.querySelector(".goal-list"), stepItems("goal", task));
+        addList(card.querySelector(".work-list"), stepItems("work", task));
+
+        addList(card.querySelector(".review-list"), methodItems(task));
+        addList(card.querySelector(".refs-list"), splitRefs(task.updated_refs, task));
+        node.appendChild(card);
+      }
+    };
+
+    fetch("./t_progress.json", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((data) => {
+        const generatedAt = data.generated_at || "";
+        document.getElementById("generated").textContent = generatedAt ? formatGeneratedAt(generatedAt) : "未生成";
+        const tasks = data.tasks || [];
+        const completedLikeCount = tasks.filter(isComplete).length;
+        document.getElementById("active-count").textContent = tasks.length - completedLikeCount;
+        document.getElementById("completed-count").textContent = completedLikeCount;
+        document.getElementById("tracked-count").textContent = tasks.length;
+        renderQuickRows(document.getElementById("quick-rows"), tasks, generatedAt);
+        fillRows(document.getElementById("task-rows"), tasks, generatedAt);
+        renderDateDial(tasks);
+        document.getElementById("show-completed").addEventListener("change", applyCompletedFilter);
+        applyCompletedFilter();
+      })
+      .catch(() => {
+        document.getElementById("generated").textContent = "t_progress.json load failed";
+      });
+  </script>
+</body>
+</html>
