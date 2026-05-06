@@ -67,6 +67,7 @@
           <thead class="bg-[#eaf1f8] text-xs font-extrabold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
             <tr>
               <th class="whitespace-nowrap px-4 py-3">T番号</th>
+              <th class="whitespace-nowrap px-4 py-3">対象</th>
               <th class="whitespace-nowrap px-4 py-3">ステータス</th>
               <th class="min-w-72 px-4 py-3">やること</th>
               <th class="whitespace-nowrap px-4 py-3">完了率</th>
@@ -410,6 +411,7 @@
         const quickGoal = goalParts.length > 1 ? `${goalParts[0]} ほか${goalParts.length - 1}件` : goalParts[0];
         const cells = [
           task.t_id || "-",
+          cleanText(task.target_app, task) || "-",
           statusLabel(task.status),
           quickGoal || "未記録",
           `${Number(task.progress_percent ?? 0)}%`,
@@ -417,9 +419,10 @@
         ];
         for (const [index, value] of cells.entries()) {
           const td = document.createElement("td");
-          td.className = index === 2 ? "px-4 py-3 leading-6 text-slate-800 dark:text-slate-100" : "whitespace-nowrap px-4 py-3 text-slate-700 dark:text-slate-200";
+          td.className = index === 3 ? "px-4 py-3 leading-6 text-slate-800 dark:text-slate-100" : "whitespace-nowrap px-4 py-3 text-slate-700 dark:text-slate-200";
           if (index === 0) td.className += " font-black text-mint";
-          if (index === 1) {
+          if (index === 1) td.className += " text-xs font-extrabold text-slate-600 dark:text-slate-300";
+          if (index === 2) {
             const badge = document.createElement("span");
             badge.className = statusClass(task.status);
             badge.textContent = value;
