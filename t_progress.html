@@ -48,7 +48,7 @@
       </div>
     </section>
 
-    <section class="mt-5 rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#171b22]">
+    <section id="quick-table" tabindex="-1" class="mt-5 rounded-xl border border-slate-200 bg-white shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-mint dark:border-slate-800 dark:bg-[#171b22]">
       <div class="flex flex-col gap-3 border-b border-slate-200 px-4 py-4 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between">
         <h2 class="text-lg font-extrabold text-slate-900 dark:text-white">早見表</h2>
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -131,6 +131,9 @@
             <div class="mb-1 text-xs font-extrabold text-slate-500 dark:text-slate-400">更新ファイル名と章番号</div>
             <ul class="refs-list list-disc space-y-1.5 pl-5 text-[15px] leading-7 text-slate-800 dark:text-slate-100"></ul>
           </div>
+        </div>
+        <div class="mt-4 flex justify-end border-t border-slate-200 pt-4 dark:border-slate-800">
+          <button type="button" class="back-to-quick rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-extrabold text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-mint dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800">早見表に戻る</button>
         </div>
       </div>
     </article>
@@ -400,13 +403,31 @@
       return `完了見込み: ${etaLabel(task, generatedAt)}`;
     };
 
+    const taskDomId = (task) => {
+      const rawId = String(task.t_id || task.mission_id || "task").trim();
+      return `task-card-${rawId.replace(/[^A-Za-z0-9_-]+/g, "-")}`;
+    };
+
+    let selectedCompletedDate = "";
+    let currentTasks = [];
+
     const renderQuickRows = (node, tasks, generatedAt) => {
       node.textContent = "";
       for (const task of tasks) {
         const tr = document.createElement("tr");
-        tr.className = "align-top hover:bg-slate-50 dark:hover:bg-slate-800/70";
+        tr.className = "cursor-pointer align-top outline-none hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-mint dark:hover:bg-slate-800/70";
+        tr.tabIndex = 0;
+        tr.setAttribute("role", "button");
+        tr.setAttribute("aria-label", `${task.t_id || "タスク"} のカードへ移動`);
         tr.dataset.complete = isComplete(task) ? "true" : "false";
         tr.dataset.completedAt = String(task.completed_at || "").slice(0, 10);
+        tr.addEventListener("click", () => navigateToTask(task));
+        tr.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            navigateToTask(task);
+          }
+        });
         const goalParts = stepItems("goal", task);
         const quickGoal = goalParts.length > 1 ? `${goalParts[0]} ほか${goalParts.length - 1}件` : goalParts[0];
         const cells = [
@@ -435,8 +456,6 @@
         node.appendChild(tr);
       }
     };
-
-    let selectedCompletedDate = "";
 
     const renderDateDial = (tasks) => {
       const node = document.getElementById("completed-date-dial");
@@ -474,6 +493,33 @@
       });
     };
 
+    const ensureTaskVisibleForNavigation = (task) => {
+      if (!isComplete(task)) return;
+      const showCompleted = document.getElementById("show-completed");
+      showCompleted.checked = true;
+      const completedAt = String(task.completed_at || "").slice(0, 10);
+      if (selectedCompletedDate && selectedCompletedDate !== completedAt) {
+        selectedCompletedDate = "";
+        renderDateDial(currentTasks);
+      }
+      applyCompletedFilter();
+    };
+
+    const navigateToTask = (task) => {
+      ensureTaskVisibleForNavigation(task);
+      const card = document.getElementById(taskDomId(task));
+      if (!card) return;
+      card.scrollIntoView({ behavior: "smooth", block: "start" });
+      card.focus({ preventScroll: true });
+    };
+
+    const navigateToQuickTable = () => {
+      const quickTable = document.getElementById("quick-table");
+      if (!quickTable) return;
+      quickTable.scrollIntoView({ behavior: "smooth", block: "start" });
+      quickTable.focus({ preventScroll: true });
+    };
+
     const fillRows = (node, tasks, generatedAt) => {
       node.textContent = "";
       document.getElementById("empty-state").hidden = tasks.length > 0;
@@ -482,6 +528,8 @@
       for (const task of tasks) {
         const card = template.content.firstElementChild.cloneNode(true);
         const progress = Number(task.progress_percent ?? 0);
+        card.id = taskDomId(task);
+        card.tabIndex = -1;
         card.dataset.complete = isComplete(task) ? "true" : "false";
         card.dataset.completedAt = String(task.completed_at || "").slice(0, 10);
 
@@ -502,6 +550,7 @@
 
         addList(card.querySelector(".review-list"), methodItems(task));
         addList(card.querySelector(".refs-list"), splitRefs(task.updated_refs, task));
+        card.querySelector(".back-to-quick").addEventListener("click", navigateToQuickTable);
         node.appendChild(card);
       }
     };
@@ -512,6 +561,7 @@
         const generatedAt = data.generated_at || "";
         document.getElementById("generated").textContent = generatedAt ? formatGeneratedAt(generatedAt) : "未生成";
         const tasks = data.tasks || [];
+        currentTasks = tasks;
         const completedLikeCount = tasks.filter(isComplete).length;
         document.getElementById("active-count").textContent = tasks.length - completedLikeCount;
         document.getElementById("completed-count").textContent = completedLikeCount;
