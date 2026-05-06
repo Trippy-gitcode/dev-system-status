@@ -57,6 +57,10 @@
             完了したものを表示
           </label>
           <div class="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+            <span>対象</span>
+            <div id="target-filter-dial" class="flex flex-wrap gap-1"></div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
             <span>完了日</span>
             <div id="completed-date-dial" class="flex flex-wrap gap-1"></div>
           </div>
@@ -409,7 +413,21 @@
     };
 
     let selectedCompletedDate = "";
+    let selectedTarget = "";
     let currentTasks = [];
+
+    const targetParts = (task) => {
+      const target = cleanText(task && task.target_app ? task.target_app : "", task);
+      return target
+        .split(/\s*\/\s*/)
+        .map((part) => part.trim())
+        .filter(Boolean);
+    };
+
+    const taskMatchesTarget = (task) => {
+      if (!selectedTarget) return true;
+      return targetParts(task).includes(selectedTarget);
+    };
 
     const renderQuickRows = (node, tasks, generatedAt) => {
       node.textContent = "";
@@ -421,6 +439,7 @@
         tr.setAttribute("aria-label", `${task.t_id || "タスク"} のカードへ移動`);
         tr.dataset.complete = isComplete(task) ? "true" : "false";
         tr.dataset.completedAt = String(task.completed_at || "").slice(0, 10);
+        tr.dataset.targets = targetParts(task).join("\t");
         tr.addEventListener("click", () => navigateToTask(task));
         tr.addEventListener("keydown", (event) => {
           if (event.key === "Enter" || event.key === " ") {
@@ -457,6 +476,30 @@
       }
     };
 
+    const renderTargetDial = (tasks) => {
+      const node = document.getElementById("target-filter-dial");
+      node.textContent = "";
+      const targets = Array.from(new Set(tasks.flatMap(targetParts))).sort((a, b) => a.localeCompare(b, "ja"));
+      if (selectedTarget && !targets.includes(selectedTarget)) selectedTarget = "";
+      const labels = ["", ...targets];
+      for (const target of labels) {
+        const button = document.createElement("button");
+        const active = selectedTarget === target;
+        button.type = "button";
+        button.textContent = target || "すべて";
+        button.setAttribute("aria-pressed", active ? "true" : "false");
+        button.className = active
+          ? "h-8 rounded-full bg-sky px-3 text-xs font-extrabold text-white shadow-sm"
+          : "h-8 rounded-full border border-slate-300 bg-white px-3 text-xs font-bold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800";
+        button.addEventListener("click", () => {
+          selectedTarget = target;
+          renderTargetDial(tasks);
+          applyTaskFilters();
+        });
+        node.appendChild(button);
+      }
+    };
+
     const renderDateDial = (tasks) => {
       const node = document.getElementById("completed-date-dial");
       node.textContent = "";
@@ -478,19 +521,24 @@
         button.addEventListener("click", () => {
           selectedCompletedDate = date;
           renderDateDial(tasks);
-          applyCompletedFilter();
+          applyTaskFilters();
         });
         node.appendChild(button);
       }
     };
 
-    const applyCompletedFilter = () => {
+    const applyTaskFilters = () => {
       const showCompleted = document.getElementById("show-completed").checked;
+      let visibleCount = 0;
       document.querySelectorAll("[data-complete]").forEach((node) => {
         const complete = node.dataset.complete === "true";
         const dateMismatch = complete && selectedCompletedDate && node.dataset.completedAt !== selectedCompletedDate;
-        node.hidden = complete && (!showCompleted || dateMismatch);
+        const nodeTargets = String(node.dataset.targets || "").split("\t").filter(Boolean);
+        const targetMismatch = selectedTarget && !nodeTargets.includes(selectedTarget);
+        node.hidden = targetMismatch || (complete && (!showCompleted || dateMismatch));
+        if (!node.hidden && node.tagName !== "TR") visibleCount += 1;
       });
+      document.getElementById("empty-state").hidden = visibleCount > 0;
     };
 
     const ensureTaskVisibleForNavigation = (task) => {
@@ -502,7 +550,11 @@
         selectedCompletedDate = "";
         renderDateDial(currentTasks);
       }
-      applyCompletedFilter();
+      if (!taskMatchesTarget(task)) {
+        selectedTarget = "";
+        renderTargetDial(currentTasks);
+      }
+      applyTaskFilters();
     };
 
     const navigateToTask = (task) => {
@@ -532,6 +584,7 @@
         card.tabIndex = -1;
         card.dataset.complete = isComplete(task) ? "true" : "false";
         card.dataset.completedAt = String(task.completed_at || "").slice(0, 10);
+        card.dataset.targets = targetParts(task).join("\t");
 
         card.querySelector(".t-id").textContent = task.t_id || "-";
         card.querySelector(".target").textContent = cleanText(task.target_app, task) || "-";
@@ -568,9 +621,10 @@
         document.getElementById("tracked-count").textContent = tasks.length;
         renderQuickRows(document.getElementById("quick-rows"), tasks, generatedAt);
         fillRows(document.getElementById("task-rows"), tasks, generatedAt);
+        renderTargetDial(tasks);
         renderDateDial(tasks);
-        document.getElementById("show-completed").addEventListener("change", applyCompletedFilter);
-        applyCompletedFilter();
+        document.getElementById("show-completed").addEventListener("change", applyTaskFilters);
+        applyTaskFilters();
       })
       .catch(() => {
         document.getElementById("generated").textContent = "t_progress.json load failed";
