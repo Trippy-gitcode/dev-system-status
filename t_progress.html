@@ -73,7 +73,7 @@
               <th class="whitespace-nowrap px-4 py-3">T番号</th>
               <th class="whitespace-nowrap px-4 py-3">対象</th>
               <th class="whitespace-nowrap px-4 py-3">ステータス</th>
-              <th class="min-w-72 px-4 py-3">やること</th>
+              <th class="min-w-80 px-4 py-3">実現したいこと</th>
               <th class="whitespace-nowrap px-4 py-3">完了率</th>
               <th class="whitespace-nowrap px-4 py-3">完了見込み</th>
             </tr>
@@ -331,6 +331,13 @@
       return fallback ? [fallback] : ["未記録"];
     };
 
+    const quickSummary = (task) => {
+      const summary = cleanText(task.goal, task);
+      if (summary) return summary;
+      const goalParts = stepItems("goal", task);
+      return goalParts.length > 1 ? `${goalParts[0]} ほか${goalParts.length - 1}件` : goalParts[0];
+    };
+
     const TEST_LABELS = {
       "TEST_METHOD:MISSION_SYNC": "ミッション管理の同期テスト",
       "TEST_METHOD:DOD_GATE": "完了条件ゲートテスト",
@@ -447,13 +454,11 @@
             navigateToTask(task);
           }
         });
-        const goalParts = stepItems("goal", task);
-        const quickGoal = goalParts.length > 1 ? `${goalParts[0]} ほか${goalParts.length - 1}件` : goalParts[0];
         const cells = [
           task.t_id || "-",
           cleanText(task.target_app, task) || "-",
           statusLabel(task.status),
-          quickGoal || "未記録",
+          quickSummary(task) || "未記録",
           `${Number(task.progress_percent ?? 0)}%`,
           isComplete(task) ? String(task.completed_at || "-").slice(0, 10) : etaLabel(task, generatedAt)
         ];
