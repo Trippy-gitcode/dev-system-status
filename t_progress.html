@@ -33,18 +33,21 @@
       <p class="inline-flex w-fit items-center rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-200" id="generated">loading...</p>
     </header>
 
-    <section class="mt-4 grid grid-cols-3 gap-2 sm:gap-4" aria-label="summary">
-      <div class="rounded-xl border border-teal-100 bg-white p-4 shadow-sm dark:border-teal-900/70 dark:bg-[#171b22]">
-        <span class="block text-xs font-bold text-teal-700 dark:text-teal-300">作業中</span>
-        <strong class="mt-1 block text-3xl font-extrabold text-mint" id="active-count">-</strong>
+    <section id="progress-summary" class="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-[#171b22]" aria-label="summary">
+      <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <h2 class="text-lg font-extrabold text-slate-900 dark:text-white">進捗サマリー</h2>
+          <p class="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">進捗数の推移</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+          <span>対象</span>
+          <div id="summary-target-filter-dial" class="flex flex-wrap gap-1"></div>
+        </div>
       </div>
-      <div class="rounded-xl border border-orange-100 bg-white p-4 shadow-sm dark:border-orange-900/70 dark:bg-[#171b22]">
-        <span class="block text-xs font-bold text-orange-700 dark:text-orange-300">完了</span>
-        <strong class="mt-1 block text-3xl font-extrabold text-coral" id="completed-count">-</strong>
-      </div>
-      <div class="rounded-xl border border-blue-100 bg-white p-4 shadow-sm dark:border-blue-900/70 dark:bg-[#171b22]">
-        <span class="block text-xs font-bold text-blue-700 dark:text-blue-300">T番号</span>
-        <strong class="mt-1 block text-3xl font-extrabold text-sky" id="tracked-count">-</strong>
+      <div id="status-counts" class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5"></div>
+      <div class="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-[#f8fafc] dark:border-slate-800 dark:bg-slate-950/40">
+        <svg id="progress-chart" class="block h-72 w-full" viewBox="0 0 760 280" role="img" aria-label="ステータス別の進捗数推移"></svg>
+        <p id="chart-empty" class="px-4 py-8 text-center text-sm font-semibold text-slate-500 dark:text-slate-400" hidden>表示できる推移がありません。</p>
       </div>
     </section>
 
@@ -52,10 +55,10 @@
       <div class="flex flex-col gap-3 border-b border-slate-200 px-4 py-4 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between">
         <h2 class="text-lg font-extrabold text-slate-900 dark:text-white">早見表</h2>
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <label class="inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
-            <input id="show-completed" type="checkbox" checked class="h-4 w-4 rounded border-slate-400 accent-mint">
-            完了したものを表示
-          </label>
+          <div class="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+            <span>ステータス</span>
+            <div id="quick-status-filter-dial" class="flex flex-wrap gap-1"></div>
+          </div>
           <div class="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
             <span>対象</span>
             <div id="target-filter-dial" class="flex flex-wrap gap-1"></div>
@@ -149,8 +152,8 @@
       const map = {
         BLOCKED: "停止中",
         QUEUED: "未着手",
-        IN_PROGRESS: "作業中",
-        RUNNING: "作業中",
+        IN_PROGRESS: "進行中",
+        RUNNING: "進行中",
         LOCAL_DONE: "反映待ち",
         COMMITTED: "反映待ち",
         DONE: "完了",
@@ -181,6 +184,28 @@
         return `${base} bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200`;
       }
       return `${base} bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200`;
+    };
+
+    const STATUS_ORDER = ["IN_PROGRESS", "DONE", "QUEUED", "BLOCKED", "LOCAL_DONE", "OTHER"];
+    const BASE_STATUS_KEYS = ["IN_PROGRESS", "DONE", "QUEUED", "BLOCKED", "LOCAL_DONE"];
+    const STATUS_META = {
+      IN_PROGRESS: { label: "進行中", stroke: "#0f766e", border: "border-teal-200 dark:border-teal-900", text: "text-teal-800 dark:text-teal-200", active: "bg-teal-700 text-white border-teal-700" },
+      DONE: { label: "完了", stroke: "#f97316", border: "border-orange-200 dark:border-orange-900", text: "text-orange-800 dark:text-orange-200", active: "bg-orange-600 text-white border-orange-600" },
+      QUEUED: { label: "未着手", stroke: "#2563eb", border: "border-blue-200 dark:border-blue-900", text: "text-blue-800 dark:text-blue-200", active: "bg-blue-600 text-white border-blue-600" },
+      BLOCKED: { label: "停止中", stroke: "#e11d48", border: "border-rose-200 dark:border-rose-900", text: "text-rose-800 dark:text-rose-200", active: "bg-rose-600 text-white border-rose-600" },
+      LOCAL_DONE: { label: "反映待ち", stroke: "#7c3aed", border: "border-violet-200 dark:border-violet-900", text: "text-violet-800 dark:text-violet-200", active: "bg-violet-600 text-white border-violet-600" },
+      OTHER: { label: "その他", stroke: "#64748b", border: "border-slate-200 dark:border-slate-700", text: "text-slate-700 dark:text-slate-200", active: "bg-slate-700 text-white border-slate-700" }
+    };
+    const FILTER_STORAGE_KEY = "dev-system:t-progress:filters:v2";
+
+    const statusKey = (status) => {
+      const key = String(status || "").toUpperCase();
+      if (["DONE", "COMPLETED", "PUSHED", "DEPLOYED", "APPLIED"].includes(key)) return "DONE";
+      if (["LOCAL_DONE", "COMMITTED"].includes(key)) return "LOCAL_DONE";
+      if (["IN_PROGRESS", "RUNNING"].includes(key)) return "IN_PROGRESS";
+      if (key === "QUEUED") return "QUEUED";
+      if (key === "BLOCKED") return "BLOCKED";
+      return "OTHER";
     };
 
     const cleanText = (value, task) => {
@@ -430,7 +455,43 @@
 
     let selectedCompletedDate = "";
     let selectedTarget = "";
+    let selectedStatusKeys = new Set(BASE_STATUS_KEYS);
     let currentTasks = [];
+    let currentGeneratedAt = "";
+
+    const statusKeysForTasks = (tasks) => {
+      const keys = new Set(BASE_STATUS_KEYS);
+      for (const task of tasks) keys.add(statusKey(task.status));
+      return STATUS_ORDER.filter((key) => keys.has(key));
+    };
+
+    const normalizeSelectedStatuses = (tasks) => {
+      const available = statusKeysForTasks(tasks);
+      selectedStatusKeys = new Set([...selectedStatusKeys].filter((key) => available.includes(key)));
+      if (!selectedStatusKeys.size) selectedStatusKeys = new Set(available);
+    };
+
+    const loadFilterState = () => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(FILTER_STORAGE_KEY) || "{}");
+        selectedTarget = typeof saved.target === "string" ? saved.target : "";
+        selectedCompletedDate = typeof saved.completedDate === "string" ? saved.completedDate : "";
+        if (Array.isArray(saved.statuses)) selectedStatusKeys = new Set(saved.statuses);
+      } catch {
+        selectedTarget = "";
+        selectedCompletedDate = "";
+        selectedStatusKeys = new Set(BASE_STATUS_KEYS);
+      }
+    };
+
+    const saveFilterState = () => {
+      const value = {
+        target: selectedTarget,
+        completedDate: selectedCompletedDate,
+        statuses: [...selectedStatusKeys]
+      };
+      localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(value));
+    };
 
     const targetParts = (task) => {
       const target = cleanText(task && task.target_app ? task.target_app : "", task);
@@ -445,6 +506,191 @@
       return targetParts(task).includes(selectedTarget);
     };
 
+    const statusCounts = (tasks) => {
+      const counts = Object.fromEntries(statusKeysForTasks(tasks).map((key) => [key, 0]));
+      for (const task of tasks) {
+        const key = statusKey(task.status);
+        counts[key] = (counts[key] || 0) + 1;
+      }
+      return counts;
+    };
+
+    const makeStatusButtonClass = (key, active, compact) => {
+      const meta = STATUS_META[key] || STATUS_META.OTHER;
+      const base = compact
+        ? "h-8 rounded-full border px-3 text-xs font-extrabold transition"
+        : "min-h-20 rounded-lg border px-3 py-3 text-left transition";
+      if (active) return `${base} ${meta.active} shadow-sm`;
+      return `${base} bg-white ${meta.border} ${meta.text} hover:bg-slate-50 dark:bg-slate-900/60 dark:hover:bg-slate-800`;
+    };
+
+    const toggleStatus = (key) => {
+      if (selectedStatusKeys.has(key)) {
+        selectedStatusKeys.delete(key);
+      } else {
+        selectedStatusKeys.add(key);
+      }
+      normalizeSelectedStatuses(currentTasks);
+      saveFilterState();
+      renderStatusControls(currentTasks);
+      renderProgressChart(currentTasks, currentGeneratedAt);
+      applyTaskFilters();
+    };
+
+    const renderStatusControls = (tasks) => {
+      const filteredByTarget = tasks.filter(taskMatchesTarget);
+      const counts = statusCounts(filteredByTarget);
+      const keys = statusKeysForTasks(tasks);
+      normalizeSelectedStatuses(tasks);
+
+      const countNode = document.getElementById("status-counts");
+      countNode.textContent = "";
+      for (const key of keys) {
+        const meta = STATUS_META[key] || STATUS_META.OTHER;
+        const active = selectedStatusKeys.has(key);
+        const button = document.createElement("button");
+        button.type = "button";
+        button.setAttribute("aria-pressed", active ? "true" : "false");
+        button.className = makeStatusButtonClass(key, active, false);
+        button.innerHTML = `<span class="block text-xs font-extrabold">${meta.label}</span><strong class="mt-1 block text-3xl font-black">${counts[key] || 0}</strong>`;
+        button.addEventListener("click", () => toggleStatus(key));
+        countNode.appendChild(button);
+      }
+
+      const quickNode = document.getElementById("quick-status-filter-dial");
+      quickNode.textContent = "";
+      for (const key of keys) {
+        const meta = STATUS_META[key] || STATUS_META.OTHER;
+        const active = selectedStatusKeys.has(key);
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = meta.label;
+        button.setAttribute("aria-pressed", active ? "true" : "false");
+        button.className = makeStatusButtonClass(key, active, true);
+        button.addEventListener("click", () => toggleStatus(key));
+        quickNode.appendChild(button);
+      }
+    };
+
+    const ymdFromValue = (value) => {
+      const match = String(value || "").match(/\d{4}-\d{2}-\d{2}/);
+      return match ? match[0] : "";
+    };
+
+    const dateFromYmd = (ymd) => {
+      const [year, month, day] = ymd.split("-").map(Number);
+      return new Date(Date.UTC(year, month - 1, day));
+    };
+
+    const ymdFromDate = (date) => {
+      const year = date.getUTCFullYear();
+      const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+      const day = String(date.getUTCDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+
+    const addDays = (date, days) => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
+
+    const generatedYmd = (generatedAt) => {
+      const date = new Date(generatedAt || Date.now());
+      if (Number.isNaN(date.getTime())) return ymdFromDate(new Date());
+      const jst = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+      return ymdFromDate(jst);
+    };
+
+    const buildStatusHistory = (tasks, generatedAt) => {
+      const dates = new Set([generatedYmd(generatedAt)]);
+      for (const task of tasks) {
+        const created = ymdFromValue(task.created_at || task.created || task.updated);
+        const completed = ymdFromValue(task.completed_at);
+        if (created) dates.add(created);
+        if (completed) dates.add(completed);
+      }
+      const sorted = [...dates].sort();
+      if (!sorted.length) return [];
+      const start = dateFromYmd(sorted[0]);
+      const end = dateFromYmd(sorted[sorted.length - 1]);
+      const days = [];
+      for (let date = start; date <= end; date = addDays(date, 1)) {
+        const ymd = ymdFromDate(date);
+        const counts = Object.fromEntries(statusKeysForTasks(tasks).map((key) => [key, 0]));
+        for (const task of tasks) {
+          const created = ymdFromValue(task.created_at || task.created || task.updated) || ymd;
+          if (created > ymd) continue;
+          const completed = ymdFromValue(task.completed_at);
+          let key = statusKey(task.status);
+          if (isComplete(task)) key = !completed || completed <= ymd ? "DONE" : "IN_PROGRESS";
+          counts[key] = (counts[key] || 0) + 1;
+        }
+        days.push({ ymd, counts });
+      }
+      return days;
+    };
+
+    const createSvg = (tag, attrs = {}) => {
+      const node = document.createElementNS("http://www.w3.org/2000/svg", tag);
+      for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
+      return node;
+    };
+
+    const renderProgressChart = (tasks, generatedAt) => {
+      const svg = document.getElementById("progress-chart");
+      const empty = document.getElementById("chart-empty");
+      svg.textContent = "";
+      const filteredTasks = tasks.filter(taskMatchesTarget);
+      const history = buildStatusHistory(filteredTasks, generatedAt);
+      const selectedKeys = statusKeysForTasks(filteredTasks).filter((key) => selectedStatusKeys.has(key));
+      const keys = selectedKeys.filter((key) => history.some((point) => (point.counts[key] || 0) > 0));
+      if (!history.length || !keys.length) {
+        svg.hidden = true;
+        empty.hidden = false;
+        return;
+      }
+      svg.hidden = false;
+      empty.hidden = true;
+
+      const width = 760;
+      const height = 280;
+      const margin = { top: 22, right: 24, bottom: 42, left: 46 };
+      const plotWidth = width - margin.left - margin.right;
+      const plotHeight = height - margin.top - margin.bottom;
+      const maxY = Math.max(1, ...history.flatMap((point) => keys.map((key) => point.counts[key] || 0)));
+      const x = (index) => margin.left + (history.length === 1 ? plotWidth / 2 : (plotWidth * index) / (history.length - 1));
+      const y = (value) => margin.top + plotHeight - (plotHeight * value) / maxY;
+
+      const gridGroup = createSvg("g", { "font-size": "11", "font-weight": "700", fill: "#64748b" });
+      for (let i = 0; i <= 4; i += 1) {
+        const value = Math.round((maxY * i) / 4);
+        const yy = y(value);
+        gridGroup.appendChild(createSvg("line", { x1: margin.left, x2: width - margin.right, y1: yy, y2: yy, stroke: "#cbd5e1", "stroke-width": "1", "stroke-dasharray": i === 0 ? "0" : "4 4" }));
+        const label = createSvg("text", { x: margin.left - 10, y: yy + 4, "text-anchor": "end" });
+        label.textContent = value;
+        gridGroup.appendChild(label);
+      }
+      svg.appendChild(gridGroup);
+      svg.appendChild(createSvg("line", { x1: margin.left, x2: width - margin.right, y1: margin.top + plotHeight, y2: margin.top + plotHeight, stroke: "#94a3b8", "stroke-width": "1.5" }));
+
+      const labelIndexes = Array.from(new Set([0, Math.floor((history.length - 1) / 2), history.length - 1]));
+      for (const index of labelIndexes) {
+        const label = createSvg("text", { x: x(index), y: height - 14, "text-anchor": "middle", "font-size": "11", "font-weight": "800", fill: "#64748b" });
+        label.textContent = history[index].ymd.slice(5).replace("-", "/");
+        svg.appendChild(label);
+      }
+
+      for (const key of keys) {
+        const meta = STATUS_META[key] || STATUS_META.OTHER;
+        const points = history.map((point, index) => `${x(index)},${y(point.counts[key] || 0)}`).join(" ");
+        svg.appendChild(createSvg("polyline", { points, fill: "none", stroke: meta.stroke, "stroke-width": "4", "stroke-linecap": "round", "stroke-linejoin": "round" }));
+        history.forEach((point, index) => {
+          svg.appendChild(createSvg("circle", { cx: x(index), cy: y(point.counts[key] || 0), r: "4", fill: "#fff", stroke: meta.stroke, "stroke-width": "3" }));
+        });
+        const last = history[history.length - 1];
+        const label = createSvg("text", { x: width - margin.right, y: y(last.counts[key] || 0) - 8, "text-anchor": "end", "font-size": "12", "font-weight": "900", fill: meta.stroke });
+        label.textContent = `${meta.label} ${last.counts[key] || 0}`;
+        svg.appendChild(label);
+      }
+    };
+
     const renderQuickRows = (node, tasks, generatedAt) => {
       node.textContent = "";
       for (const task of tasks) {
@@ -456,6 +702,7 @@
         tr.dataset.complete = isComplete(task) ? "true" : "false";
         tr.dataset.completedAt = String(task.completed_at || "").slice(0, 10);
         tr.dataset.targets = targetParts(task).join("\t");
+        tr.dataset.statusKey = statusKey(task.status);
         tr.addEventListener("click", () => navigateToTask(task));
         tr.addEventListener("keydown", (event) => {
           if (event.key === "Enter" || event.key === " ") {
@@ -492,26 +739,34 @@
     };
 
     const renderTargetDial = (tasks) => {
-      const node = document.getElementById("target-filter-dial");
-      node.textContent = "";
+      const nodes = [
+        document.getElementById("summary-target-filter-dial"),
+        document.getElementById("target-filter-dial")
+      ].filter(Boolean);
       const targets = Array.from(new Set(tasks.flatMap(targetParts))).sort((a, b) => a.localeCompare(b, "ja"));
       if (selectedTarget && !targets.includes(selectedTarget)) selectedTarget = "";
       const labels = ["", ...targets];
-      for (const target of labels) {
-        const button = document.createElement("button");
-        const active = selectedTarget === target;
-        button.type = "button";
-        button.textContent = target || "すべて";
-        button.setAttribute("aria-pressed", active ? "true" : "false");
-        button.className = active
-          ? "h-8 rounded-full bg-sky px-3 text-xs font-extrabold text-white shadow-sm"
-          : "h-8 rounded-full border border-slate-300 bg-white px-3 text-xs font-bold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800";
-        button.addEventListener("click", () => {
-          selectedTarget = target;
-          renderTargetDial(tasks);
-          applyTaskFilters();
-        });
-        node.appendChild(button);
+      for (const node of nodes) {
+        node.textContent = "";
+        for (const target of labels) {
+          const button = document.createElement("button");
+          const active = selectedTarget === target;
+          button.type = "button";
+          button.textContent = target || "すべて";
+          button.setAttribute("aria-pressed", active ? "true" : "false");
+          button.className = active
+            ? "h-8 rounded-full bg-sky px-3 text-xs font-extrabold text-white shadow-sm"
+            : "h-8 rounded-full border border-slate-300 bg-white px-3 text-xs font-bold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800";
+          button.addEventListener("click", () => {
+            selectedTarget = target;
+            saveFilterState();
+            renderTargetDial(tasks);
+            renderStatusControls(tasks);
+            renderProgressChart(tasks, currentGeneratedAt);
+            applyTaskFilters();
+          });
+          node.appendChild(button);
+        }
       }
     };
 
@@ -535,6 +790,7 @@
           : "h-8 rounded-full border border-slate-300 bg-white px-3 text-xs font-bold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800";
         button.addEventListener("click", () => {
           selectedCompletedDate = date;
+          saveFilterState();
           renderDateDial(tasks);
           applyTaskFilters();
         });
@@ -543,32 +799,37 @@
     };
 
     const applyTaskFilters = () => {
-      const showCompleted = document.getElementById("show-completed").checked;
       let visibleCount = 0;
       document.querySelectorAll("[data-complete]").forEach((node) => {
         const complete = node.dataset.complete === "true";
         const dateMismatch = complete && selectedCompletedDate && node.dataset.completedAt !== selectedCompletedDate;
         const nodeTargets = String(node.dataset.targets || "").split("\t").filter(Boolean);
         const targetMismatch = selectedTarget && !nodeTargets.includes(selectedTarget);
-        node.hidden = targetMismatch || (complete && (!showCompleted || dateMismatch));
+        const statusMismatch = !selectedStatusKeys.has(node.dataset.statusKey);
+        node.hidden = targetMismatch || statusMismatch || dateMismatch;
         if (!node.hidden && node.tagName !== "TR") visibleCount += 1;
       });
       document.getElementById("empty-state").hidden = visibleCount > 0;
     };
 
     const ensureTaskVisibleForNavigation = (task) => {
-      if (!isComplete(task)) return;
-      const showCompleted = document.getElementById("show-completed");
-      showCompleted.checked = true;
+      const key = statusKey(task.status);
+      if (!selectedStatusKeys.has(key)) {
+        selectedStatusKeys.add(key);
+        renderStatusControls(currentTasks);
+      }
       const completedAt = String(task.completed_at || "").slice(0, 10);
-      if (selectedCompletedDate && selectedCompletedDate !== completedAt) {
+      if (isComplete(task) && selectedCompletedDate && selectedCompletedDate !== completedAt) {
         selectedCompletedDate = "";
         renderDateDial(currentTasks);
       }
       if (!taskMatchesTarget(task)) {
         selectedTarget = "";
         renderTargetDial(currentTasks);
+        renderStatusControls(currentTasks);
+        renderProgressChart(currentTasks, currentGeneratedAt);
       }
+      saveFilterState();
       applyTaskFilters();
     };
 
@@ -600,6 +861,7 @@
         card.dataset.complete = isComplete(task) ? "true" : "false";
         card.dataset.completedAt = String(task.completed_at || "").slice(0, 10);
         card.dataset.targets = targetParts(task).join("\t");
+        card.dataset.statusKey = statusKey(task.status);
 
         card.querySelector(".t-id").textContent = task.t_id || "-";
         card.querySelector(".target").textContent = cleanText(task.target_app, task) || "-";
@@ -630,15 +892,15 @@
         document.getElementById("generated").textContent = generatedAt ? formatGeneratedAt(generatedAt) : "未生成";
         const tasks = data.tasks || [];
         currentTasks = tasks;
-        const completedLikeCount = tasks.filter(isComplete).length;
-        document.getElementById("active-count").textContent = tasks.length - completedLikeCount;
-        document.getElementById("completed-count").textContent = completedLikeCount;
-        document.getElementById("tracked-count").textContent = tasks.length;
+        currentGeneratedAt = generatedAt;
+        loadFilterState();
+        normalizeSelectedStatuses(tasks);
         renderQuickRows(document.getElementById("quick-rows"), tasks, generatedAt);
         fillRows(document.getElementById("task-rows"), tasks, generatedAt);
         renderTargetDial(tasks);
+        renderStatusControls(tasks);
+        renderProgressChart(tasks, generatedAt);
         renderDateDial(tasks);
-        document.getElementById("show-completed").addEventListener("change", applyTaskFilters);
         applyTaskFilters();
       })
       .catch(() => {
