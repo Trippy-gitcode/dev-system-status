@@ -76,7 +76,7 @@
               <th class="whitespace-nowrap px-4 py-3">T番号</th>
               <th class="whitespace-nowrap px-4 py-3">対象</th>
               <th class="whitespace-nowrap px-4 py-3">ステータス</th>
-              <th class="whitespace-nowrap px-4 py-3">完了AI</th>
+              <th class="whitespace-nowrap px-4 py-3">担当AI</th>
               <th class="min-w-80 px-4 py-3">実現したいこと</th>
               <th class="whitespace-nowrap px-4 py-3">完了率</th>
               <th class="whitespace-nowrap px-4 py-3">完了見込み</th>
@@ -122,6 +122,26 @@
             <ul class="work-list list-disc space-y-1.5 pl-5 text-[15px] leading-7 text-slate-800 dark:text-slate-100"></ul>
           </section>
         </div>
+        <section class="pending-section mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/30" hidden>
+          <div class="mb-2 flex items-center gap-2">
+            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-200 text-xs font-black text-blue-900 dark:bg-blue-900 dark:text-blue-100">!</span>
+            <h3 class="text-sm font-extrabold text-blue-900 dark:text-blue-100">反映待ち（残件）</h3>
+          </div>
+          <div class="grid gap-3 lg:grid-cols-3">
+            <div class="pending-remaining-box" hidden>
+              <div class="mb-1 text-xs font-extrabold text-blue-700 dark:text-blue-200">残ステップ</div>
+              <ul class="pending-remaining-list list-disc space-y-1 pl-5 text-[14px] leading-6 text-slate-800 dark:text-slate-100"></ul>
+            </div>
+            <div class="pending-blocked-box" hidden>
+              <div class="mb-1 text-xs font-extrabold text-blue-700 dark:text-blue-200">ブロック要因</div>
+              <ul class="pending-blocked-list list-disc space-y-1 pl-5 text-[14px] leading-6 text-slate-800 dark:text-slate-100"></ul>
+            </div>
+            <div class="pending-next-box" hidden>
+              <div class="mb-1 text-xs font-extrabold text-blue-700 dark:text-blue-200">次のアクション</div>
+              <ul class="pending-next-list list-disc space-y-1 pl-5 text-[14px] leading-6 text-slate-800 dark:text-slate-100"></ul>
+            </div>
+          </div>
+        </section>
         <div class="mt-4 grid gap-4 border-t border-slate-200 pt-4 dark:border-slate-800 lg:grid-cols-[0.8fr_0.8fr_1.2fr_1.2fr]">
           <div>
             <div class="mb-1 text-xs font-extrabold text-slate-500 dark:text-slate-400">完了/進捗</div>
@@ -302,6 +322,23 @@
       return ["DONE", "COMPLETED", "PUSHED", "DEPLOYED", "APPLIED"].includes(status);
     };
 
+    const isPending = (task) => {
+      const status = String(task.status || "").toUpperCase();
+      return ["LOCAL_DONE", "COMMITTED", "BLOCKED"].includes(status);
+    };
+
+    const splitPending = (value) => {
+      const raw = String(value || "").trim();
+      if (!raw) return [];
+      // Skip the "なし" placeholder used in TASK detail; treat it as no item.
+      if (/^(none|なし|-+)$/i.test(raw)) return [];
+      return raw
+        .replace(/`/g, "")
+        .split(/\s+\/\s+|;\s*|。\s*/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+    };
+
     const etaLabel = (task, generatedAt) => {
       if (isComplete(task)) return "完了済み";
       const eta = String(task.eta || "");
@@ -424,7 +461,19 @@
       }
     };
 
+    const cleanActorTag = (value) => {
+      const text = String(value || "").trim();
+      if (!text) return "";
+      // Strip leading/trailing square brackets when the value is a single tag
+      // like "[Claude:IMPL]" — preserve internals like "[A] / [B]".
+      const single = text.match(/^\[([^\]]+)\]$/);
+      if (single) return single[1];
+      return text;
+    };
+
     const actorLabel = (task) => {
+      const ownerAi = cleanActorTag(task.owner_ai);
+      if (ownerAi) return ownerAi;
       const doneBy = String(task.done_by || "").trim();
       if (doneBy) return doneBy.replace(/^\[|\]$/g, "");
       const text = `${task.owner || ""} ${task.work_done || ""} ${task.test_methods || ""} ${task.review_personas || ""}`;
@@ -435,6 +484,8 @@
     };
 
     const quickActorLabel = (task) => {
+      const ownerAi = cleanActorTag(task.owner_ai);
+      if (ownerAi) return ownerAi;
       if (String(task.done_by || "").trim()) return actorLabel(task);
       if (!isComplete(task)) return "-";
       return actorLabel(task);
@@ -894,6 +945,33 @@
 
         addList(card.querySelector(".goal-list"), stepItems("goal", task));
         addList(card.querySelector(".work-list"), stepItems("work", task));
+
+        const pendingSection = card.querySelector(".pending-section");
+        if (pendingSection) {
+          if (isPending(task)) {
+            const remaining = splitPending(task.remaining_steps);
+            const blocked = splitPending(task.blocked_on);
+            const nextActions = splitPending(task.next_action);
+            const remainingBox = card.querySelector(".pending-remaining-box");
+            const blockedBox = card.querySelector(".pending-blocked-box");
+            const nextBox = card.querySelector(".pending-next-box");
+            if (remaining.length) {
+              remainingBox.hidden = false;
+              addList(card.querySelector(".pending-remaining-list"), remaining);
+            }
+            if (blocked.length) {
+              blockedBox.hidden = false;
+              addList(card.querySelector(".pending-blocked-list"), blocked);
+            }
+            if (nextActions.length) {
+              nextBox.hidden = false;
+              addList(card.querySelector(".pending-next-list"), nextActions);
+            }
+            if (remaining.length || blocked.length || nextActions.length) {
+              pendingSection.hidden = false;
+            }
+          }
+        }
 
         addList(card.querySelector(".review-list"), methodItems(task));
         addList(card.querySelector(".refs-list"), splitRefs(task.updated_refs, task));
