@@ -656,7 +656,10 @@
   //     無ければ 「集計未配備」 placeholder (= verify/adv_violation_log.md は
   //     SSoT で publish 経路に projection が無いため、 後続 mission で 集計 endpoint 追加候補)。
   function appUpperKey(app) {
-    return String(app || '').toUpperCase().replace(/[^A-Z0-9]+/g, '_');
+    return String(app || '')
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
   }
 
   function aggregateAppView(tasks, retrofitStatus, violationSummary) {
@@ -691,7 +694,7 @@
         g.all_total += 1;
         // phase_status (= TASK-{APP_UPPER}-PHASE[1-9]-... のみ)
         var upper = appUpperKey(app);
-        var phaseRe = new RegExp('^TASK-' + upper + '-PHASE([1-9])', 'i');
+        var phaseRe = new RegExp('^TASK-' + upper + '(?:-[A-Z0-9]+)?-PHASE([0-9]+)(?:-|$)', 'i');
         if (phaseRe.test(mid)) {
           if (g.phase_status[st] !== undefined) g.phase_status[st] += 1;
           g.phase_total += 1;
