@@ -114,6 +114,16 @@
         <ul class="app-view-list" id="app-view-list" aria-live="polite">
           <li class="empty">読み込み中…</li>
         </ul>
+
+        <!-- T139 / TASK-DEVSYS-MISSION-GRAPH-SSOT-AND-VERDICT-PROPAGATE -->
+        <!-- Mission Graph view: 各 task の depends_on / parent_of / parallel_with / -->
+        <!-- verdict_input_from / critical_input_from / clarification_input_from を視覚化。 -->
+        <!-- 親子関係 = 縦並び card + arrow、 並列 = 横並び card、 critical 入力 = 赤枠。 -->
+        <h2 class="section-title">Mission Graph (親子 / 並列 / verdict propagation)</h2>
+        <p class="section-desc">T139 — depends_on / parent_of / parallel_with の Mission 結合と、 critical_input_from で BLOCK 判定 されている task を一覧。 PO 直命 2026-05-09「Task 同士を結ぶ仕組み、 親子 / 並列 OK 一目」 反映。</p>
+        <ul class="mission-graph-list" id="mission-graph-list" aria-live="polite">
+          <li class="empty">読み込み中…</li>
+        </ul>
       </details>
     </section>
   </main>

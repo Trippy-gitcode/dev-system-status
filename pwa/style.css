@@ -615,3 +615,101 @@ body {
   font-size: 1.2rem;
   font-weight: 700;
 }
+
+/* T139 / TASK-DEVSYS-MISSION-GRAPH-SSOT-AND-VERDICT-PROPAGATE
+ * Mission Graph view (= 親子 / 並列 / verdict propagation 視覚化)。
+ * - 縦並び card = depends_on / parent_of で連結された task chain
+ * - 横並び chip = parallel_with sibling
+ * - 赤枠 .graph-blocked = critical_input_from を持つ task (= BLOCK 状態)
+ */
+.mission-graph-list { list-style: none; padding: 0; margin: 0; }
+.mission-graph-card {
+  border: 1px solid var(--border, #cbd5e0);
+  border-left: 3px solid #4a5568;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 8px 0;
+  background: #ffffff;
+  position: relative;
+}
+.mission-graph-card.graph-blocked {
+  border: 2px solid #e53e3e;
+  border-left: 4px solid #c53030;
+  background: #fff5f5;
+}
+.mission-graph-head {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  font-size: 12px; font-weight: 600;
+}
+.mission-graph-tid {
+  color: #2b6cb0;
+  font-family: var(--mono, monospace);
+}
+.mission-graph-status {
+  padding: 1px 6px; border-radius: 8px;
+  font-size: 10px; background: #edf2f7; color: #4a5568;
+}
+.mission-graph-status.status-done,
+.mission-graph-status.status-completed,
+.mission-graph-status.status-pushed,
+.mission-graph-status.status-deployed,
+.mission-graph-status.status-applied { background: #c6f6d5; color: #22543d; }
+.mission-graph-status.status-local_done { background: #bee3f8; color: #2a4365; }
+.mission-graph-status.status-in_progress { background: #faf089; color: #744210; }
+.mission-graph-status.status-queued { background: #e2e8f0; color: #4a5568; }
+.mission-graph-status.status-blocked { background: #fed7d7; color: #742a2a; }
+.mission-graph-app {
+  font-size: 11px; font-weight: 500;
+  color: #718096;
+}
+.mission-graph-mid {
+  font-size: 11px;
+  color: #4a5568;
+  margin: 4px 0 6px 0;
+  font-family: var(--mono, monospace);
+  word-break: break-all;
+}
+.mission-graph-edges {
+  display: flex; flex-direction: column; gap: 4px;
+  font-size: 11px;
+  margin-top: 4px;
+}
+.edge-row {
+  padding: 3px 6px;
+  background: #f7fafc;
+  border-radius: 4px;
+  word-break: break-word;
+}
+.edge-depends { background: #ebf8ff; color: #2c5282; }
+.edge-parent-of { background: #e6fffa; color: #234e52; }
+.edge-parallel {
+  background: #faf5ff; color: #553c9a;
+  display: flex; gap: 4px; flex-wrap: wrap; align-items: center;
+}
+.edge-parallel .edge-label { font-weight: 600; }
+.edge-parallel .sibling-chip {
+  padding: 1px 6px; border-radius: 8px;
+  background: #d6bcfa; color: #44337a;
+  font-family: var(--mono, monospace);
+  font-size: 10px;
+}
+.edge-verdict { background: #fffaf0; color: #744210; }
+.edge-critical {
+  background: #fed7d7; color: #742a2a;
+  font-weight: 600;
+}
+.edge-clarification { background: #fefcbf; color: #744210; }
+@media (prefers-color-scheme: dark) {
+  .mission-graph-card { background: #1a202c; border-color: #2d3748; }
+  .mission-graph-card.graph-blocked { background: #2a1818; border-color: #e53e3e; }
+  .mission-graph-app { color: #a0aec0; }
+  .mission-graph-mid { color: #cbd5e0; }
+  .edge-row { background: #2d3748; color: #e2e8f0; }
+  .edge-depends { background: #2c5282; color: #ebf8ff; }
+  .edge-parent-of { background: #234e52; color: #e6fffa; }
+  .edge-parallel { background: #44337a; color: #faf5ff; }
+  .edge-parallel .sibling-chip { background: #553c9a; color: #faf5ff; }
+  .edge-verdict { background: #744210; color: #fffaf0; }
+  .edge-critical { background: #742a2a; color: #fed7d7; }
+  .edge-clarification { background: #744210; color: #fefcbf; }
+}

@@ -89,6 +89,12 @@
     window.__dais_pwa.renderProgressBoard = renderProgressBoard;       // 進捗 board render
     window.__dais_pwa.isTaskClickable = isTaskClickable;               // QUEUED / IN_PROGRESS / LOCAL_DONE 判定
     window.__dais_pwa.buildProgressTaskPayload = buildProgressTaskPayload; // payload 生成 (test 公開)
+    // T139 / TASK-DEVSYS-MISSION-GRAPH-SSOT-AND-VERDICT-PROPAGATE
+    // Mission Graph view: depends_on / parent_of / parallel_with の視覚化 +
+    // critical_input_from がある task を BLOCK badge で 視認 化。
+    window.__dais_pwa.renderMissionGraph = renderMissionGraph;
+    window.__dais_pwa.computeMissionGraph = computeMissionGraph;
+    window.__dais_pwa.parseGraphList = parseGraphList;
   }
 
   var STATE = {
@@ -788,6 +794,133 @@
     });
   }
 
+  // ─── T139 Mission Graph view ─────────────────────────────────────────
+  // PO 直命 2026-05-09「Task 同士を結ぶ仕組み、 親子関係 + 並列 OK 一目」 反映。
+  // depends_on / parent_of / parallel_with / critical_input_from /
+  // clarification_input_from / verdict_input_from を視覚化。
+  // - 各 task = node (= 縦並び card)
+  // - depends_on / parent_of edge = 矢印で連結 (= ASCII / character glyph で表現)
+  // - parallel_with = 横並び (= sibling chip)
+  // - critical_input_from がある task = 赤枠 (.graph-blocked)
+  function parseGraphList(value) {
+    // value 例: "TASK-A / TASK-B / TASK-C" or "[TASK-A, TASK-B]" or "none"
+    // → ["TASK-A", "TASK-B", "TASK-C"]
+    if (!value) return [];
+    var s = String(value).trim();
+    if (!s || /^(none|なし|-|n\/a|\[\])$/i.test(s)) return [];
+    var ids = s.match(/TASK-[A-Z0-9_-]+/g);
+    return ids || [];
+  }
+
+  function computeMissionGraph(tasks) {
+    // tasks = STATE.tasks (= t_progress.json tasks[] each with .graph)
+    // returns: array of node objects sorted by t_id desc, each with edges resolved.
+    var nodes = (tasks || []).map(function (t) {
+      var g = t.graph || {};
+      return {
+        t_id: t.t_id || '',
+        mission_id: t.mission_id || '',
+        status: String(t.status || '').toUpperCase(),
+        target_app: t.target_app || '',
+        goal: t.goal || '',
+        depends_on: parseGraphList(g.depends_on),
+        parent_of: parseGraphList(g.parent_of),
+        parallel_with: parseGraphList(g.parallel_with),
+        verdict_input_from: g.verdict_input_from || '',
+        critical_input_from: g.critical_input_from || '',
+        clarification_input_from: g.clarification_input_from || '',
+        is_critical_blocked: false
+      };
+    });
+    // critical_input_from が "none" / 空 以外 で 件数 ≥ 1 を含む = BLOCK 候補
+    nodes.forEach(function (n) {
+      var c = String(n.critical_input_from || '').trim();
+      if (!c || /^(none|なし|-|n\/a)$/i.test(c)) return;
+      // critical_input_from の text に「N 件」 が含まれていれば BLOCK 視認
+      if (/[1-9][0-9]*\s*件/.test(c)) {
+        n.is_critical_blocked = true;
+      } else if (c.indexOf('TASK-') === 0 || c.indexOf(':') > 0) {
+        n.is_critical_blocked = true;
+      }
+    });
+    // sort: t_id desc (= 大番号先頭、 Mission Queue 表示順序ルール §2.25.31 整合)
+    nodes.sort(function (a, b) {
+      var an = parseInt(String(a.t_id).replace(/^T/, ''), 10) || 0;
+      var bn = parseInt(String(b.t_id).replace(/^T/, ''), 10) || 0;
+      return bn - an;
+    });
+    return nodes;
+  }
+
+  function renderMissionGraph() {
+    var list = $('#mission-graph-list');
+    if (!list) return;
+    list.innerHTML = '';
+    if (STATE.errors.tProgress) {
+      list.appendChild(el('li', { class: 'empty', text: 't_progress.json を取得できないため Mission Graph を表示できません。' }));
+      return;
+    }
+    var nodes = computeMissionGraph(STATE.tasks);
+    if (!nodes.length) {
+      list.appendChild(el('li', { class: 'empty', text: 'Mission Graph 情報がありません。' }));
+      return;
+    }
+    // graph fields のいずれかが値を持つ task のみ 表示 (= 純 sequential / 孤立 task は省略)
+    var withEdges = nodes.filter(function (n) {
+      return n.depends_on.length > 0 || n.parent_of.length > 0 ||
+             n.parallel_with.length > 0 || n.is_critical_blocked ||
+             (n.verdict_input_from && !/^(none|なし|-)$/i.test(n.verdict_input_from)) ||
+             (n.clarification_input_from && !/^(none|なし|-)$/i.test(n.clarification_input_from));
+    });
+    if (!withEdges.length) {
+      list.appendChild(el('li', { class: 'empty', text: 'graph fields が設定された task はありません (= propagate 未実行)。' }));
+      return;
+    }
+    withEdges.forEach(function (n) {
+      var card = el('li', {
+        class: 'mission-graph-card' + (n.is_critical_blocked ? ' graph-blocked' : '')
+      });
+      // header
+      var head = el('div', { class: 'mission-graph-head' }, [
+        el('span', { class: 'mission-graph-tid', text: n.t_id }),
+        el('span', { class: 'mission-graph-status status-' + n.status.toLowerCase(), text: n.status }),
+        el('span', { class: 'mission-graph-app', text: n.target_app || '—' })
+      ]);
+      card.appendChild(head);
+      // mission id (= short)
+      card.appendChild(el('div', { class: 'mission-graph-mid', text: n.mission_id }));
+      // edges
+      var edgeBox = el('div', { class: 'mission-graph-edges' });
+      if (n.depends_on.length) {
+        edgeBox.appendChild(el('div', { class: 'edge-row edge-depends', text: '↑ depends_on: ' + n.depends_on.join(' / ') }));
+      }
+      if (n.parent_of.length) {
+        edgeBox.appendChild(el('div', { class: 'edge-row edge-parent-of', text: '↓ parent_of: ' + n.parent_of.join(' / ') }));
+      }
+      if (n.parallel_with.length) {
+        var par = el('div', { class: 'edge-row edge-parallel' });
+        par.appendChild(el('span', { class: 'edge-label', text: '⇔ parallel_with:' }));
+        n.parallel_with.forEach(function (sib) {
+          par.appendChild(el('span', { class: 'sibling-chip', text: sib }));
+        });
+        edgeBox.appendChild(par);
+      }
+      if (n.verdict_input_from && !/^(none|なし|-)$/i.test(n.verdict_input_from)) {
+        edgeBox.appendChild(el('div', { class: 'edge-row edge-verdict', text: '⌥ verdict_input_from: ' + n.verdict_input_from }));
+      }
+      if (n.is_critical_blocked) {
+        edgeBox.appendChild(el('div', { class: 'edge-row edge-critical', text: '⚠ critical_input_from: ' + n.critical_input_from }));
+      } else if (n.critical_input_from && !/^(none|なし|-)$/i.test(n.critical_input_from)) {
+        edgeBox.appendChild(el('div', { class: 'edge-row edge-critical', text: '? critical_input_from: ' + n.critical_input_from }));
+      }
+      if (n.clarification_input_from && !/^(none|なし|-)$/i.test(n.clarification_input_from)) {
+        edgeBox.appendChild(el('div', { class: 'edge-row edge-clarification', text: '? clarification_input_from: ' + n.clarification_input_from }));
+      }
+      card.appendChild(edgeBox);
+      list.appendChild(card);
+    });
+  }
+
   // ─── 進捗 サマリー ───────────────────────────────────────────────────
   function renderProgressSummary() {
     var active = (STATE.tasks || []).filter(function (t) {
@@ -896,6 +1029,7 @@
       renderRules();
       renderProgressSummary();
       renderAppView();
+      renderMissionGraph(); // T139: Mission Graph 親子 / 並列 / verdict propagate
       renderProgressBoard(); // T128 拡張: 進捗 row click → modal 起動
       var stamp = STATE.lastFetch.toISOString().replace(/\.\d{3}Z$/, 'Z');
       setStatus('更新: ' + stamp + ' (agents=' + STATE.agents.length + ', tasks=' + STATE.tasks.length + ', outbox=' + STATE.outbox.length + ')', 'ok');
