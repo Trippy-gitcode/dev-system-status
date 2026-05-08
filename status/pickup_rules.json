@@ -1,0 +1,28 @@
+{
+  "format_version": "1.0",
+  "generated_at": "2026-05-08T00:00:00Z",
+  "source": "docs/status/pickup_rules.json",
+  "spec_refs": [
+    "instructions/dais_supervisor_model_brief.md#section-14",
+    "core_spec.md#section-2264"
+  ],
+  "schema": {
+    "rules[].target_app": "string ('*' wildcard allowed). Examples: 'Dais', 'Mais', 'Lais'.",
+    "rules[].owner_tag": "string ('*' wildcard allowed). Examples: '[Claude:OPS]', '[subagent:IMPL]', '[Codex:SPEC]'.",
+    "rules[].auto_pickup_enabled": "bool. true=agent can auto-pick this combination, false=manual assignment only.",
+    "rules[].rationale": "string (optional). PO-readable note shown in PWA editor."
+  },
+  "default_when_unmatched": {
+    "auto_pickup_enabled": true,
+    "rule_reason": "default:allow"
+  },
+  "rules": [
+    {
+      "target_app": "*",
+      "owner_tag": "[PO:DECISION]",
+      "auto_pickup_enabled": false,
+      "rationale": "PO 直接判断必須。 agent 自動 pickup 禁止 (CLAUDE.md §1.1.2 + brief v1 §1.5)。"
+    }
+  ],
+  "writer_note": "PWA editor (T117) writes this file via PO yes/no toggle UI. This script is reader-only."
+}

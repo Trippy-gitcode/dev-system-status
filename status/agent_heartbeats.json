@@ -1,0 +1,105 @@
+{
+  "claude": {
+    "agent_pid": 86386,
+    "branch": "main",
+    "capability": {
+      "function_refs": [
+        "DOD_GATE",
+        "UNIT_TEST",
+        "E2E_TEST",
+        "REALWORLD_TEST",
+        "AGENT_HEARTBEAT_UPDATE",
+        "WRITE_LANE_MERGER",
+        "STALE_BRANCH_REAPER",
+        "MISSION_QUEUE_LOCK"
+      ],
+      "owner_tags": [
+        "[Claude:OPS]",
+        "[Claude:IMPL]"
+      ],
+      "review_personas": [
+        "OPS_REVIEWER",
+        "SPEC_REVIEWER",
+        "HANDOFF_REVIEWER",
+        "UI_REVIEWER",
+        "PO_DECISION"
+      ],
+      "test_methods": [
+        "UNIT",
+        "E2E",
+        "REALWORLD",
+        "STATIC_DOC",
+        "PO_CONFIRMATION"
+      ]
+    },
+    "current_task_id": "",
+    "last_heartbeat": "2026-05-08T12:57:30Z",
+    "worktree_path": "/Users/futoshi/Desktop/dev-system/.claude/worktrees/serene-heyrovsky-dcc42b"
+  },
+  "subagent": {
+    "agent_pid": 99118,
+    "branch": "codex/mais-studio-status",
+    "capability": {
+      "function_refs": [
+        "DOD_GATE",
+        "UNIT_TEST",
+        "E2E_TEST",
+        "REALWORLD_TEST",
+        "AGENT_HEARTBEAT_UPDATE",
+        "WRITE_LANE_MERGER",
+        "STALE_BRANCH_REAPER"
+      ],
+      "owner_tags": [
+        "[subagent:IMPL]",
+        "[subagent:SPEC]",
+        "[subagent:REVIEW]",
+        "[subagent:OPS]"
+      ],
+      "review_personas": [
+        "OPS_REVIEWER",
+        "SPEC_REVIEWER",
+        "HANDOFF_REVIEWER",
+        "UI_REVIEWER"
+      ],
+      "test_methods": [
+        "UNIT",
+        "E2E",
+        "REALWORLD",
+        "STATIC_DOC"
+      ]
+    },
+    "current_task_id": "TASK-DAIS-ACTIVE-AGENT-REGISTRY",
+    "last_heartbeat": "2026-05-08T12:30:27Z",
+    "worktree_path": "/Users/futoshi/Desktop/dev-system"
+  },
+  "test-agent": {
+    "agent_pid": 52767,
+    "branch": "main",
+    "capability": {
+      "function_refs": [
+        "AGENT_HEARTBEAT_UPDATE"
+      ],
+      "owner_tags": [],
+      "review_personas": [],
+      "test_methods": []
+    },
+    "current_task_id": "",
+    "last_heartbeat": "2026-05-08T09:20:06Z",
+    "worktree_path": "/Users/futoshi/Desktop/dev-system/.claude/worktrees/serene-heyrovsky-dcc42b"
+  },
+  "unknown": {
+    "agent_pid": 85855,
+    "branch": "codex/T97/mais-knowledge-retrofit-review",
+    "capability": {
+      "function_refs": [
+        "AGENT_HEARTBEAT_UPDATE"
+      ],
+      "owner_tags": [],
+      "review_personas": [],
+      "test_methods": []
+    },
+    "current_task_id": "TASK-DAIS-PO-INBOX-OUTBOX-SSOT",
+    "last_heartbeat": "2026-05-08T12:52:39Z",
+    "worktree_path": "/Users/futoshi/Desktop/dev-system"
+  }
+}
