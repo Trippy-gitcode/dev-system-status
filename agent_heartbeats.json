@@ -12,5 +12,12 @@
     "current_task_id": "",
     "last_heartbeat": "2026-05-08T09:20:06Z",
     "worktree_path": "/Users/futoshi/Desktop/dev-system/.claude/worktrees/serene-heyrovsky-dcc42b"
+  },
+  "unknown": {
+    "agent_pid": 44565,
+    "branch": "codex/T97/mais-knowledge-retrofit-review",
+    "current_task_id": "",
+    "last_heartbeat": "2026-05-08T11:40:33Z",
+    "worktree_path": "/Users/futoshi/Desktop/dev-system"
   }
 }
