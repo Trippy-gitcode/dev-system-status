@@ -700,9 +700,16 @@
       svg.hidden = false;
       empty.hidden = true;
 
+      // 棒の本数に応じて 日付ラベル の rotate / font-size を決定 (T84 全日付表示対応)
+      // ラベル幅 ~28px (MM/DD@font-size 11) を基準に、 棒間隔より広い場合は -45 度 rotate
+      const slotWidth = history.length <= 1 ? 760 : (760 - 46 - 24) / Math.max(1, history.length - 1);
+      const labelFontSize = history.length > 30 ? 9 : (history.length > 20 ? 10 : 11);
+      const labelRotate = slotWidth < 30; // 30px 未満なら rotate
+      const labelBottomReserve = labelRotate ? 56 : 36;
+
       const width = 760;
       const height = 280;
-      const margin = { top: 22, right: 24, bottom: 42, left: 46 };
+      const margin = { top: 22, right: 24, bottom: labelBottomReserve + 6, left: 46 };
       const plotWidth = width - margin.left - margin.right;
       const plotHeight = height - margin.top - margin.bottom;
       const maxY = Math.max(1, ...history.map((point) => keys.reduce((sum, key) => sum + (point.counts[key] || 0), 0)));
@@ -722,10 +729,25 @@
       svg.appendChild(gridGroup);
       svg.appendChild(createSvg("line", { x1: margin.left, x2: width - margin.right, y1: margin.top + plotHeight, y2: margin.top + plotHeight, stroke: "#94a3b8", "stroke-width": "1.5" }));
 
-      const labelIndexes = Array.from(new Set([0, Math.floor((history.length - 1) / 2), history.length - 1]));
-      for (const index of labelIndexes) {
-        const label = createSvg("text", { x: x(index), y: height - 14, "text-anchor": "middle", "font-size": "11", "font-weight": "800", fill: "#64748b" });
-        label.textContent = history[index].ymd.slice(5).replace("-", "/");
+      // 全棒分の 日付ラベル を出力 (PO 指示 2026-05-08「日付が棒グラフの下に全て出るようにして」)
+      // axis-tick-full-display: history.length 件の date label を全て出力する
+      const labelBaseY = margin.top + plotHeight + (labelRotate ? 18 : 16);
+      for (let index = 0; index < history.length; index += 1) {
+        const cx = x(index);
+        const ymdShort = history[index].ymd.slice(5).replace("-", "/");
+        const labelAttrs = {
+          x: cx,
+          y: labelBaseY,
+          "text-anchor": labelRotate ? "end" : "middle",
+          "font-size": String(labelFontSize),
+          "font-weight": "800",
+          fill: "#64748b"
+        };
+        if (labelRotate) {
+          labelAttrs.transform = `rotate(-45 ${cx} ${labelBaseY})`;
+        }
+        const label = createSvg("text", labelAttrs);
+        label.textContent = ymdShort;
         svg.appendChild(label);
       }
 
