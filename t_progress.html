@@ -37,7 +37,7 @@
       <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h2 class="text-lg font-extrabold text-slate-900 dark:text-white">進捗サマリー</h2>
-          <p class="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">進捗数の推移</p>
+          <p class="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">未完了と完了の比較</p>
         </div>
         <div class="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
           <span>対象</span>
@@ -46,7 +46,7 @@
       </div>
       <div id="status-counts" class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5"></div>
       <div class="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-[#f8fafc] dark:border-slate-800 dark:bg-slate-950/40">
-        <svg id="progress-chart" class="block h-72 w-full" viewBox="0 0 760 280" role="img" aria-label="ステータス別の進捗数推移"></svg>
+        <svg id="progress-chart" class="block h-72 w-full" viewBox="0 0 760 280" role="img" aria-label="未完了と完了の2本棒グラフ"></svg>
         <p id="chart-empty" class="px-4 py-8 text-center text-sm font-semibold text-slate-500 dark:text-slate-400" hidden>表示できる推移がありません。</p>
       </div>
     </section>
@@ -689,10 +689,9 @@
       const empty = document.getElementById("chart-empty");
       svg.textContent = "";
       const filteredTasks = tasks.filter(taskMatchesTarget);
-      const history = buildStatusHistory(filteredTasks, generatedAt);
       const selectedKeys = statusKeysForTasks(filteredTasks).filter((key) => selectedStatusKeys.has(key));
-      const keys = selectedKeys.filter((key) => history.some((point) => (point.counts[key] || 0) > 0));
-      if (!history.length || !keys.length) {
+      const visibleTasks = filteredTasks.filter((task) => selectedStatusKeys.has(statusKey(task.status)));
+      if (!visibleTasks.length || !selectedKeys.length) {
         svg.hidden = true;
         empty.hidden = false;
         return;
@@ -700,22 +699,37 @@
       svg.hidden = false;
       empty.hidden = true;
 
-      // 棒の本数に応じて 日付ラベル の rotate / font-size を決定 (T84 全日付表示対応)
-      // ラベル幅 ~28px (MM/DD@font-size 11) を基準に、 棒間隔より広い場合は -45 度 rotate
-      const slotWidth = history.length <= 1 ? 760 : (760 - 46 - 24) / Math.max(1, history.length - 1);
-      const labelFontSize = history.length > 30 ? 9 : (history.length > 20 ? 10 : 11);
-      const labelRotate = slotWidth < 30; // 30px 未満なら rotate
-      const labelBottomReserve = labelRotate ? 56 : 36;
-
+      const incompleteValue = visibleTasks.filter((task) => !isComplete(task)).length;
+      const doneValue = visibleTasks.filter(isComplete).length;
+      // progress-chart-two-bars: PO 指示 2026-05-09。棒は「未完了」「完了」の2本だけ。
+      // complete-only-split: 完了は他ステータスと積み上げず、独立した棒に分離する。
+      const buckets = [
+        {
+          key: "INCOMPLETE",
+          label: "未完了",
+          value: incompleteValue,
+          fill: "#0f766e",
+          text: "#0f766e",
+          title: "完了以外"
+        },
+        {
+          key: "DONE",
+          label: "完了",
+          value: doneValue,
+          fill: STATUS_META.DONE.stroke,
+          text: "#c2410c",
+          title: STATUS_META.DONE.label
+        }
+      ];
       const width = 760;
       const height = 280;
-      const margin = { top: 22, right: 24, bottom: labelBottomReserve + 6, left: 46 };
+      const margin = { top: 24, right: 28, bottom: 58, left: 54 };
       const plotWidth = width - margin.left - margin.right;
       const plotHeight = height - margin.top - margin.bottom;
-      const maxY = Math.max(1, ...history.map((point) => keys.reduce((sum, key) => sum + (point.counts[key] || 0), 0)));
-      const x = (index) => margin.left + (history.length === 1 ? plotWidth / 2 : (plotWidth * index) / (history.length - 1));
+      const maxY = Math.max(1, ...buckets.map((bucket) => bucket.value));
       const y = (value) => margin.top + plotHeight - (plotHeight * value) / maxY;
-      const barWidth = Math.max(12, Math.min(54, plotWidth / Math.max(1, history.length) * 0.62));
+      const x = (index) => margin.left + plotWidth * (index === 0 ? 0.31 : 0.69);
+      const barWidth = Math.min(170, Math.max(112, plotWidth * 0.22));
 
       const gridGroup = createSvg("g", { "font-size": "11", "font-weight": "700", fill: "#64748b" });
       for (let i = 0; i <= 4; i += 1) {
@@ -729,56 +743,38 @@
       svg.appendChild(gridGroup);
       svg.appendChild(createSvg("line", { x1: margin.left, x2: width - margin.right, y1: margin.top + plotHeight, y2: margin.top + plotHeight, stroke: "#94a3b8", "stroke-width": "1.5" }));
 
-      // 全棒分の 日付ラベル を出力 (PO 指示 2026-05-08「日付が棒グラフの下に全て出るようにして」)
-      // axis-tick-full-display: history.length 件の date label を全て出力する
-      const labelBaseY = margin.top + plotHeight + (labelRotate ? 18 : 16);
-      for (let index = 0; index < history.length; index += 1) {
+      const selectedLabel = selectedKeys.map((key) => (STATUS_META[key] || STATUS_META.OTHER).label).join(" / ");
+      const labelBaseY = margin.top + plotHeight + 28;
+      for (let index = 0; index < buckets.length; index += 1) {
+        const bucket = buckets[index];
         const cx = x(index);
-        const ymdShort = history[index].ymd.slice(5).replace("-", "/");
-        const labelAttrs = {
-          x: cx,
-          y: labelBaseY,
-          "text-anchor": labelRotate ? "end" : "middle",
-          "font-size": String(labelFontSize),
-          "font-weight": "800",
-          fill: "#64748b"
-        };
-        if (labelRotate) {
-          labelAttrs.transform = `rotate(-45 ${cx} ${labelBaseY})`;
-        }
-        const label = createSvg("text", labelAttrs);
-        label.textContent = ymdShort;
-        svg.appendChild(label);
-      }
+        const yTop = y(bucket.value);
+        const yBottom = y(0);
+        const rect = createSvg("rect", {
+          x: cx - barWidth / 2,
+          y: yTop,
+          width: barWidth,
+          height: Math.max(0, yBottom - yTop),
+          fill: bucket.fill,
+          rx: "6"
+        });
+        const title = createSvg("title");
+        title.textContent = `${bucket.title}: ${bucket.value}件 (選択中: ${selectedLabel})`;
+        rect.appendChild(title);
+        svg.appendChild(rect);
 
-      history.forEach((point, index) => {
-        let accumulated = 0;
-        const cx = x(index);
-        const total = keys.reduce((sum, key) => sum + (point.counts[key] || 0), 0);
-        for (const key of keys) {
-          const value = point.counts[key] || 0;
-          if (value <= 0) continue;
-          const meta = STATUS_META[key] || STATUS_META.OTHER;
-          const yTop = y(accumulated + value);
-          const yBottom = y(accumulated);
-          const segment = createSvg("rect", {
-            x: cx - barWidth / 2,
-            y: yTop,
-            width: barWidth,
-            height: Math.max(1, yBottom - yTop),
-            fill: meta.stroke,
-            rx: "3"
-          });
-          const title = createSvg("title");
-          title.textContent = `${point.ymd} ${meta.label}: ${value}`;
-          segment.appendChild(title);
-          svg.appendChild(segment);
-          accumulated += value;
-        }
-        const totalLabel = createSvg("text", { x: cx, y: y(total) - 7, "text-anchor": "middle", "font-size": "11", "font-weight": "900", fill: "#334155" });
-        totalLabel.textContent = total;
-        svg.appendChild(totalLabel);
-      });
+        const valueLabel = createSvg("text", { x: cx, y: Math.max(margin.top + 13, yTop - 9), "text-anchor": "middle", "font-size": "22", "font-weight": "900", fill: bucket.text });
+        valueLabel.textContent = bucket.value;
+        svg.appendChild(valueLabel);
+
+        const label = createSvg("text", { x: cx, y: labelBaseY, "text-anchor": "middle", "font-size": "16", "font-weight": "900", fill: "#334155" });
+        label.textContent = bucket.label;
+        svg.appendChild(label);
+
+        const subLabel = createSvg("text", { x: cx, y: labelBaseY + 20, "text-anchor": "middle", "font-size": "11", "font-weight": "700", fill: "#64748b" });
+        subLabel.textContent = bucket.key === "DONE" ? "完了だけ分離" : "完了以外を合算";
+        svg.appendChild(subLabel);
+      }
     };
 
     const renderQuickRows = (node, tasks, generatedAt) => {
