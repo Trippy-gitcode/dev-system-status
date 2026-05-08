@@ -1,0 +1,16 @@
+{
+  "claude": {
+    "agent_pid": 12345,
+    "branch": "claude/T95/registry-heartbeat",
+    "current_task_id": "TASK-DEVSYS-AGENT-PARALLEL-OPS-REGISTRY-HEARTBEAT",
+    "last_heartbeat": "2026-05-08T09:19:02Z",
+    "worktree_path": "/Users/futoshi/Desktop/dev-system/.claude/worktrees/serene-heyrovsky-dcc42b"
+  },
+  "test-agent": {
+    "agent_pid": 52767,
+    "branch": "main",
+    "current_task_id": "",
+    "last_heartbeat": "2026-05-08T09:20:06Z",
+    "worktree_path": "/Users/futoshi/Desktop/dev-system/.claude/worktrees/serene-heyrovsky-dcc42b"
+  }
+}
