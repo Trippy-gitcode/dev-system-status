@@ -9,7 +9,7 @@
   "agents": [
     {
       "agent": "claude",
-      "agent_pid": 96998,
+      "agent_pid": 37218,
       "branch": "main",
       "capability": {
         "function_refs": [
@@ -43,7 +43,7 @@
       },
       "capability_present": true,
       "current_task_id": "",
-      "last_heartbeat": "2026-05-08T17:03:53Z",
+      "last_heartbeat": "2026-05-08T17:05:21Z",
       "worktree_path": "/Users/futoshi/Desktop/dev-system/.claude/worktrees/serene-heyrovsky-dcc42b"
     },
     {
@@ -119,7 +119,7 @@
       "worktree_path": "/Users/futoshi/Desktop/dev-system/.claude/worktrees/serene-heyrovsky-dcc42b"
     }
   ],
-  "generated_at": "2026-05-08T17:06:13Z",
+  "generated_at": "2026-05-08T17:17:47Z",
   "schema_version": "1.0",
   "source": "docs/status/agent_heartbeats.json",
   "spec_refs": [

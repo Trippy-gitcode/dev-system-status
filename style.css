@@ -585,3 +585,33 @@ body {
   .app-view-card { background: #1a202c; border-color: #2d3748; }
   .app-view-name { color: #f7fafc; }
 }
+
+/* T128 拡張 / TASK-DAIS-PWA-ONE-SITE-ASSIGN row click 拡張
+ * 進捗 タブ の clickable task row (= シングルボード UX)。 cursor pointer + tap hint。
+ */
+.task-clickable {
+  cursor: pointer;
+  position: relative;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.task-clickable:hover,
+.task-clickable:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+.task-clickable:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.task-clickable:active {
+  background: rgba(47, 129, 247, 0.08);
+}
+.task-clickable::after {
+  content: '›';
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  color: var(--fg-muted);
+  font-size: 1.2rem;
+  font-weight: 700;
+}

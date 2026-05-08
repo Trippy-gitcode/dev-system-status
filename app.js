@@ -83,6 +83,12 @@
     window.__dais_pwa.appUpperKey = appUpperKey;           // T115
     window.__dais_pwa.buildIssueUrl = buildIssueUrl;       // T128 (test 公開)
     window.__dais_pwa.openIssueDeeplink = openIssueDeeplink; // T128 (test 公開)
+    // T128 拡張 / TASK-DAIS-PWA-ONE-SITE-ASSIGN row click 拡張
+    // 進捗ボード row click → modal 起動 の 1-site UX を test 可能化。
+    window.__dais_pwa.openTaskAssignModal = openTaskAssignModal;       // 進捗 row click handler
+    window.__dais_pwa.renderProgressBoard = renderProgressBoard;       // 進捗 board render
+    window.__dais_pwa.isTaskClickable = isTaskClickable;               // QUEUED / IN_PROGRESS / LOCAL_DONE 判定
+    window.__dais_pwa.buildProgressTaskPayload = buildProgressTaskPayload; // payload 生成 (test 公開)
   }
 
   var STATE = {
@@ -380,6 +386,127 @@
     ].join('\n');
 
     openPrefillModal('アサイン指示を生成', payload, poInboxId + '.md');
+  }
+
+  // ─── T128 拡張 / TASK-DAIS-PWA-ONE-SITE-ASSIGN 進捗 row click ───────────
+  // PO 直命 2026-05-09「進捗ボードを見てクリックしてアサインする形がいい」 反映。
+  // 進捗 タブ の task row click → 既存 openPrefillModal 起動 → 既存「GitHub Issue
+  // で送信」 button → submit → T121 intake、 1-site 完結 シングルボード UX。
+  // 既存「割り当て」 タブ独立 UI は維持 (= backward-compat、 削除しない)。
+  function isTaskClickable(task) {
+    // QUEUED / IN_PROGRESS / LOCAL_DONE のみ click 対象。
+    // DONE / COMPLETED / ARCHIVED は既終了 task で re-assign 不要 (= click 対象外)。
+    if (!task) return false;
+    var st = String(task.status || '').toUpperCase();
+    return st === 'QUEUED' || st === 'IN_PROGRESS' || st === 'LOCAL_DONE';
+  }
+
+  function buildProgressTaskPayload(task) {
+    // 進捗 row click 用の po_inbox prefill payload。
+    // 既存 owner があればそれを suggested_owner、 無ければ [Claude:IMPL] を default。
+    var now = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+    var date = now.slice(0, 10).replace(/-/g, '');
+    var topic = (task.t_id || 'task').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-progress-assign';
+    var seq = '01';
+    var poInboxId = topic + '-' + date + '-' + seq;
+    var suggested = sanitizeLine(task.owner || task.owner_ai || '[Claude:IMPL]');
+    var st = String(task.status || '').toUpperCase();
+    var payload = [
+      '---',
+      'po_inbox_id: ' + poInboxId,
+      'created_at: ' + now,
+      'po_intent: ' + sanitizeLine((task.t_id || '') + ' (status=' + st + ') を ' + suggested + ' に再アサイン / 進捗確認'),
+      'suggested_owner: ' + suggested,
+      'priority: ' + (task.priority || 'medium'),
+      'target_app: ' + (task.target_app || 'Dais'),
+      'expected_completion_level: IMPL_TESTED',
+      'status: open',
+      'claimed_by: ',
+      'mission_id: ' + (task.mission_id || ''),
+      'source: pwa-progress-row-click',
+      'task_status: ' + st,
+      '---',
+      '',
+      '# ' + (task.t_id || '') + ' progress row click assign',
+      '',
+      'PWA 進捗ボード row click で生成 (= 1-site UX、 PO 直命 2026-05-09)。',
+      '`scripts/devs_po_inbox_intake.sh --claim ' + poInboxId + ' --owner \'' + suggested + '\'`',
+      'で claim → Mission Queue 確認 / 再アサイン → 完了後 archive。',
+      '',
+      '## task 概要',
+      '',
+      'goal: ' + (task.goal || '(none)'),
+      'current owner: ' + (task.owner || '—'),
+      'current status: ' + st,
+      ''
+    ].join('\n');
+    return { poInboxId: poInboxId, payload: payload };
+  }
+
+  function openTaskAssignModal(task) {
+    // 進捗 board row click から呼ばれる。 DONE 等 click 対象外は openPrefillModal を
+    // 呼ばず即 return (= modal 起動しない)、 row click handler 側でも guard する
+    // が、 二重 guard で fail-safe。
+    if (!isTaskClickable(task)) return false;
+    var built = buildProgressTaskPayload(task);
+    openPrefillModal('進捗 row → アサイン指示を生成', built.payload, built.poInboxId + '.md');
+    return true;
+  }
+
+  function renderProgressBoard() {
+    // 進捗 タブ の task row 一覧 (= 既存 iframe 上に追加表示)。
+    // QUEUED / IN_PROGRESS / LOCAL_DONE の active task のみ表示、 click で modal 起動。
+    var list = $('#progress-board-list');
+    if (!list) return;
+    list.innerHTML = '';
+    if (STATE.errors.tProgress) {
+      list.appendChild(el('li', { class: 'empty', text: 't_progress.json を取得できないため進捗ボードを表示できません。' }));
+      return;
+    }
+    var active = (STATE.tasks || []).filter(isTaskClickable);
+    if (!active.length) {
+      list.appendChild(el('li', { class: 'empty', text: 'click 対象 (QUEUED / IN_PROGRESS / LOCAL_DONE) の task はありません。' }));
+      return;
+    }
+    // status 順 (IN_PROGRESS → QUEUED → LOCAL_DONE) + t_id 降順
+    var order = { IN_PROGRESS: 0, QUEUED: 1, LOCAL_DONE: 2 };
+    var sorted = active.slice().sort(function (a, b) {
+      var sa = order[String(a.status || '').toUpperCase()] || 9;
+      var sb = order[String(b.status || '').toUpperCase()] || 9;
+      if (sa !== sb) return sa - sb;
+      return (b.t_id || '').localeCompare(a.t_id || '');
+    });
+    sorted.forEach(function (t) {
+      var st = String(t.status || '').toUpperCase();
+      var head = el('div', { class: 'task-row-head' }, [
+        el('span', { class: 'task-id', text: (t.t_id || '') + ' / ' + (t.mission_id || '') }),
+        el('span', { class: 'task-target', text: (t.target_app || '') + ' · ' + st })
+      ]);
+      var goalText = (t.goal || '').slice(0, 200);
+      if ((t.goal || '').length > 200) goalText += '…';
+      var goal = el('div', { class: 'task-goal', text: goalText });
+      var meta = el('div', { class: 'task-meta', text:
+        'owner: ' + (t.owner || '—') + ' · status: ' + st + ' · click でアサイン'
+      });
+      // row 自体を clickable に。 keyboard accessibility 用に role="button" + tabindex=0。
+      var row = el('li', {
+        class: 'task-clickable',
+        role: 'button',
+        tabindex: '0',
+        'aria-label': (t.t_id || '') + ' をアサイン',
+        data: { taskId: t.t_id || '', missionId: t.mission_id || '', status: st }
+      }, [head, goal, meta]);
+      // click handler (進捗 row click → modal)。
+      row.addEventListener('click', function () { openTaskAssignModal(t); });
+      // keyboard (Enter / Space) でも 起動 (= a11y)。
+      row.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openTaskAssignModal(t);
+        }
+      });
+      list.appendChild(row);
+    });
   }
 
   function closeAssignModal() {
@@ -769,6 +896,7 @@
       renderRules();
       renderProgressSummary();
       renderAppView();
+      renderProgressBoard(); // T128 拡張: 進捗 row click → modal 起動
       var stamp = STATE.lastFetch.toISOString().replace(/\.\d{3}Z$/, 'Z');
       setStatus('更新: ' + stamp + ' (agents=' + STATE.agents.length + ', tasks=' + STATE.tasks.length + ', outbox=' + STATE.outbox.length + ')', 'ok');
     });

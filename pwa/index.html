@@ -75,6 +75,16 @@
     <!-- ============================================================ -->
     <section id="tab-progress" class="tab-pane" role="tabpanel" aria-labelledby="tabbtn-progress">
       <p class="section-desc">運用中の進捗ボードをそのまま表示 (= <a href="./t_progress.html" target="_blank" rel="noopener">別タブで開く</a>)。 詳細 task は ↓ ボードを直接タップ / スクロール。</p>
+
+      <!-- T128 拡張 / TASK-DAIS-PWA-ONE-SITE-ASSIGN: 進捗 row click → modal 起動 (1-site UX) -->
+      <!-- 各 row は app.js renderProgressBoard() が動的に生成し、 class="task-clickable" -->
+      <!-- + role="button" + tabindex="0" + cursor: pointer (style.css) でアサイン可能化 -->
+      <h2 class="section-title">クリックでアサイン</h2>
+      <p class="section-desc">QUEUED / IN_PROGRESS / LOCAL_DONE の task を click → 「GitHub Issue で送信」 で 1 タップ assign (= PO 直命 2026-05-09 シングルボード UX)。 DONE は click 対象外。</p>
+      <ul class="task-list progress-board-list" id="progress-board-list" aria-live="polite" data-row-role="button" data-row-class="task-clickable" style="cursor: pointer;">
+        <li class="empty">読み込み中…</li>
+      </ul>
+
       <!-- T125 dual-mode: iframe src は app.js setupProgressLinks() が動的設定 (root / pwa/ / local 各 case) -->
       <iframe id="progress-iframe" title="dev-system 進捗ボード" loading="lazy" referrerpolicy="no-referrer"></iframe>
 
