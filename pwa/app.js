@@ -81,6 +81,8 @@
     window.__dais_pwa.aggregateAppView = aggregateAppView; // T115
     window.__dais_pwa.renderAppView = renderAppView;       // T115
     window.__dais_pwa.appUpperKey = appUpperKey;           // T115
+    window.__dais_pwa.buildIssueUrl = buildIssueUrl;       // T128 (test 公開)
+    window.__dais_pwa.openIssueDeeplink = openIssueDeeplink; // T128 (test 公開)
   }
 
   var STATE = {
@@ -144,6 +146,45 @@
     $('#assign-modal').hidden = false;
     $('#assign-modal').dataset.payload = payload;
     $('#assign-modal').dataset.filename = filename || '';
+    // T128 / TASK-DAIS-PWA-ONE-SITE-ASSIGN
+    // GitHub Issue deeplink button 用に title もデータ属性に保存。
+    $('#assign-modal').dataset.title = title || '';
+  }
+
+  // ─── T128 / TASK-DAIS-PWA-ONE-SITE-ASSIGN ───────────────────────────
+  // GitHub Issue 新規作成 deeplink URL (= 1-site assign path)。
+  // PWA modal の payload を URL encode した issues/new query string で
+  // 同 Safari タブに開く。 ふとし login 済の前提で submit → T121 intake
+  // (label dais:po-task) が poll で Mission Queue に自動取込。
+  // PO 直命 2026-05-09「アクセスしたサイトからアサインできないと意味なくない？」
+  // brief v1 §1.3「タップで agent にアサインできる」 本来意図 (= 1 サイト完結)。
+  function buildIssueUrl(title, payload, label) {
+    // 既定 label = dais:po-task (= T121 GitHub Issue intake が poll する label)。
+    // 既定 URL 例: https://github.com/Trippy-gitcode/dev-system/issues/new?labels=dais:po-task&title=...&body=...
+    var lbl = label || 'dais:po-task';
+    // repo URL は 1 行で literal 化 (= grep github.com.*issues/new で機械検証可能)。
+    var base = 'https://github.com/Trippy-gitcode/dev-system/issues/new';
+    return base + '?labels=' + encodeURIComponent(lbl) +
+      '&title=' + encodeURIComponent(title || '') +
+      '&body=' + encodeURIComponent(payload || '');
+  }
+
+  function openIssueDeeplink() {
+    var modal = $('#assign-modal');
+    if (!modal) return;
+    var payload = modal.dataset.payload || '';
+    var title = modal.dataset.title || 'PWA 1-site assign';
+    var url = buildIssueUrl(title, payload, 'dais:po-task');
+    // 同 Safari タブで開く (= window.open _blank)。 PWA standalone でも
+    // iOS Safari は外部 URL を default browser で開くので同 site 性は
+    // 「Safari の中で完結」 という PO 意図に合致。
+    var w = null;
+    try { w = window.open(url, '_blank'); } catch (e) { w = null; }
+    if (!w) {
+      // popup blocked fallback (= 同タブ navigate)
+      try { window.location.href = url; } catch (e2) { /* noop */ }
+    }
+    setStatus('GitHub Issue 作成画面を起動しました。 ふとしが submit → T121 intake で取込。', 'ok');
   }
 
   // ─── タブ切替 ───────────────────────────────────────────────────────
@@ -765,6 +806,9 @@
     $('#assign-filter').addEventListener('input', renderTasks);
     $('#assign-copy-btn').addEventListener('click', copyAssignPayload);
     $('#assign-close-btn').addEventListener('click', closeAssignModal);
+    // T128: GitHub Issue で送信 (= 1-site assign deeplink)
+    var issueBtn = $('#assign-modal-submit-issue');
+    if (issueBtn) issueBtn.addEventListener('click', openIssueDeeplink);
     $('#assign-modal').addEventListener('click', function (e) {
       if (e.target === $('#assign-modal')) closeAssignModal();
     });

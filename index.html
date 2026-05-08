@@ -109,20 +109,22 @@
   </main>
 
   <!-- アサイン modal: 「タップアサイン」 → po_inbox prefill 表示 -->
+  <!-- T128 / TASK-DAIS-PWA-ONE-SITE-ASSIGN: GitHub Issue 送信 button 追加 (1-site assign) -->
   <div class="modal-backdrop" id="assign-modal" hidden>
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="assign-modal-title">
       <h3 id="assign-modal-title">アサイン指示を生成</h3>
-      <p class="modal-desc">PWA は SSoT に直接書込めません。 下記テキストをコピーして chat / GitHub Issue に貼付するか、 ADV/Codex に渡してください (= po_inbox new entry の prefill)。</p>
+      <p class="modal-desc">「GitHub Issue で送信」 で同 Safari タブから 1 タップ submit (= T121 intake が dais:po-task 自動取込)。 コピーは chat / 別経路用 fallback。</p>
       <pre id="assign-modal-payload" class="payload-pre" aria-label="po_inbox prefill payload"></pre>
       <div class="modal-actions">
-        <button id="assign-copy-btn" class="primary-btn" type="button">コピー</button>
+        <button id="assign-modal-submit-issue" class="primary-btn" type="button">GitHub Issue で送信</button>
+        <button id="assign-copy-btn" class="ghost-btn" type="button">コピー</button>
         <button id="assign-close-btn" class="ghost-btn" type="button">閉じる</button>
       </div>
     </div>
   </div>
 
   <footer class="app-footer">
-    <small>Dais Supervisor PWA · T117 / TASK-DAIS-PWA-IPHONE-AGENT-DASHBOARD · T125 URL 1 本化 · brief v1 §1.1-§1.5</small>
+    <small>Dais Supervisor PWA · T117 / TASK-DAIS-PWA-IPHONE-AGENT-DASHBOARD · T125 URL 1 本化 · T128 1-site assign · brief v1 §1.1-§1.5</small>
   </footer>
 
   <script src="./app.js" defer></script>
