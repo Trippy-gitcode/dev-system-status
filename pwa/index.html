@@ -21,6 +21,11 @@
     <div class="status-line" id="status-line">起動中…</div>
   </header>
 
+  <!-- 全 agent 状態 strip (常時表示、 PO 質問「active/offline/作業中」 に対応) -->
+  <section class="agent-strip" id="agent-strip" aria-label="Agent 状態 一覧">
+    <div class="agent-strip-loading">agent 状態 読み込み中…</div>
+  </section>
+
   <nav class="tab-nav" role="tablist" aria-label="メインタブ">
     <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="tab-assign" data-tab="assign" id="tabbtn-assign">割り当て</button>
     <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-progress" data-tab="progress" id="tabbtn-progress">進捗</button>

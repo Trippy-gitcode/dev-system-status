@@ -498,3 +498,61 @@ body {
   font-size: 14px;
 }
 .extras > summary:hover { background: var(--card-hover, #edf2f7); }
+
+/* T117 fix: 全 agent 状態 strip (常時表示、 active/idle/offline 視認性) */
+.agent-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 8px 12px;
+  background: var(--card-bg, #f7f8f9);
+  border-bottom: 1px solid var(--border, #cbd5e0);
+  -webkit-overflow-scrolling: touch;
+}
+.agent-strip-loading,
+.agent-strip-empty,
+.agent-strip-error { font-size: 13px; color: #4a5568; padding: 4px 0; }
+.agent-strip-error { color: #c53030; }
+.agent-card {
+  flex: 0 0 auto;
+  min-width: 140px;
+  max-width: 200px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border, #cbd5e0);
+  background: #ffffff;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.agent-card.st-active { border-left: 4px solid #38a169; }
+.agent-card.st-idle { border-left: 4px solid #d69e2e; }
+.agent-card.st-offline { border-left: 4px solid #a0aec0; opacity: 0.7; }
+.agent-card.st-unknown { border-left: 4px solid #718096; }
+.agent-card-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 4px;
+}
+.agent-card-name { font-weight: 600; font-size: 13px; }
+.agent-card-status {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: #edf2f7;
+  text-transform: uppercase;
+}
+.st-active .agent-card-status { background: #c6f6d5; color: #22543d; }
+.st-idle .agent-card-status { background: #faf089; color: #744210; }
+.st-offline .agent-card-status { background: #e2e8f0; color: #4a5568; }
+.agent-card-task {
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 10px;
+  color: #2d3748;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.agent-card-meta { color: #718096; font-size: 10px; margin-top: 2px; }
+@media (prefers-color-scheme: dark) {
+  .agent-card { background: #1a202c; border-color: #2d3748; }
+  .agent-card-name { color: #f7fafc; }
+}

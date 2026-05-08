@@ -111,7 +111,52 @@
   }
 
   // ─── §1.1 Active Agent Registry 描画 ────────────────────────────────
+  // agent 状態判定 (last_heartbeat の経過時間ベース)
+  function agentStatus(a) {
+    if (!a.last_heartbeat) return { label: 'unknown', cls: 'st-unknown', minAgo: null };
+    var now = Date.now();
+    var hb = Date.parse(a.last_heartbeat);
+    if (isNaN(hb)) return { label: 'unknown', cls: 'st-unknown', minAgo: null };
+    var minAgo = Math.floor((now - hb) / 60000);
+    if (minAgo < 10) return { label: 'active', cls: 'st-active', minAgo: minAgo };
+    if (minAgo < 60) return { label: 'idle', cls: 'st-idle', minAgo: minAgo };
+    return { label: 'offline', cls: 'st-offline', minAgo: minAgo };
+  }
+
+  // 全 agent 状態 strip (常時表示、 PO 質問「active/offline/作業中」 対応)
+  function renderAgentStrip() {
+    var strip = $('#agent-strip');
+    if (!strip) return;
+    strip.innerHTML = '';
+    if (STATE.errors.agentRegistry) {
+      strip.appendChild(el('div', { class: 'agent-strip-error', text: 'agent_registry.json 取得失敗' }));
+      return;
+    }
+    if (!STATE.agents.length) {
+      strip.appendChild(el('div', { class: 'agent-strip-empty', text: 'agent 情報なし' }));
+      return;
+    }
+    var sorted = STATE.agents.slice().sort(function (a, b) {
+      return (b.last_heartbeat || '').localeCompare(a.last_heartbeat || '');
+    });
+    sorted.forEach(function (a) {
+      var st = agentStatus(a);
+      var minTxt = st.minAgo === null ? '—' : (st.minAgo + 'm前');
+      var taskTxt = a.current_task_id ? a.current_task_id.replace(/^TASK-/, '') : '(idle)';
+      var card = el('div', { class: 'agent-card ' + st.cls }, [
+        el('div', { class: 'agent-card-head' }, [
+          el('span', { class: 'agent-card-name', text: a.agent || '(unknown)' }),
+          el('span', { class: 'agent-card-status', text: st.label })
+        ]),
+        el('div', { class: 'agent-card-task', text: taskTxt }),
+        el('div', { class: 'agent-card-meta', text: (a.branch || '—') + ' · ' + minTxt })
+      ]);
+      strip.appendChild(card);
+    });
+  }
+
   function renderAgents() {
+    renderAgentStrip();
     var list = $('#agent-list');
     if (!list) return;
     list.innerHTML = '';
@@ -123,13 +168,13 @@
       list.appendChild(el('li', { class: 'empty', text: 'agent 情報がありません。' }));
       return;
     }
-    // last_heartbeat 降順
     var sorted = STATE.agents.slice().sort(function (a, b) {
       return (b.last_heartbeat || '').localeCompare(a.last_heartbeat || '');
     });
     sorted.forEach(function (a) {
+      var st = agentStatus(a);
       var head = el('div', { class: 'agent-row-head' }, [
-        el('span', { class: 'agent-name', text: a.agent || '(unknown)' }),
+        el('span', { class: 'agent-name', text: (a.agent || '(unknown)') + ' [' + st.label + ']' }),
         el('span', { class: 'agent-hb', text: a.last_heartbeat || '—' })
       ]);
       var task = el('div', { class: 'agent-task', text: a.current_task_id || '(idle)' });
