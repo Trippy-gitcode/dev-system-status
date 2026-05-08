@@ -980,27 +980,97 @@
       }
     };
 
-    fetch("./t_progress.json", { cache: "no-store" })
-      .then((response) => response.json())
-      .then((data) => {
-        const generatedAt = data.generated_at || "";
-        document.getElementById("generated").textContent = generatedAt ? formatGeneratedAt(generatedAt) : "未生成";
-        const tasks = data.tasks || [];
-        currentTasks = tasks;
-        currentGeneratedAt = generatedAt;
-        loadFilterState();
-        normalizeSelectedStatuses(tasks);
-        renderQuickRows(document.getElementById("quick-rows"), tasks, generatedAt);
-        fillRows(document.getElementById("task-rows"), tasks, generatedAt);
-        renderTargetDial(tasks);
-        renderStatusControls(tasks);
-        renderProgressChart(tasks, generatedAt);
-        renderDateDial(tasks);
-        applyTaskFilters();
-      })
-      .catch(() => {
-        document.getElementById("generated").textContent = "t_progress.json load failed";
+    // T81: client side polling autorefresh (PO 指示 2026-05-07)
+    // Browser をリロードしなくても、 push + publish 完了後に最新の Mission 状態を反映する。
+    const POLLING_INTERVAL_MS = 8000; // 8 秒間隔で再 fetch (5-10 秒範囲)
+    const FETCH_TIMEOUT_MS = 8000;    // fetch 1 回あたり 8 秒で timeout
+    const MAX_RETRY = 3;              // 連続失敗 3 回まで retry、 超過時は次 interval を待つ
+    let currentDataSignature = "";    // 取得済 JSON の identity (no change なら DOM 再描画 skip)
+    let isFetchInFlight = false;      // 多重起動防止 (interval が短い場合の guard)
+    let consecutiveFailures = 0;      // retry counter (成功で 0 にリセット)
+
+    const cacheBustingUrl = () => `./t_progress.json?ts=${Date.now()}`;
+
+    const fetchProgress = () => {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+      // fetch ./t_progress.json?ts=<ms> with timeout + abort guard (cache-busting)
+      return fetch(cacheBustingUrl(), { cache: "no-store", signal: controller.signal })
+        .finally(() => clearTimeout(timer));
+    };
+
+    const dataSignature = (data) => {
+      const generated = String(data && data.generated_at ? data.generated_at : "");
+      const tasks = Array.isArray(data && data.tasks) ? data.tasks : [];
+      return `${generated}|${tasks.length}`;
+    };
+
+    const renderAll = (data) => {
+      const generatedAt = data.generated_at || "";
+      document.getElementById("generated").textContent = generatedAt ? formatGeneratedAt(generatedAt) : "未生成";
+      const tasks = data.tasks || [];
+      currentTasks = tasks;
+      currentGeneratedAt = generatedAt;
+      normalizeSelectedStatuses(tasks);
+      renderQuickRows(document.getElementById("quick-rows"), tasks, generatedAt);
+      fillRows(document.getElementById("task-rows"), tasks, generatedAt);
+      renderTargetDial(tasks);
+      renderStatusControls(tasks);
+      renderProgressChart(tasks, generatedAt);
+      renderDateDial(tasks);
+      applyTaskFilters();
+    };
+
+    const loadProgress = ({ initial = false } = {}) => {
+      if (isFetchInFlight) return Promise.resolve();
+      isFetchInFlight = true;
+      return fetchProgress()
+        .then((response) => {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return response.json();
+        })
+        .then((data) => {
+          consecutiveFailures = 0;
+          const signature = dataSignature(data);
+          if (initial) {
+            loadFilterState();
+            renderAll(data);
+            currentDataSignature = signature;
+            return;
+          }
+          if (signature === currentDataSignature) return; // 変化なしなら DOM 再描画 skip
+          currentDataSignature = signature;
+          renderAll(data);
+        })
+        .catch((error) => {
+          consecutiveFailures += 1;
+          if (initial) {
+            document.getElementById("generated").textContent = "t_progress.json load failed";
+          }
+          if (consecutiveFailures <= MAX_RETRY) {
+            const backoff = Math.min(POLLING_INTERVAL_MS, 1000 * consecutiveFailures);
+            setTimeout(() => loadProgress({ initial: false }), backoff);
+          }
+          return error;
+        })
+        .finally(() => {
+          isFetchInFlight = false;
+        });
+    };
+
+    const startPolling = () => {
+      setInterval(() => {
+        // タブが background のときは fetch を skip して帯域節約
+        if (typeof document.hidden === "boolean" && document.hidden) return;
+        loadProgress({ initial: false });
+      }, POLLING_INTERVAL_MS);
+      // タブが foreground に戻ったら即時更新
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) loadProgress({ initial: false });
       });
+    };
+
+    loadProgress({ initial: true }).then(() => startPolling());
   </script>
 </body>
 </html>
