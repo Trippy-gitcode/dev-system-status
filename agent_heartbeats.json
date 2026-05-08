@@ -1,7 +1,7 @@
 {
   "claude": {
-    "agent_pid": 12345,
-    "branch": "claude/T95/registry-heartbeat",
+    "agent_pid": 86386,
+    "branch": "main",
     "capability": {
       "function_refs": [
         "DOD_GATE",
@@ -32,8 +32,8 @@
         "PO_CONFIRMATION"
       ]
     },
-    "current_task_id": "TASK-DEVSYS-AGENT-PARALLEL-OPS-REGISTRY-HEARTBEAT",
-    "last_heartbeat": "2026-05-08T09:19:02Z",
+    "current_task_id": "",
+    "last_heartbeat": "2026-05-08T12:57:30Z",
     "worktree_path": "/Users/futoshi/Desktop/dev-system/.claude/worktrees/serene-heyrovsky-dcc42b"
   },
   "subagent": {
