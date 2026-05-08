@@ -556,3 +556,32 @@ body {
   .agent-card { background: #1a202c; border-color: #2d3748; }
   .agent-card-name { color: #f7fafc; }
 }
+
+/* T115 / TASK-DEVSYS-SUPERVISOR-DASHBOARD-LEGACY-VIEW
+ * App 単位 view (= 進捗 タブ details.extras 内、 Phase 進捗 / retrofit / violation count)。
+ */
+.app-view-list { list-style: none; padding: 0; margin: 0; }
+.app-view-card {
+  border: 1px solid var(--border, #cbd5e0);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 8px 0;
+  background: #ffffff;
+}
+.app-view-name { font-weight: 600; font-size: 14px; }
+.app-view-row {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  font-size: 11px; margin-top: 4px;
+}
+.app-view-badge {
+  padding: 2px 6px; border-radius: 10px; background: #edf2f7;
+}
+.app-view-badge.done { background: #c6f6d5; color: #22543d; }
+.app-view-badge.local_done { background: #bee3f8; color: #2a4365; }
+.app-view-badge.in_progress { background: #faf089; color: #744210; }
+.app-view-badge.queued { background: #e2e8f0; color: #4a5568; }
+.app-view-badge.blocked { background: #fed7d7; color: #742a2a; }
+@media (prefers-color-scheme: dark) {
+  .app-view-card { background: #1a202c; border-color: #2d3748; }
+  .app-view-name { color: #f7fafc; }
+}

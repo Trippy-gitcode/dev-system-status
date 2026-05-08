@@ -57,7 +57,11 @@
     agentRegistry: function () { return statusBase() + 'agent_registry.json'; },
     tProgress: function () { return statusBase() + 't_progress.json'; },
     poOutbox: function () { return statusBase() + 'po_outbox.json'; },
-    pickupRules: function () { return statusBase() + 'pickup_rules.json'; }
+    pickupRules: function () { return statusBase() + 'pickup_rules.json'; },
+    // T115 / TASK-DEVSYS-SUPERVISOR-DASHBOARD-LEGACY-VIEW
+    // App 単位 view 用。 publish 経路で配信されない場合 fetch 失敗 → 「未取得」 placeholder
+    // (brief v1 §1.1 + T110 + T112 連動、 後続 mission で集計 endpoint 配備候補)。
+    retrofitStatus: function () { return statusBase() + 'retrofit_status.json'; }
   };
 
   // legacy ENDPOINTS object: po_inbox path のみ参考用 (PWA は po_inbox を fetch しない)
@@ -66,12 +70,17 @@
   };
 
   // 公開用 (= test 利用 + dual-mode 検出 unit test 容易化)
+  // function declarations は hoist されるため、 後段で定義した
+  // aggregateAppView / renderAppView / appUpperKey も この時点で参照可能。
   if (typeof window !== 'undefined') {
     window.__dais_pwa = window.__dais_pwa || {};
     window.__dais_pwa.pwaBase = pwaBase;
     window.__dais_pwa.statusBase = statusBase;
     window.__dais_pwa.tProgressUrl = tProgressUrl;
     window.__dais_pwa.PATHS = PATHS;
+    window.__dais_pwa.aggregateAppView = aggregateAppView; // T115
+    window.__dais_pwa.renderAppView = renderAppView;       // T115
+    window.__dais_pwa.appUpperKey = appUpperKey;           // T115
   }
 
   var STATE = {
@@ -79,6 +88,7 @@
     tasks: [],
     outbox: [],
     pickupRules: null,
+    retrofitStatus: null, // T115: { apps: { <app>: { retrofitted_count, total_count, ... } } }
     lastFetch: null,
     pushSubscribed: false,
     errors: {}
@@ -456,6 +466,160 @@
     });
   }
 
+  // ─── T115 App 単位 view (Phase 進捗 / retrofit 進捗 / violation count) ─
+  // brief v1 §1.1 + T112 (Phase 1-9 Lifecycle) + T110 (App 知見 retrofit) +
+  // verify/adv_violation_log.md の集約 view。 「進捗」 タブの 折りたたみ
+  // 「追加 view」 内 (= details.extras) に App 単位の card を表示する。
+  //
+  // 集計 source:
+  //   - Phase 進捗: STATE.tasks (= t_progress.json) を target_app で group by して
+  //     mission_id が `TASK-{APP_UPPER}-PHASE[1-9]-...` パターン のもの から
+  //     status (DONE / LOCAL_DONE / IN_PROGRESS / QUEUED / BLOCKED) 件数 を 集計。
+  //     Phase pattern が無い App は 全 task の status 件数 (= 全体 進捗) を fallback 表示。
+  //   - retrofit 進捗: STATE.retrofitStatus (= retrofit_status.json projection)。
+  //     publish 経路で配信されない場合は 「未取得」 placeholder。
+  //   - violation count: STATE.tasks 親 JSON に violation_summary が在る場合 read。
+  //     無ければ 「集計未配備」 placeholder (= verify/adv_violation_log.md は
+  //     SSoT で publish 経路に projection が無いため、 後続 mission で 集計 endpoint 追加候補)。
+  function appUpperKey(app) {
+    return String(app || '').toUpperCase().replace(/[^A-Z0-9]+/g, '_');
+  }
+
+  function aggregateAppView(tasks, retrofitStatus, violationSummary) {
+    // group by target_app (= 同一 task が 「Dais / Mais」 等 複合 target を持つ場合は
+    // 分割して 各 App に カウント)。 (none) は 「未指定」 として 1 group。
+    var groups = {};
+    function ensure(app) {
+      if (!groups[app]) {
+        groups[app] = {
+          app: app,
+          phase_total: 0,
+          phase_status: { DONE: 0, LOCAL_DONE: 0, IN_PROGRESS: 0, QUEUED: 0, BLOCKED: 0 },
+          all_total: 0,
+          all_status: { DONE: 0, LOCAL_DONE: 0, IN_PROGRESS: 0, QUEUED: 0, BLOCKED: 0, OTHER: 0 }
+        };
+      }
+      return groups[app];
+    }
+
+    (tasks || []).forEach(function (t) {
+      var raw = (t.target_app || '(none)').trim() || '(none)';
+      // 複合 target (= 「A / B」) を split
+      var apps = raw.split(/\s*\/\s*/).filter(function (x) { return x; });
+      if (!apps.length) apps = ['(none)'];
+      var st = (t.status || '').toUpperCase();
+      var mid = String(t.mission_id || '');
+      apps.forEach(function (app) {
+        var g = ensure(app);
+        // all_status (= App 全 task の status 集計)
+        if (g.all_status[st] !== undefined) g.all_status[st] += 1;
+        else g.all_status.OTHER += 1;
+        g.all_total += 1;
+        // phase_status (= TASK-{APP_UPPER}-PHASE[1-9]-... のみ)
+        var upper = appUpperKey(app);
+        var phaseRe = new RegExp('^TASK-' + upper + '-PHASE([1-9])', 'i');
+        if (phaseRe.test(mid)) {
+          if (g.phase_status[st] !== undefined) g.phase_status[st] += 1;
+          g.phase_total += 1;
+        }
+      });
+    });
+
+    var apps = Object.keys(groups).sort(function (a, b) {
+      // 「(none)」 を末尾、 task 数 多い順
+      if (a === '(none)') return 1;
+      if (b === '(none)') return -1;
+      return groups[b].all_total - groups[a].all_total;
+    });
+
+    return apps.map(function (app) {
+      var g = groups[app];
+      var rs = (retrofitStatus && retrofitStatus.apps && retrofitStatus.apps[app]) || null;
+      // violation_summary: t_progress.json 親 に violation_summary.by_app[<app>] = N が在る場合
+      var vc = null;
+      if (violationSummary && violationSummary.by_app) {
+        if (typeof violationSummary.by_app[app] === 'number') {
+          vc = violationSummary.by_app[app];
+        }
+      }
+      return {
+        app: g.app,
+        phase_total: g.phase_total,
+        phase_status: g.phase_status,
+        all_total: g.all_total,
+        all_status: g.all_status,
+        retrofit: rs, // null = 未取得
+        violation_count: vc // null = 集計未配備
+      };
+    });
+  }
+
+  function renderAppView() {
+    var list = $('#app-view-list');
+    if (!list) return;
+    list.innerHTML = '';
+    if (STATE.errors.tProgress) {
+      var li = el('li', { class: 'empty', text: 't_progress.json を取得できないため App 単位 view を表示できません。' });
+      list.appendChild(li);
+      return;
+    }
+    var summary = (STATE.rawTProgress && STATE.rawTProgress.violation_summary) || null;
+    var rows = aggregateAppView(STATE.tasks, STATE.retrofitStatus, summary);
+    if (!rows.length) {
+      list.appendChild(el('li', { class: 'empty', text: 'App 情報がありません。' }));
+      return;
+    }
+    rows.forEach(function (r) {
+      var card = el('li', { class: 'app-view-card' });
+      card.appendChild(el('div', { class: 'app-view-name', text: r.app }));
+
+      // Phase 進捗 row
+      var phaseRow = el('div', { class: 'app-view-row' });
+      if (r.phase_total > 0) {
+        phaseRow.appendChild(el('span', { class: 'app-view-badge', text: 'Phase: ' + r.phase_total }));
+        ['DONE', 'LOCAL_DONE', 'IN_PROGRESS', 'QUEUED', 'BLOCKED'].forEach(function (k) {
+          if (r.phase_status[k] > 0) {
+            phaseRow.appendChild(el('span', {
+              class: 'app-view-badge ' + k.toLowerCase(),
+              text: k + ': ' + r.phase_status[k]
+            }));
+          }
+        });
+      } else {
+        // Phase pattern 無し → 全 task status を fallback
+        phaseRow.appendChild(el('span', { class: 'app-view-badge', text: 'Phase 未付番 (全 task: ' + r.all_total + ')' }));
+        ['DONE', 'LOCAL_DONE', 'IN_PROGRESS', 'QUEUED', 'BLOCKED'].forEach(function (k) {
+          if (r.all_status[k] > 0) {
+            phaseRow.appendChild(el('span', {
+              class: 'app-view-badge ' + k.toLowerCase(),
+              text: k + ': ' + r.all_status[k]
+            }));
+          }
+        });
+      }
+      card.appendChild(phaseRow);
+
+      // retrofit + violation row
+      var metaRow = el('div', { class: 'app-view-row' });
+      if (r.retrofit) {
+        var rfTotal = (typeof r.retrofit.total_count === 'number') ? r.retrofit.total_count : null;
+        var rfDone = (typeof r.retrofit.retrofitted_count === 'number') ? r.retrofit.retrofitted_count : null;
+        var rfTxt = 'retrofit: ' + (rfDone == null ? '?' : rfDone) + ' / ' + (rfTotal == null ? '?' : rfTotal);
+        metaRow.appendChild(el('span', { class: 'app-view-badge', text: rfTxt }));
+      } else {
+        metaRow.appendChild(el('span', { class: 'app-view-badge', text: 'retrofit: 未取得' }));
+      }
+      if (r.violation_count != null) {
+        metaRow.appendChild(el('span', { class: 'app-view-badge', text: 'violations: ' + r.violation_count }));
+      } else {
+        metaRow.appendChild(el('span', { class: 'app-view-badge', text: 'violations: 集計未配備' }));
+      }
+      card.appendChild(metaRow);
+
+      list.appendChild(card);
+    });
+  }
+
   // ─── 進捗 サマリー ───────────────────────────────────────────────────
   function renderProgressSummary() {
     var active = (STATE.tasks || []).filter(function (t) {
@@ -522,10 +686,22 @@
 
     jobs.push(fetchJson(PATHS.tProgress()).then(function (d) {
       STATE.tasks = (d && d.tasks) || [];
+      STATE.rawTProgress = d || null; // T115: violation_summary 等 親 field を保持
     }).catch(function (err) {
       console.warn('t_progress fetch failed:', err);
       STATE.tasks = [];
+      STATE.rawTProgress = null;
       STATE.errors.tProgress = true;
+    }));
+
+    // T115: retrofit_status.json は publish 経路で配信されない場合あり (= 後続 mission)。
+    // fetch 失敗 = 「未取得」 placeholder で表示、 violation 同様 graceful degrade。
+    jobs.push(fetchJson(PATHS.retrofitStatus()).then(function (d) {
+      STATE.retrofitStatus = d || null;
+    }).catch(function (err) {
+      console.warn('retrofit_status fetch failed (T115 placeholder OK):', err);
+      STATE.retrofitStatus = null;
+      STATE.errors.retrofitStatus = true;
     }));
 
     jobs.push(fetchJson(PATHS.poOutbox()).then(function (d) {
@@ -551,6 +727,7 @@
       renderOutbox();
       renderRules();
       renderProgressSummary();
+      renderAppView();
       var stamp = STATE.lastFetch.toISOString().replace(/\.\d{3}Z$/, 'Z');
       setStatus('更新: ' + stamp + ' (agents=' + STATE.agents.length + ', tasks=' + STATE.tasks.length + ', outbox=' + STATE.outbox.length + ')', 'ok');
     });
