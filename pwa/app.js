@@ -18,7 +18,8 @@
   var ENDPOINTS = {
     agentRegistry: '../status/agent_registry.json',
     tProgress: '../status/t_progress.json',
-    poOutboxList: '../../instructions/po_outbox/',
+    poOutbox: '../status/po_outbox.json',
+    pickupRules: '../status/pickup_rules.json',
     poInboxList: '../../instructions/po_inbox/'
   };
 
@@ -26,10 +27,17 @@
     agents: [],
     tasks: [],
     outbox: [],
+    pickupRules: null,
     lastFetch: null,
     pushSubscribed: false,
-    rules: loadRules()
+    errors: {}
   };
+
+  var RULE_DEFS = [
+    { key: 'claude-impl', target_app: 'Dais', owner_tag: '[Claude:IMPL]' },
+    { key: 'codex-spec', target_app: 'Dais', owner_tag: '[Codex:SPEC]' },
+    { key: 'subagent-impl', target_app: 'Dais', owner_tag: '[subagent:IMPL]' }
+  ];
 
   // ─── DOM helper ─────────────────────────────────────────────────────
   function $(sel) { return document.querySelector(sel); }
@@ -64,6 +72,19 @@
     line.className = 'status-line' + (level ? ' ' + level : '');
   }
 
+  function sanitizeLine(value) {
+    return String(value || '').replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  function openPrefillModal(title, payload, filename) {
+    var modalTitle = $('#assign-modal-title');
+    if (modalTitle) modalTitle.textContent = title;
+    $('#assign-modal-payload').textContent = payload;
+    $('#assign-modal').hidden = false;
+    $('#assign-modal').dataset.payload = payload;
+    $('#assign-modal').dataset.filename = filename || '';
+  }
+
   // ─── タブ切替 ───────────────────────────────────────────────────────
   function setupTabs() {
     $all('.tab-btn').forEach(function (btn) {
@@ -94,6 +115,10 @@
     var list = $('#agent-list');
     if (!list) return;
     list.innerHTML = '';
+    if (STATE.errors.agentRegistry) {
+      list.appendChild(el('li', { class: 'empty', text: 'agent_registry.json を取得できません。' }));
+      return;
+    }
     if (!STATE.agents.length) {
       list.appendChild(el('li', { class: 'empty', text: 'agent 情報がありません。' }));
       return;
@@ -124,6 +149,10 @@
     if (!list) return;
     var filterVal = ($('#assign-filter').value || '').toLowerCase();
     list.innerHTML = '';
+    if (STATE.errors.tProgress) {
+      list.appendChild(el('li', { class: 'empty', text: 't_progress.json を取得できません。' }));
+      return;
+    }
 
     // QUEUED + non-blocked (= status が QUEUED で blocked flag 無し)
     var queued = (STATE.tasks || []).filter(function (t) {
@@ -181,7 +210,7 @@
       '---',
       'po_inbox_id: ' + poInboxId,
       'created_at: ' + now,
-      'po_intent: ' + (task.t_id || '') + ' を ' + ownerTag + ' にアサイン',
+      'po_intent: ' + sanitizeLine((task.t_id || '') + ' を ' + ownerTag + ' にアサイン'),
       'suggested_owner: ' + ownerTag,
       'priority: ' + (task.priority || 'medium'),
       'target_app: ' + (task.target_app || 'Dais'),
@@ -203,10 +232,7 @@
       ''
     ].join('\n');
 
-    $('#assign-modal-payload').textContent = payload;
-    $('#assign-modal').hidden = false;
-    $('#assign-modal').dataset.payload = payload;
-    $('#assign-modal').dataset.filename = poInboxId + '.md';
+    openPrefillModal('アサイン指示を生成', payload, poInboxId + '.md');
   }
 
   function closeAssignModal() {
@@ -233,31 +259,78 @@
   }
 
   // ─── §1.4 自動 pickup ルール ────────────────────────────────────────
-  function loadRules() {
-    try {
-      var raw = localStorage.getItem('dais.pickup.rules');
-      if (raw) return JSON.parse(raw);
-    } catch (e) {}
-    return { 'claude-impl': false, 'codex-spec': false, 'subagent-impl': false };
+  function pickupRuleEnabled(def) {
+    var rules = (STATE.pickupRules && STATE.pickupRules.rules) || [];
+    function matchRule(targetApp, ownerTag) {
+      for (var i = 0; i < rules.length; i += 1) {
+        var r = rules[i] || {};
+        if (r.target_app === targetApp && r.owner_tag === ownerTag) {
+          return r;
+        }
+      }
+      return null;
+    }
+    var found = matchRule(def.target_app, def.owner_tag) ||
+      matchRule('*', def.owner_tag) ||
+      matchRule(def.target_app, '*') ||
+      matchRule('*', '*');
+    if (!found) return true;
+    return found.auto_pickup_enabled !== false;
   }
 
-  function saveRules() {
-    try { localStorage.setItem('dais.pickup.rules', JSON.stringify(STATE.rules)); } catch (e) {}
-  }
-
-  function setupRules() {
-    Object.keys(STATE.rules).forEach(function (key) {
-      var box = document.querySelector('input[data-rule="' + key + '"]');
+  function renderRules() {
+    RULE_DEFS.forEach(function (def) {
+      var box = document.querySelector('input[data-rule="' + def.key + '"]');
       if (!box) return;
-      box.checked = !!STATE.rules[key];
-      box.addEventListener('change', function () {
-        STATE.rules[key] = box.checked;
-        saveRules();
-      });
+      box.checked = pickupRuleEnabled(def);
+      box.disabled = !!STATE.errors.pickupRules;
     });
   }
 
-  // ─── §1.5 緊急通知 (Web Push subscribe placeholder) ─────────────────
+  function openRuleChangeModal(def, enabled) {
+    var now = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+    var date = now.slice(0, 10).replace(/-/g, '');
+    var poInboxId = 'pickup-rule-' + def.key + '-' + date + '-01';
+    var payload = [
+      '---',
+      'po_inbox_id: ' + poInboxId,
+      'created_at: ' + now,
+      'po_intent: pickup rule ' + def.target_app + ' / ' + def.owner_tag + ' を ' + (enabled ? 'enabled' : 'disabled') + ' に変更',
+      'suggested_owner: [Codex:SPEC]',
+      'priority: medium',
+      'target_app: Dais',
+      'expected_completion_level: SPEC_ONLY',
+      'status: open',
+      'claimed_by: ',
+      'mission_id: ',
+      'source: pwa-pickup-rule',
+      '---',
+      '',
+      '# pickup rule change request',
+      '',
+      'PWA pickup toggle で生成。 `docs/status/pickup_rules.json` の rule を更新してください。',
+      '',
+      'target_app: ' + def.target_app,
+      'owner_tag: ' + def.owner_tag,
+      'auto_pickup_enabled: ' + (enabled ? 'true' : 'false'),
+      ''
+    ].join('\n');
+    openPrefillModal('pickup rule 変更指示を生成', payload, poInboxId + '.md');
+  }
+
+  function setupRules() {
+    RULE_DEFS.forEach(function (def) {
+      var box = document.querySelector('input[data-rule="' + def.key + '"]');
+      if (!box) return;
+      box.addEventListener('change', function () {
+        openRuleChangeModal(def, box.checked);
+        renderRules();
+      });
+    });
+    renderRules();
+  }
+
+  // ─── §1.5 緊急通知 (Web Push subscribe + po_outbox fallback) ────────
   function setupPushToggle() {
     var btn = $('#push-toggle');
     var hint = $('#push-hint');
@@ -304,14 +377,18 @@
     var g = $('#kpi-agents'); if (g) g.textContent = String(agents);
   }
 
-  // ─── po_outbox 描画 (placeholder + 静的 fetch try) ──────────────────
+  // ─── po_outbox 描画 (docs/status/po_outbox.json projection) ────────
   function renderOutbox() {
     var list = $('#outbox-list');
     if (!list) return;
     list.innerHTML = '';
+    if (STATE.errors.poOutbox) {
+      list.appendChild(el('li', { class: 'empty', text: 'po_outbox.json を取得できません。' }));
+      return;
+    }
     if (!STATE.outbox.length) {
       list.appendChild(el('li', { class: 'empty', text:
-        'po_outbox の未対応通知はありません。 (= directory listing は server 設定に依存、 後続 mission で SSoT 化予定)'
+        'po_outbox の未対応通知はありません。'
       }));
       return;
     }
@@ -324,7 +401,7 @@
         el('span', { class: 'urgency-badge urgency-' + (o.urgency || 'info'), text: (o.urgency || 'info').toUpperCase() }),
         el('span', { class: 'agent-hb', text: o.created_at || '' })
       ]);
-      var subj = el('div', { class: 'outbox-mid', text: o.subject || o.po_outbox_id || '' });
+      var subj = el('div', { class: 'outbox-mid', text: o.subject || o.po_action_summary || o.po_outbox_id || '' });
       var meta = el('div', { class: 'outbox-meta', text:
         'mission: ' + (o.mission_id || '—') + ' · status: ' + (o.status || '—') +
         (o.po_action_required ? ' · PO action 要' : '')
@@ -337,12 +414,14 @@
   function refresh() {
     setStatus('読み込み中…');
     var jobs = [];
+    STATE.errors = {};
 
     jobs.push(fetchJson(ENDPOINTS.agentRegistry).then(function (d) {
       STATE.agents = (d && d.agents) || [];
     }).catch(function (err) {
       console.warn('agent_registry fetch failed:', err);
       STATE.agents = [];
+      STATE.errors.agentRegistry = true;
     }));
 
     jobs.push(fetchJson(ENDPOINTS.tProgress).then(function (d) {
@@ -350,6 +429,23 @@
     }).catch(function (err) {
       console.warn('t_progress fetch failed:', err);
       STATE.tasks = [];
+      STATE.errors.tProgress = true;
+    }));
+
+    jobs.push(fetchJson(ENDPOINTS.poOutbox).then(function (d) {
+      STATE.outbox = (d && d.items) || [];
+    }).catch(function (err) {
+      console.warn('po_outbox fetch failed:', err);
+      STATE.outbox = [];
+      STATE.errors.poOutbox = true;
+    }));
+
+    jobs.push(fetchJson(ENDPOINTS.pickupRules).then(function (d) {
+      STATE.pickupRules = d || null;
+    }).catch(function (err) {
+      console.warn('pickup_rules fetch failed:', err);
+      STATE.pickupRules = null;
+      STATE.errors.pickupRules = true;
     }));
 
     return Promise.all(jobs).then(function () {
@@ -357,9 +453,10 @@
       renderAgents();
       renderTasks();
       renderOutbox();
+      renderRules();
       renderProgressSummary();
       var stamp = STATE.lastFetch.toISOString().replace(/\.\d{3}Z$/, 'Z');
-      setStatus('更新: ' + stamp + ' (agents=' + STATE.agents.length + ', tasks=' + STATE.tasks.length + ')', 'ok');
+      setStatus('更新: ' + stamp + ' (agents=' + STATE.agents.length + ', tasks=' + STATE.tasks.length + ', outbox=' + STATE.outbox.length + ')', 'ok');
     });
   }
 

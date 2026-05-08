@@ -11,7 +11,7 @@
  *     VAPID key 配備後に有効化される。
  */
 
-var CACHE_VERSION = 'dais-pwa-v1-2026-05-08';
+var CACHE_VERSION = 'dais-pwa-v2-2026-05-08';
 var STATIC_CACHE = CACHE_VERSION + '-static';
 var DATA_CACHE = CACHE_VERSION + '-data';
 

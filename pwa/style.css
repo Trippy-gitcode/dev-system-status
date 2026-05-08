@@ -477,3 +477,24 @@ body {
     margin: 0 auto;
   }
 }
+
+/* T117 iframe view (= 運用中の進捗ボードを「進捗」 タブで そのまま表示) */
+#progress-iframe {
+  width: 100%;
+  height: calc(100vh - 220px);
+  min-height: 480px;
+  border: 1px solid var(--border, #cbd5e0);
+  border-radius: 6px;
+  background: #ffffff;
+  margin: 8px 0 12px;
+}
+.extras { margin-top: 16px; }
+.extras > summary {
+  cursor: pointer;
+  padding: 8px 12px;
+  background: var(--card-bg, #f7f8f9);
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+}
+.extras > summary:hover { background: var(--card-hover, #edf2f7); }

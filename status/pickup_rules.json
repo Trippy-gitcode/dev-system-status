@@ -24,5 +24,5 @@
       "rationale": "PO 直接判断必須。 agent 自動 pickup 禁止 (CLAUDE.md §1.1.2 + brief v1 §1.5)。"
     }
   ],
-  "writer_note": "PWA editor (T117) writes this file via PO yes/no toggle UI. This script is reader-only."
+  "writer_note": "PWA editor (T117) reads this file and generates po_inbox prefill requests for changes. Direct SSoT write remains ADV/Codex-side only."
 }
