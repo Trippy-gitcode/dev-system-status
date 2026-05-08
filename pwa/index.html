@@ -74,8 +74,9 @@
     <!-- タブ 2: 進捗 -->
     <!-- ============================================================ -->
     <section id="tab-progress" class="tab-pane" role="tabpanel" aria-labelledby="tabbtn-progress">
-      <p class="section-desc">運用中の進捗ボードをそのまま表示 (= <a href="../t_progress.html" target="_blank" rel="noopener">別タブで開く</a>)。 詳細 task は ↓ ボードを直接タップ / スクロール。</p>
-      <iframe id="progress-iframe" src="../t_progress.html" title="dev-system 進捗ボード" loading="lazy" referrerpolicy="no-referrer"></iframe>
+      <p class="section-desc">運用中の進捗ボードをそのまま表示 (= <a href="./t_progress.html" target="_blank" rel="noopener">別タブで開く</a>)。 詳細 task は ↓ ボードを直接タップ / スクロール。</p>
+      <!-- T125 dual-mode: iframe src は app.js setupProgressLinks() が動的設定 (root / pwa/ / local 各 case) -->
+      <iframe id="progress-iframe" title="dev-system 進捗ボード" loading="lazy" referrerpolicy="no-referrer"></iframe>
 
       <details class="extras">
         <summary>追加 view (Active Agents / PO 通知 / KPI)</summary>
@@ -115,7 +116,7 @@
   </div>
 
   <footer class="app-footer">
-    <small>Dais Supervisor PWA · T117 / TASK-DAIS-PWA-IPHONE-AGENT-DASHBOARD · brief v1 §1.1-§1.5</small>
+    <small>Dais Supervisor PWA · T117 / TASK-DAIS-PWA-IPHONE-AGENT-DASHBOARD · T125 URL 1 本化 · brief v1 §1.1-§1.5</small>
   </footer>
 
   <script src="./app.js" defer></script>
