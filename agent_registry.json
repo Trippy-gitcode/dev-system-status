@@ -1,0 +1,130 @@
+{
+  "active_agents": [
+    "claude",
+    "subagent",
+    "unknown",
+    "test-agent"
+  ],
+  "agent_count": 4,
+  "agents": [
+    {
+      "agent": "claude",
+      "agent_pid": 12345,
+      "branch": "claude/T95/registry-heartbeat",
+      "capability": {
+        "function_refs": [
+          "DOD_GATE",
+          "UNIT_TEST",
+          "E2E_TEST",
+          "REALWORLD_TEST",
+          "AGENT_HEARTBEAT_UPDATE",
+          "WRITE_LANE_MERGER",
+          "STALE_BRANCH_REAPER",
+          "MISSION_QUEUE_LOCK"
+        ],
+        "owner_tags": [
+          "[Claude:OPS]",
+          "[Claude:IMPL]"
+        ],
+        "review_personas": [
+          "OPS_REVIEWER",
+          "SPEC_REVIEWER",
+          "HANDOFF_REVIEWER",
+          "UI_REVIEWER",
+          "PO_DECISION"
+        ],
+        "test_methods": [
+          "UNIT",
+          "E2E",
+          "REALWORLD",
+          "STATIC_DOC",
+          "PO_CONFIRMATION"
+        ]
+      },
+      "capability_present": true,
+      "current_task_id": "TASK-DEVSYS-AGENT-PARALLEL-OPS-REGISTRY-HEARTBEAT",
+      "last_heartbeat": "2026-05-08T09:19:02Z",
+      "worktree_path": "/Users/futoshi/Desktop/dev-system/.claude/worktrees/serene-heyrovsky-dcc42b"
+    },
+    {
+      "agent": "subagent",
+      "agent_pid": 99118,
+      "branch": "codex/mais-studio-status",
+      "capability": {
+        "function_refs": [
+          "DOD_GATE",
+          "UNIT_TEST",
+          "E2E_TEST",
+          "REALWORLD_TEST",
+          "AGENT_HEARTBEAT_UPDATE",
+          "WRITE_LANE_MERGER",
+          "STALE_BRANCH_REAPER"
+        ],
+        "owner_tags": [
+          "[subagent:IMPL]",
+          "[subagent:SPEC]",
+          "[subagent:REVIEW]",
+          "[subagent:OPS]"
+        ],
+        "review_personas": [
+          "OPS_REVIEWER",
+          "SPEC_REVIEWER",
+          "HANDOFF_REVIEWER",
+          "UI_REVIEWER"
+        ],
+        "test_methods": [
+          "UNIT",
+          "E2E",
+          "REALWORLD",
+          "STATIC_DOC"
+        ]
+      },
+      "capability_present": true,
+      "current_task_id": "TASK-DAIS-ACTIVE-AGENT-REGISTRY",
+      "last_heartbeat": "2026-05-08T12:30:27Z",
+      "worktree_path": "/Users/futoshi/Desktop/dev-system"
+    },
+    {
+      "agent": "unknown",
+      "agent_pid": 47076,
+      "branch": "codex/T97/mais-knowledge-retrofit-review",
+      "capability": {
+        "function_refs": [
+          "AGENT_HEARTBEAT_UPDATE"
+        ],
+        "owner_tags": [],
+        "review_personas": [],
+        "test_methods": []
+      },
+      "capability_present": true,
+      "current_task_id": "",
+      "last_heartbeat": "2026-05-08T12:24:22Z",
+      "worktree_path": "/Users/futoshi/Desktop/dev-system"
+    },
+    {
+      "agent": "test-agent",
+      "agent_pid": 52767,
+      "branch": "main",
+      "capability": {
+        "function_refs": [
+          "AGENT_HEARTBEAT_UPDATE"
+        ],
+        "owner_tags": [],
+        "review_personas": [],
+        "test_methods": []
+      },
+      "capability_present": true,
+      "current_task_id": "",
+      "last_heartbeat": "2026-05-08T09:20:06Z",
+      "worktree_path": "/Users/futoshi/Desktop/dev-system/.claude/worktrees/serene-heyrovsky-dcc42b"
+    }
+  ],
+  "generated_at": "2026-05-08T12:33:02Z",
+  "schema_version": "1.0",
+  "source": "docs/status/agent_heartbeats.json",
+  "spec_refs": [
+    "core_spec.md#section-22533",
+    "core_spec.md#section-2264",
+    "instructions/dais_supervisor_model_brief.md#section-1"
+  ]
+}
