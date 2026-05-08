@@ -42,10 +42,10 @@
 
   function tProgressUrl() {
     var pb = pwaBase();
-    if (/\/pwa\/$/.test(pb)) {
-      return pb.replace(/pwa\/$/, 't_progress.html');
-    }
     if (/\/docs\/pwa\/$/.test(pb)) {
+      return pb.replace(/pwa\/$/, 'status/t_progress.html');
+    }
+    if (/\/pwa\/$/.test(pb)) {
       return pb.replace(/pwa\/$/, 't_progress.html');
     }
     return pb + 't_progress.html';
