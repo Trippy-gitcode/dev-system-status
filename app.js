@@ -647,7 +647,7 @@
   //
   // 集計 source:
   //   - Phase 進捗: STATE.tasks (= t_progress.json) を target_app で group by して
-  //     mission_id が `TASK-{APP_UPPER}-PHASE[1-9]-...` パターン のもの から
+  //     mission_id が `TASK-{APP_UPPER}[-V0]-PHASE<N>-...` パターン のもの から
   //     status (DONE / LOCAL_DONE / IN_PROGRESS / QUEUED / BLOCKED) 件数 を 集計。
   //     Phase pattern が無い App は 全 task の status 件数 (= 全体 進捗) を fallback 表示。
   //   - retrofit 進捗: STATE.retrofitStatus (= retrofit_status.json projection)。
@@ -692,7 +692,7 @@
         if (g.all_status[st] !== undefined) g.all_status[st] += 1;
         else g.all_status.OTHER += 1;
         g.all_total += 1;
-        // phase_status (= TASK-{APP_UPPER}-PHASE[1-9]-... のみ)
+        // phase_status (= TASK-{APP_UPPER}[-V0]-PHASE<N>-... のみ)
         var upper = appUpperKey(app);
         var phaseRe = new RegExp('^TASK-' + upper + '(?:-[A-Z0-9]+)?-PHASE([0-9]+)(?:-|$)', 'i');
         if (phaseRe.test(mid)) {
