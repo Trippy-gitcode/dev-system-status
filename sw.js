@@ -1,6 +1,7 @@
 /* Dais Supervisor PWA — service worker.
  * T117 / TASK-DAIS-PWA-IPHONE-AGENT-DASHBOARD
  * T125 / TASK-DAIS-PWA-ROOT-URL-CONSOLIDATION
+ * DA153-OPS_P / TASK-DAIS-PHASE3-T4-EMERGENCY-NOTIFICATION (P3-T4)
  *
  * 戦略:
  *   - static shell (PWA HTML / CSS / JS / icons / manifest) = cache-first
@@ -9,12 +10,19 @@
  *   - precache list は 相対 path (./) のみ使用、 root + /pwa/ 双方の scope で 自動成立
  *     (T125 URL 1 本化、 root URL アクセス で PWA がそのまま表示)
  *
- * push 通知 (T122) との連携:
- *   - 'push' / 'notificationclick' handler は placeholder。 Apple Developer 加入 +
- *     VAPID key 配備後に有効化される。
+ * push 通知 (T122 / P3-T4) との連携:
+ *   - 'push' handler: Web Push API の event.data から
+ *     { title, body, deeplink, id, ts } を読み notification を表示する
+ *     (scripts/devs_emergency_notify.sh が emit する payload schema)。
+ *   - 'notificationclick' handler: 通知 tap で deeplink を新規 / 既存 client window に
+ *     focus / openWindow する。
+ *   - Apple Developer 加入 + VAPID key 配備後に Web Push 配信が有効化される。
+ *     gateway 経由で direct push できない環境では 'message' event 経由で
+ *     PWA が emergency_notify_queue.json を読み込み手動で showNotification する
+ *     fallback 経路 (= P3-T4 デモ経路) が利用される。
  */
 
-var CACHE_VERSION = 'dais-pwa-v4-2026-05-09-t144';
+var CACHE_VERSION = 'dais-pwa-v5-2026-05-10-da153';
 var STATIC_CACHE = CACHE_VERSION + '-static';
 var DATA_CACHE = CACHE_VERSION + '-data';
 
@@ -113,7 +121,11 @@ self.addEventListener('fetch', function (event) {
   );
 });
 
-// ─── push 通知 placeholder (T122 で有効化) ────────────────────────────
+// ─── P3-T4 emergency push 通知 (T122 + DA153-OPS_P) ─────────────────────
+// payload schema (scripts/devs_emergency_notify.sh と一致):
+//   { title: string, body: string, deeplink: string, id: string, ts: ISO }
+// urgency は emergency 固定 (= aggregator 側で gate 済)。
+// tag は 同じ id の重複表示を抑制するため id を流用する。
 self.addEventListener('push', function (event) {
   var data = {};
   try {
@@ -121,17 +133,24 @@ self.addEventListener('push', function (event) {
   } catch (e) {
     data = { title: 'Dais', body: event.data ? event.data.text() : '' };
   }
-  var title = data.title || 'Dais Supervisor';
+  var title = data.title || 'PO judgement needed';
+  var deeplink = data.deeplink || data.url || './index.html';
   var options = {
     body: data.body || '緊急 PO 判断が必要です。',
     icon: './icon-192.png',
     badge: './icon-192.png',
-    tag: data.tag || 'dais-urgent',
-    data: { url: data.url || './index.html' }
+    tag: data.id || data.tag || 'dais-urgent',
+    requireInteraction: true,
+    data: {
+      url: deeplink,
+      id: data.id || '',
+      ts: data.ts || ''
+    }
   };
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
+// notification click: deeplink (= /pwa/po-decision.html?id=<ID>) を開く。
 self.addEventListener('notificationclick', function (event) {
   event.notification.close();
   var url = (event.notification.data && event.notification.data.url) || './index.html';
@@ -145,4 +164,23 @@ self.addEventListener('notificationclick', function (event) {
       return null;
     })
   );
+});
+
+// fallback path: VAPID 配備前は PWA 側 JS が emergency_notify_queue.json を
+// fetch し、 SW へ postMessage({type:'emergency_payload', payload:{...}}) で
+// showNotification を依頼する。 同じ payload schema を期待する。
+self.addEventListener('message', function (event) {
+  var msg = (event && event.data) || {};
+  if (msg.type !== 'emergency_payload' || !msg.payload) return;
+  var p = msg.payload;
+  var title = p.title || 'PO judgement needed';
+  var options = {
+    body: p.body || '緊急 PO 判断が必要です。',
+    icon: './icon-192.png',
+    badge: './icon-192.png',
+    tag: p.id || 'dais-urgent',
+    requireInteraction: true,
+    data: { url: p.deeplink || './index.html', id: p.id || '', ts: p.ts || '' }
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
 });

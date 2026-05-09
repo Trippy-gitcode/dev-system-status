@@ -1111,3 +1111,268 @@ body {
     flex: 0 1 auto;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * P1-T4 / DA153-INF_P / TASK-DAIS-PHASE1-T4-PWS-PR-INTEGRATION
+ * GitHub PR integration view (= docs/pwa/pr-integration.html + .js).
+ *
+ * Goals:
+ *   - card grid; PR sorted by priority (CI fail first, then open by stale)
+ *   - state color: .pr-state-open / .pr-state-draft / .pr-state-ci-fail /
+ *                   .pr-state-merged / .pr-state-closed
+ *   - stale-PR warning class (.pr-stale-warning) once >7 days idle
+ *   - mobile breakpoint @ 640px → cards stack with bigger tap targets
+ * ───────────────────────────────────────────────────────────────────────── */
+
+.pr-integration-main {
+  padding: 12px 16px 32px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.pr-summary {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.pr-summary .kpi-num {
+  color: var(--accent);
+  font-size: 1.4rem;
+}
+.pr-summary .kpi-num.pr-kpi-open    { color: var(--ok); }
+.pr-summary .kpi-num.pr-kpi-draft   { color: var(--fg-muted); }
+.pr-summary .kpi-num.pr-kpi-ci-fail { color: var(--danger); }
+.pr-summary .kpi-num.pr-kpi-merged  { color: var(--accent); }
+.pr-summary .kpi-num.pr-kpi-stale   { color: var(--warn); }
+
+.pr-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.pr-chip-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pr-chip {
+  min-height: var(--tap-min);
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1;
+}
+.pr-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.pr-chip.active {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+
+.pr-search-row {
+  display: flex;
+  gap: 8px;
+}
+.pr-search-row input[type="search"] {
+  flex: 1;
+  min-height: var(--tap-min);
+  padding: 8px 12px;
+  background: var(--bg-elev);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+.pr-search-row input[type="search"]:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.pr-stale-warn {
+  background: rgba(210, 153, 34, 0.18);
+  border: 1px solid var(--warn);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  color: var(--warn);
+  font-weight: 600;
+}
+
+/* ── PR cards ─────────────────────────────────────────────────────────────── */
+
+.pr-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 10px;
+}
+
+.pr-empty {
+  padding: 18px;
+  color: var(--fg-muted);
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+
+.pr-card {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pr-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.pr-link {
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--accent);
+}
+
+.pr-link:hover { text-decoration: underline; }
+
+.pr-state-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
+  text-transform: uppercase;
+}
+
+.pr-card.pr-state-open    { border-left-color: var(--ok); }
+.pr-card.pr-state-draft   { border-left-color: var(--fg-muted); }
+.pr-card.pr-state-ci-fail { border-left-color: var(--danger); }
+.pr-card.pr-state-merged  { border-left-color: var(--accent); opacity: 0.85; }
+.pr-card.pr-state-closed  { border-left-color: var(--fg-muted); opacity: 0.6; }
+
+.pr-card.pr-state-open    .pr-state-label { color: var(--ok); border-color: var(--ok); }
+.pr-card.pr-state-draft   .pr-state-label { color: var(--fg-muted); }
+.pr-card.pr-state-ci-fail .pr-state-label { color: var(--danger); border-color: var(--danger); }
+.pr-card.pr-state-merged  .pr-state-label { color: var(--accent); border-color: var(--accent); }
+
+.pr-stale-warning {
+  border-color: var(--warn);
+  box-shadow: 0 0 0 2px rgba(210, 153, 34, 0.18);
+}
+.pr-stale-warning .pr-stale-note {
+  background: var(--warn);
+  color: #1a1308;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+}
+
+.pr-draft-badge {
+  font-size: 0.7rem;
+  background: var(--bg);
+  border: 1px solid var(--fg-muted);
+  color: var(--fg-muted);
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.ci-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
+  text-transform: uppercase;
+}
+.ci-badge.ci-badge-success { color: var(--ok); border-color: var(--ok); }
+.ci-badge.ci-badge-pending { color: var(--warn); border-color: var(--warn); }
+.ci-badge.ci-badge-failure { color: var(--danger); border-color: var(--danger); }
+.ci-badge.ci-badge-unknown { color: var(--fg-muted); }
+
+.pr-title {
+  font-weight: 600;
+  font-size: 0.98rem;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.pr-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  font-size: 0.78rem;
+  color: var(--fg-muted);
+}
+
+.pr-task-id {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1px 6px;
+  color: var(--fg);
+  font-weight: 600;
+}
+.pr-task-id-missing { color: var(--fg-muted); border-style: dashed; }
+
+.pr-mission-id {
+  text-decoration: none;
+  color: var(--accent);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+.pr-mission-id:hover { text-decoration: underline; }
+
+.pr-head-ref {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  color: var(--fg-muted);
+  word-break: break-all;
+}
+
+/* dot legend used in the page footer hint line. */
+.pr-dot-open    { background: var(--ok); }
+.pr-dot-draft   { background: var(--fg-muted); }
+.pr-dot-ci-fail { background: var(--danger); }
+.pr-dot-merged  { background: var(--accent); }
+
+/* Mobile breakpoint: stack cards in a single column with bigger tap targets. */
+@media (max-width: 640px) {
+  .pr-summary {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .pr-list {
+    grid-template-columns: 1fr;
+  }
+  .pr-chip {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+  }
+  .pr-card {
+    padding: 12px;
+  }
+}

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d1117" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Dais PR Integration" />
+  <meta name="description" content="Dais Supervisor PWA — GitHub PR integration view (P1-T4 / DA153-INF_P): live PR list grouped by status with TASK-* mapping, CI status, stale-PR warning." />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png" />
+  <link rel="stylesheet" href="./style.css" />
+  <title>Dais PR Integration</title>
+</head>
+<body>
+  <!--
+    P1-T4 / DA153-INF_P / TASK-DAIS-PHASE1-T4-PWS-PR-INTEGRATION
+    GitHub PR integration view:
+      - shows the live PR list grouped by status (Open / Draft / CI fail / Merged)
+      - resolves each PR -> TASK-* mission ID (regex over title / body / head_ref)
+      - CI status badge (SUCCESS / PENDING / FAILURE / unknown)
+      - stale PR warning class once >7 days have passed since last update
+      - mobile breakpoint @ 640px (cards stack with bigger tap targets)
+    Data source (read-only, static, refreshed by scripts/devs_pr_list_export.sh):
+      - docs/status/pr_list.json
+    Pure additive: no edits to existing PWS pages besides the index.html nav link.
+  -->
+  <header class="app-header">
+    <h1>GitHub PR Integration</h1>
+    <div class="status-line" id="pr-status">読み込み中…</div>
+    <nav class="active-sessions-nav" aria-label="dashboard navigation">
+      <a class="ghost-btn" href="./index.html">← Supervisor に戻る</a>
+      <a class="ghost-btn" href="./active-sessions.html">Active Sessions</a>
+      <a class="ghost-btn" href="./parent-child-chain.html">Parent-Child Chain</a>
+    </nav>
+  </header>
+
+  <main class="pr-integration-main">
+    <section class="pr-summary" aria-label="PR サマリー">
+      <div class="kpi"><div class="kpi-num" id="pr-kpi-total">—</div><div class="kpi-label">total</div></div>
+      <div class="kpi"><div class="kpi-num pr-kpi-open" id="pr-kpi-open">—</div><div class="kpi-label">open</div></div>
+      <div class="kpi"><div class="kpi-num pr-kpi-draft" id="pr-kpi-draft">—</div><div class="kpi-label">draft</div></div>
+      <div class="kpi"><div class="kpi-num pr-kpi-ci-fail" id="pr-kpi-ci-fail">—</div><div class="kpi-label">ci-fail</div></div>
+      <div class="kpi"><div class="kpi-num pr-kpi-merged" id="pr-kpi-merged">—</div><div class="kpi-label">merged</div></div>
+      <div class="kpi"><div class="kpi-num pr-kpi-stale" id="pr-kpi-stale">—</div><div class="kpi-label">stale</div></div>
+    </section>
+
+    <section class="pr-controls" aria-label="フィルタ">
+      <div class="pr-chip-bar" id="pr-chip-bar" role="tablist" aria-label="state filter">
+        <button type="button" class="pr-chip active" data-pr-chip="ALL" role="tab" aria-selected="true">すべて</button>
+        <button type="button" class="pr-chip" data-pr-chip="OPEN" role="tab" aria-selected="false">Open</button>
+        <button type="button" class="pr-chip" data-pr-chip="DRAFT" role="tab" aria-selected="false">Draft</button>
+        <button type="button" class="pr-chip" data-pr-chip="CI_FAIL" role="tab" aria-selected="false">CI fail</button>
+        <button type="button" class="pr-chip" data-pr-chip="MERGED" role="tab" aria-selected="false">Merged</button>
+      </div>
+      <div class="pr-search-row">
+        <input
+          type="search"
+          id="pr-filter"
+          placeholder="番号 / タイトル / TASK / branch で絞り込み…"
+          aria-label="PR filter"
+        />
+        <button id="pr-refresh" class="ghost-btn" type="button">再読込</button>
+      </div>
+    </section>
+
+    <!-- stale warning bar (hidden when stale=0) -->
+    <div
+      class="pr-stale-warn"
+      id="pr-stale-warn"
+      role="status"
+      aria-live="polite"
+      hidden
+    ></div>
+
+    <!-- Card list — populated by pr-integration.js renderPRList(). -->
+    <div class="pr-list" id="pr-list" aria-label="GitHub PR list" data-pr-card-anchor="true">
+      <div class="pr-empty">読み込み中…</div>
+    </div>
+
+    <p class="hint">
+      色分け: <span class="dot pr-dot-open" aria-hidden="true"></span> Open /
+      <span class="dot pr-dot-draft" aria-hidden="true"></span> Draft /
+      <span class="dot pr-dot-ci-fail" aria-hidden="true"></span> CI fail /
+      <span class="dot pr-dot-merged" aria-hidden="true"></span> Merged。
+      stale (&gt; 7 日 未更新) は赤い枠で警告。 各 card は GitHub PR ページへリンクし、
+      TASK-* / 番号付き task ID / branch を併記します。
+    </p>
+  </main>
+
+  <footer class="app-footer">
+    <small>
+      Dais Supervisor PWA · P1-T4 / DA153-INF_P · GitHub PR Integration ·
+      <code>docs/status/pr_list.json</code> ←
+      <code>scripts/devs_pr_list_export.sh</code>
+    </small>
+  </footer>
+
+  <script src="./pr-integration.js" defer></script>
+</body>
+</html>
