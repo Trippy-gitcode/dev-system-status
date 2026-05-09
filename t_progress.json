@@ -1,12 +1,13 @@
 {
-  "generated_at": "2026-05-09T18:38:47Z",
+  "generated_at": "2026-05-09T18:50:07Z",
   "source": "instructions/session_progress.md#Mission Queue",
   "mission_queue_file": "instructions/session_progress.md",
   "task_detail_file": "instructions/in_flight_topics.md",
   "past_log_file": "instructions/session_progress.md#Mission Queue DONE rows",
-  "active_task_count": 27,
+  "active_task_count": 28,
   "completed_task_count": 163,
   "active_task_ids": [
+    "TASK-DAIS-PHASE3-T2-PO-DECISION-AGGREGATION",
     "TASK-DAIS-PHASE1-T2-PWS-PARENT-CHILD-CHAIN",
     "TASK-DAIS-PHASE2-T1-SUPERVISOR-BASE",
     "TASK-DAIS-PHASE3-T3-PO-RESPONSE-DELIVERY",
@@ -201,6 +202,38 @@
     "TASK-CLAUDE-RESUME-T0-T7-HANDOFF"
   ],
   "tasks": [
+    {
+      "t_id": "DA150-OPS_P",
+      "mission_id": "TASK-DAIS-PHASE3-T2-PO-DECISION-AGGREGATION",
+      "status": "QUEUED",
+      "owner": "[Claude:IMPL]",
+      "owner_ai": "[Claude:IMPL]",
+      "target_app": "Dais / 全App",
+      "goal": "scripts/devs_po_decision_aggregator.sh collects agent-to-PO request records (P3-T1 record format), classifies them by category and urgency, deduplicates similar items, surfaces priority queue (PWS-renderable) and escalates long-waiting items.",
+      "goal_steps": "design priority and dedup rules -> implement aggregator (--collect / --priority-queue / --escalate / --dedup-report modes) -> integrate with Supervisor incident_log + P3-T1 record format -> tests covering each rule.",
+      "work_done": "未着手（実績なし）",
+      "work_steps": "未着手（実績なし）",
+      "test_methods": "TEST_METHOD:UNIT TEST_METHOD:STATIC_DOC",
+      "review_personas": "REVIEW_PERSONA:OPS_REVIEWER REVIEW_PERSONA:SPEC_REVIEWER",
+      "verification_evidence": "test -f docs/phase3_po_decision_aggregation.md PASS; test -x scripts/devs_po_decision_aggregator.sh PASS; test -f tests/test_p3_t2_po_decision_aggregation.sh PASS; sh tests/test_p3_t2_po_decision_aggregation.sh PASS>=6; sh scripts/devs_phase0_quality_gate.sh PASS.",
+      "updated_refs": "instructions/session_progress.md §ミッションキュー / instructions/in_flight_topics.md §TASK-DAIS-PHASE3-T2-PO-DECISION-AGGREGATION",
+      "remaining_steps": "implementation -> tests -> docs -> phase0 gate PASS -> LOCAL_DONE push.",
+      "blocked_on": "none",
+      "next_action": "scripts/devs_po_decision_aggregator.sh を実装し、 P3-T1 record fixture を読み priority queue + dedup + escalation を生成する。",
+      "created_at": "",
+      "completed_at": "",
+      "progress_percent": 0,
+      "eta": "2026-05-17",
+      "graph": {
+        "depends_on": "TASK-DAIS-PHASE3-T1-PO-MESSAGE-FORMAT, TASK-DAIS-PHASE2-T1-SUPERVISOR-BASE",
+        "parent_of": "",
+        "parallel_with": "",
+        "verdict_input_from": "",
+        "critical_input_from": "",
+        "clarification_input_from": ""
+      },
+      "parent_child_suggest": []
+    },
     {
       "t_id": "DA149-INF_P",
       "mission_id": "TASK-DAIS-PHASE1-T2-PWS-PARENT-CHILD-CHAIN",
