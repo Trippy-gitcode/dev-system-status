@@ -37,7 +37,7 @@
       <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h2 class="text-lg font-extrabold text-slate-900 dark:text-white">進捗サマリー</h2>
-          <p class="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">未完了と完了の比較</p>
+          <p class="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">日付別に完了と完了以外を比較</p>
         </div>
         <div class="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
           <span>対象</span>
@@ -46,7 +46,7 @@
       </div>
       <div id="status-counts" class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5"></div>
       <div class="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-[#f8fafc] dark:border-slate-800 dark:bg-slate-950/40">
-        <svg id="progress-chart" class="block h-72 w-full" viewBox="0 0 760 280" role="img" aria-label="未完了と完了の2本棒グラフ"></svg>
+        <svg id="progress-chart" class="block h-72 w-full" viewBox="0 0 760 280" role="img" aria-label="日付ごとの完了と完了以外の積み上げ棒グラフ"></svg>
         <p id="chart-empty" class="px-4 py-8 text-center text-sm font-semibold text-slate-500 dark:text-slate-400" hidden>表示できる推移がありません。</p>
       </div>
     </section>
@@ -570,7 +570,7 @@
       const meta = STATUS_META[key] || STATUS_META.OTHER;
       const base = compact
         ? "h-8 rounded-full border px-3 text-xs font-extrabold transition"
-        : "min-h-20 rounded-lg border px-3 py-3 text-left transition";
+        : "min-h-20 min-w-0 rounded-lg border px-3 py-3 text-left transition";
       if (active) return `${base} ${meta.active} shadow-sm`;
       return `${base} bg-white ${meta.border} ${meta.text} hover:bg-slate-50 dark:bg-slate-900/60 dark:hover:bg-slate-800`;
     };
@@ -603,6 +603,8 @@
         button.type = "button";
         button.setAttribute("aria-pressed", active ? "true" : "false");
         button.className = makeStatusButtonClass(key, active, false);
+        button.style.minWidth = "0";
+        button.style.width = "100%";
         button.innerHTML = `<span class="block text-xs font-extrabold">${meta.label}</span><strong class="mt-1 block text-3xl font-black">${counts[key] || 0}</strong>`;
         button.addEventListener("click", () => toggleStatus(key));
         countNode.appendChild(button);
@@ -699,37 +701,48 @@
       svg.hidden = false;
       empty.hidden = true;
 
-      const incompleteValue = visibleTasks.filter((task) => !isComplete(task)).length;
-      const doneValue = visibleTasks.filter(isComplete).length;
-      // progress-chart-two-bars: PO 指示 2026-05-09。棒は「未完了」「完了」の2本だけ。
-      // complete-only-split: 完了は他ステータスと積み上げず、独立した棒に分離する。
-      const buckets = [
-        {
-          key: "INCOMPLETE",
-          label: "未完了",
-          value: incompleteValue,
-          fill: "#0f766e",
-          text: "#0f766e",
-          title: "完了以外"
-        },
-        {
-          key: "DONE",
-          label: "完了",
-          value: doneValue,
-          fill: STATUS_META.DONE.stroke,
-          text: "#c2410c",
-          title: STATUS_META.DONE.label
-        }
-      ];
+      const doneKeys = selectedKeys.includes("DONE") ? ["DONE"] : [];
+      const incompleteKeys = selectedKeys.filter((key) => key !== "DONE");
+      const buildSegments = (keys, counts) => keys
+        .map((key) => ({
+          key,
+          value: counts[key] || 0,
+          meta: STATUS_META[key] || STATUS_META.OTHER
+        }))
+        .filter((segment) => segment.value > 0);
+      const days = buildStatusHistory(visibleTasks, generatedAt)
+        .map((day) => {
+          const incompleteSegments = buildSegments(incompleteKeys, day.counts);
+          const doneSegments = buildSegments(doneKeys, day.counts);
+          return {
+            ymd: day.ymd,
+            incompleteSegments,
+            doneSegments,
+            incompleteTotal: incompleteSegments.reduce((sum, segment) => sum + segment.value, 0),
+            doneTotal: doneSegments.reduce((sum, segment) => sum + segment.value, 0)
+          };
+        })
+        .filter((day) => day.incompleteTotal > 0 || day.doneTotal > 0);
+      if (!days.length) {
+        svg.hidden = true;
+        empty.hidden = false;
+        return;
+      }
+
+      // progress-chart-date-split-stacks: 各日付を「完了以外」「完了」の密着2本で表示する。
+      // same-date-bars-touch: 同じ日付の2本は x 座標を連続させ、日付間だけ余白を持たせる。
       const width = 760;
       const height = 280;
-      const margin = { top: 24, right: 28, bottom: 58, left: 54 };
+      const margin = { top: 34, right: 24, bottom: 64, left: 54 };
       const plotWidth = width - margin.left - margin.right;
       const plotHeight = height - margin.top - margin.bottom;
-      const maxY = Math.max(1, ...buckets.map((bucket) => bucket.value));
+      const maxY = Math.max(1, ...days.flatMap((day) => [day.incompleteTotal, day.doneTotal]));
       const y = (value) => margin.top + plotHeight - (plotHeight * value) / maxY;
-      const x = (index) => margin.left + plotWidth * (index === 0 ? 0.31 : 0.69);
-      const barWidth = Math.min(170, Math.max(112, plotWidth * 0.22));
+      const groupWidth = plotWidth / days.length;
+      const barWidth = Math.max(4, Math.min(22, groupWidth * 0.42));
+      const pairWidth = barWidth * 2;
+      const labelFontSize = days.length > 16 ? 8 : days.length > 10 ? 9 : 10;
+      const rotateDateLabels = days.length > 10;
 
       const gridGroup = createSvg("g", { "font-size": "11", "font-weight": "700", fill: "#64748b" });
       for (let i = 0; i <= 4; i += 1) {
@@ -744,36 +757,73 @@
       svg.appendChild(createSvg("line", { x1: margin.left, x2: width - margin.right, y1: margin.top + plotHeight, y2: margin.top + plotHeight, stroke: "#94a3b8", "stroke-width": "1.5" }));
 
       const selectedLabel = selectedKeys.map((key) => (STATUS_META[key] || STATUS_META.OTHER).label).join(" / ");
-      const labelBaseY = margin.top + plotHeight + 28;
-      for (let index = 0; index < buckets.length; index += 1) {
-        const bucket = buckets[index];
-        const cx = x(index);
-        const yTop = y(bucket.value);
-        const yBottom = y(0);
-        const rect = createSvg("rect", {
-          x: cx - barWidth / 2,
-          y: yTop,
-          width: barWidth,
-          height: Math.max(0, yBottom - yTop),
-          fill: bucket.fill,
-          rx: "6"
+      const guide = createSvg("text", { x: width - margin.right, y: 18, "text-anchor": "end", "font-size": "11", "font-weight": "800", fill: "#64748b" });
+      guide.textContent = "各日付: 左=完了以外 / 右=完了";
+      svg.appendChild(guide);
+
+      const legendKeys = [...incompleteKeys, ...doneKeys].filter((key) => days.some((day) => (
+        day.incompleteSegments.some((segment) => segment.key === key) ||
+        day.doneSegments.some((segment) => segment.key === key)
+      )));
+      let legendX = margin.left;
+      for (const key of legendKeys) {
+        const meta = STATUS_META[key] || STATUS_META.OTHER;
+        const item = createSvg("g", { transform: `translate(${legendX} 12)` });
+        item.appendChild(createSvg("rect", { x: 0, y: -7, width: 9, height: 9, rx: "2", fill: meta.stroke }));
+        const text = createSvg("text", { x: 13, y: 1, "font-size": "10", "font-weight": "800", fill: "#64748b" });
+        text.textContent = meta.label;
+        item.appendChild(text);
+        svg.appendChild(item);
+        legendX += Math.min(92, 27 + meta.label.length * 12);
+      }
+
+      const drawStack = (day, segments, total, xStart, categoryLabel, valueFill) => {
+        let running = 0;
+        for (let segmentIndex = 0; segmentIndex < segments.length; segmentIndex += 1) {
+          const segment = segments[segmentIndex];
+          const yBottom = y(running);
+          running += segment.value;
+          const yTop = y(running);
+          const rect = createSvg("rect", {
+            x: xStart,
+            y: yTop,
+            width: barWidth,
+            height: Math.max(0, yBottom - yTop),
+            fill: segment.meta.stroke,
+            rx: segmentIndex === segments.length - 1 ? "3" : "0"
+          });
+          const title = createSvg("title");
+          title.textContent = `${day.ymd} ${categoryLabel} / ${segment.meta.label}: ${segment.value}件 (選択中: ${selectedLabel})`;
+          rect.appendChild(title);
+          svg.appendChild(rect);
+        }
+        if (total > 0 && days.length <= 18) {
+          const valueLabel = createSvg("text", { x: xStart + barWidth / 2, y: Math.max(margin.top + 12, y(total) - 5), "text-anchor": "middle", "font-size": "9", "font-weight": "900", fill: valueFill });
+          valueLabel.textContent = total;
+          svg.appendChild(valueLabel);
+        }
+      };
+
+      const dateLabelY = margin.top + plotHeight + 18;
+      for (let index = 0; index < days.length; index += 1) {
+        const day = days[index];
+        const groupStart = margin.left + index * groupWidth + Math.max(0, (groupWidth - pairWidth) / 2);
+        const incompleteX = groupStart;
+        const doneX = incompleteX + barWidth;
+        drawStack(day, day.incompleteSegments, day.incompleteTotal, incompleteX, "完了以外", "#0f766e");
+        drawStack(day, day.doneSegments, day.doneTotal, doneX, "完了", "#c2410c");
+
+        const label = createSvg("text", {
+          x: incompleteX + pairWidth / 2,
+          y: dateLabelY,
+          "text-anchor": rotateDateLabels ? "end" : "middle",
+          "font-size": String(labelFontSize),
+          "font-weight": "900",
+          fill: "#334155"
         });
-        const title = createSvg("title");
-        title.textContent = `${bucket.title}: ${bucket.value}件 (選択中: ${selectedLabel})`;
-        rect.appendChild(title);
-        svg.appendChild(rect);
-
-        const valueLabel = createSvg("text", { x: cx, y: Math.max(margin.top + 13, yTop - 9), "text-anchor": "middle", "font-size": "22", "font-weight": "900", fill: bucket.text });
-        valueLabel.textContent = bucket.value;
-        svg.appendChild(valueLabel);
-
-        const label = createSvg("text", { x: cx, y: labelBaseY, "text-anchor": "middle", "font-size": "16", "font-weight": "900", fill: "#334155" });
-        label.textContent = bucket.label;
+        if (rotateDateLabels) label.setAttribute("transform", `rotate(-45 ${incompleteX + pairWidth / 2} ${dateLabelY})`);
+        label.textContent = day.ymd.slice(5).replace("-", "/");
         svg.appendChild(label);
-
-        const subLabel = createSvg("text", { x: cx, y: labelBaseY + 20, "text-anchor": "middle", "font-size": "11", "font-weight": "700", fill: "#64748b" });
-        subLabel.textContent = bucket.key === "DONE" ? "完了だけ分離" : "完了以外を合算";
-        svg.appendChild(subLabel);
       }
     };
 
