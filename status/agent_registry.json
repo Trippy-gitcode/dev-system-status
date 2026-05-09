@@ -86,7 +86,7 @@
     },
     {
       "agent": "unknown",
-      "agent_pid": 97968,
+      "agent_pid": 24481,
       "branch": "codex/T97/mais-knowledge-retrofit-review",
       "capability": {
         "function_refs": [
@@ -98,7 +98,7 @@
       },
       "capability_present": true,
       "current_task_id": "",
-      "last_heartbeat": "2026-05-09T02:12:37Z",
+      "last_heartbeat": "2026-05-09T02:19:36Z",
       "worktree_path": "/Users/futoshi/Desktop/dev-system"
     },
     {
@@ -119,7 +119,7 @@
       "worktree_path": "/Users/futoshi/Desktop/dev-system/.claude/worktrees/serene-heyrovsky-dcc42b"
     }
   ],
-  "generated_at": "2026-05-09T02:20:25Z",
+  "generated_at": "2026-05-09T02:22:48Z",
   "schema_version": "1.0",
   "source": "docs/status/agent_heartbeats.json",
   "spec_refs": [
