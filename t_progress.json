@@ -1,12 +1,13 @@
 {
-  "generated_at": "2026-05-09T19:10:02Z",
+  "generated_at": "2026-05-09T19:15:34Z",
   "source": "instructions/session_progress.md#Mission Queue",
   "mission_queue_file": "instructions/session_progress.md",
   "task_detail_file": "instructions/in_flight_topics.md",
   "past_log_file": "instructions/session_progress.md#Mission Queue DONE rows",
-  "active_task_count": 32,
+  "active_task_count": 33,
   "completed_task_count": 163,
   "active_task_ids": [
+    "TASK-DAIS-PHASE2-T4-MORNING-DIGEST-FORMAT",
     "TASK-DAIS-PHASE1-T4-PWS-PR-INTEGRATION",
     "TASK-DAIS-PHASE3-T2-PO-DECISION-AGGREGATION",
     "TASK-DAIS-PHASE2-T6-AUTO-PICKUP",
@@ -206,6 +207,38 @@
     "TASK-CLAUDE-RESUME-T0-T7-HANDOFF"
   ],
   "tasks": [
+    {
+      "t_id": "DA153-DOC_P",
+      "mission_id": "TASK-DAIS-PHASE2-T4-MORNING-DIGEST-FORMAT",
+      "status": "QUEUED",
+      "owner": "[Claude:IMPL]",
+      "owner_ai": "[Claude:IMPL]",
+      "target_app": "Dais / 全App",
+      "goal": "docs/phase2_morning_digest_format.md spec defines a stable daily_digest.md format: 1-minute scannable, fixed section order (Completed / Detected events / PO judgement waiting / Current agent state / Recommended actions), per-section length budget, priority sort within section, integration with scripts/devs_supervisor_digest.sh.",
+      "goal_steps": "define fixed section order + per-section length budget + within-section priority sort / author docs/phase2_morning_digest_format.md spec doc / update scripts/devs_supervisor_digest.sh renderer to honor the format / write tests asserting daily_digest.md matches format on synthetic Supervisor fixture.",
+      "work_done": "未着手（実績なし）",
+      "work_steps": "未着手（実績なし、 これから着手）。",
+      "test_methods": "TEST_METHOD:UNIT TEST_METHOD:STATIC_DOC",
+      "review_personas": "REVIEW_PERSONA:OPS_REVIEWER REVIEW_PERSONA:UI_REVIEWER",
+      "verification_evidence": "test -f docs/phase2_morning_digest_format.md PASS; test -f tests/test_p2_t4_morning_digest_format.sh PASS; sh tests/test_p2_t4_morning_digest_format.sh PASS>=6; sh scripts/devs_phase0_quality_gate.sh PASS.",
+      "updated_refs": "instructions/session_progress.md §ミッションキュー / instructions/in_flight_topics.md §TASK-DAIS-PHASE2-T4-MORNING-DIGEST-FORMAT",
+      "remaining_steps": "spec -> impl -> tests -> phase0 gate PASS -> LOCAL_DONE push.",
+      "blocked_on": "none",
+      "next_action": "docs/phase2_morning_digest_format.md spec を書き、 scripts/devs_supervisor_digest.sh を fixed format に更新し、 tests で synthetic fixture を検証する。",
+      "created_at": "",
+      "completed_at": "",
+      "progress_percent": 0,
+      "eta": "2026-05-17",
+      "graph": {
+        "depends_on": "TASK-DAIS-PHASE2-T1-SUPERVISOR-BASE",
+        "parent_of": "",
+        "parallel_with": "",
+        "verdict_input_from": "",
+        "critical_input_from": "",
+        "clarification_input_from": ""
+      },
+      "parent_child_suggest": []
+    },
     {
       "t_id": "DA153-INF_P",
       "mission_id": "TASK-DAIS-PHASE1-T4-PWS-PR-INTEGRATION",
