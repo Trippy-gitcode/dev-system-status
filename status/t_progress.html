@@ -90,7 +90,7 @@
               <th class="whitespace-nowrap px-4 py-3">対象</th>
               <th class="whitespace-nowrap px-4 py-3">ステータス</th>
               <th class="whitespace-nowrap px-4 py-3">担当AI</th>
-              <th class="min-w-80 px-4 py-3" aria-hidden="true"></th>
+              <th class="min-w-80 px-4 py-3">実現したいこと</th>
               <th class="whitespace-nowrap px-4 py-3">完了率</th>
               <th class="whitespace-nowrap px-4 py-3">完了見込み</th>
             </tr>
@@ -121,7 +121,7 @@
         <div><span class="text-xs font-extrabold text-slate-500 dark:text-slate-400">種類</span><p class="detail-kind font-semibold text-slate-900 dark:text-slate-100">-</p></div>
         <div><span class="text-xs font-extrabold text-slate-500 dark:text-slate-400">状態</span><p class="detail-status font-semibold text-slate-900 dark:text-slate-100">-</p></div>
         <div><span class="text-xs font-extrabold text-slate-500 dark:text-slate-400">担当 AI</span><p class="detail-agent font-semibold text-slate-900 dark:text-slate-100">-</p></div>
-        <div class="sm:col-span-2"><p class="detail-intent font-semibold text-slate-800 dark:text-slate-100">-</p></div>
+        <div class="sm:col-span-2"><span class="text-xs font-extrabold text-slate-500 dark:text-slate-400">実現したいこと</span><p class="detail-intent font-semibold text-slate-800 dark:text-slate-100">-</p></div>
         <div class="sm:col-span-2 detail-deps-box" hidden>
           <span class="text-xs font-extrabold text-slate-500 dark:text-slate-400">依存</span>
           <p class="detail-deps font-semibold text-slate-800 dark:text-slate-100">-</p>
@@ -457,38 +457,6 @@
       text = text.replace(/\s+/g, " ").trim();
       return text;
     };
-
-    // T152 readability gate: 進捗表に出す目的文を 100 文字以下・専門表記なしに保つ。
-    // PO 直命 2026-05-09: 「ヘッダーから "実現したいこと" 削除、 内容は 100 文字以下、
-    //  Gate 形式・md ファイル名・script・path・test・log 表記禁止、 違反時は安全な短文 fallback」。
-    const INTENT_SUMMARY_FALLBACK = "目的の表示に課題があります（要確認）";
-    const INTENT_SUMMARY_MAX_LEN = 100;
-    const INTENT_SUMMARY_BANNED_PATTERNS = [
-      /Gate\s+[A-Za-z0-9-]+/,
-      /\b[A-Za-z0-9_.-]+\.md\b/i,
-      /\b[A-Za-z0-9_.-]+\.(?:sh|js|jsonl?|html|css|py|ts|tsx)\b/i,
-      /\bscripts?\//i,
-      /\btests?\//i,
-      /\b(?:smoke|regression|verify|jsonl?|hook)\b/i,
-      /\blog\b(?!イ|ア|in)/i
-    ];
-    const intentSummaryReadability = (text) => {
-      const original = String(text == null ? "" : text);
-      if (!original.trim()) {
-        return { ok: false, summary: INTENT_SUMMARY_FALLBACK, reason: "empty" };
-      }
-      for (const re of INTENT_SUMMARY_BANNED_PATTERNS) {
-        if (re.test(original)) {
-          return { ok: false, summary: INTENT_SUMMARY_FALLBACK, reason: "banned-pattern" };
-        }
-      }
-      const len = Array.from(original).length;
-      if (len > INTENT_SUMMARY_MAX_LEN) {
-        return { ok: false, summary: INTENT_SUMMARY_FALLBACK, reason: "over-100-chars" };
-      }
-      return { ok: true, summary: original, reason: "" };
-    };
-    const safeIntentSummary = (text) => intentSummaryReadability(text).summary;
 
     const isComplete = (task) => {
       const status = String(task.status || "").toUpperCase();
@@ -1100,14 +1068,17 @@
         longPressHook(tr2);
 
         const tdIntent = document.createElement("td");
-        tdIntent.colSpan = 6; // 対象 / ステータス / 担当AI / (旧 実現したいこと、 T152 でラベル削除) / 完了率 / 完了見込み = 6 col
+        tdIntent.colSpan = 6; // 対象 / ステータス / 担当AI / 実現したいこと / 完了率 / 完了見込み = 6 col
         tdIntent.className = "px-4 pb-3 pt-0 leading-6 text-slate-800 dark:text-slate-100 task-row-intent-cell";
         const intentInner = document.createElement("div");
         intentInner.className = "flex flex-col gap-1";
-        // T152 PO 直命 2026-05-09: header から「実現したいこと」削除 + 目的文を非エンジニア向け 100 字以下 + 禁止語 fallback で表示
+        const intentLabel = document.createElement("span");
+        intentLabel.className = "text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500";
+        intentLabel.textContent = "実現したいこと";
         const intentText = document.createElement("span");
         intentText.className = "text-[14px] font-semibold text-slate-800 dark:text-slate-100";
-        intentText.textContent = safeIntentSummary(quickSummary(task)) || "未記録";
+        intentText.textContent = quickSummary(task) || "未記録";
+        intentInner.appendChild(intentLabel);
         intentInner.appendChild(intentText);
         tdIntent.appendChild(intentInner);
         tr2.appendChild(tdIntent);
@@ -1428,7 +1399,7 @@
       card.querySelector(".detail-kind").textContent = kind;
       card.querySelector(".detail-status").textContent = statusV2Label(task);
       card.querySelector(".detail-agent").textContent = quickActorLabel(task) || "-";
-      card.querySelector(".detail-intent").textContent = safeIntentSummary(quickSummary(task)) || "-";
+      card.querySelector(".detail-intent").textContent = quickSummary(task) || "-";
       // 依存 (depends_on)
       const depsBox = card.querySelector(".detail-deps-box");
       const depsP = card.querySelector(".detail-deps");
