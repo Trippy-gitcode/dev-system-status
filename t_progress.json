@@ -1,12 +1,13 @@
 {
-  "generated_at": "2026-05-09T17:33:49Z",
+  "generated_at": "2026-05-09T18:06:47Z",
   "source": "instructions/session_progress.md#Mission Queue",
   "mission_queue_file": "instructions/session_progress.md",
   "task_detail_file": "instructions/in_flight_topics.md",
   "past_log_file": "instructions/session_progress.md#Mission Queue DONE rows",
-  "active_task_count": 22,
+  "active_task_count": 23,
   "completed_task_count": 163,
   "active_task_ids": [
+    "TASK-DAIS-PHASE0-TASK-ID-ALLOCATOR-RACE-FIX",
     "TASK-DAIS-PHASE3-T1-PO-MESSAGE-FORMAT",
     "TASK-DAIS-PHASE2-T5-CAPABILITY-MATRIX",
     "TASK-DAIS-PHASE1-T5-TASK-CLAIM-LOCK",
@@ -196,6 +197,38 @@
     "TASK-CLAUDE-RESUME-T0-T7-HANDOFF"
   ],
   "tasks": [
+    {
+      "t_id": "DA145-FIX_P",
+      "mission_id": "TASK-DAIS-PHASE0-TASK-ID-ALLOCATOR-RACE-FIX",
+      "status": "LOCAL_DONE",
+      "owner": "[Claude:IMPL]",
+      "owner_ai": "[Claude:IMPL]",
+      "target_app": "Dais / 全App",
+      "goal": "scripts/devs_task_id_allocate.sh uses python3 fcntl.flock for the entire counter critical section so allocation, counter persistence, and the JSONL audit append happen as one kernel-atomic unit; mkdir-based stale-takeover race eliminated; FD close auto-releases on crash so no stale lock survives.",
+      "goal_steps": "replace mkdir-lock with python3 fcntl.flock -> migrate the counter read / increment / write / log append into the locked critical section -> drop bash-level lock_age / lock_is_stale / reap_stale_lock / write_lock_meta -> add tests/test_phase0_task_id_allocator_race.sh covering 12-way contention, mixed-app contention, alive-held block, killed-holder auto-release -> run 50x stress + CPU-loaded 20x stress.",
+      "work_done": "claimed_by=[Claude:IMPL]; P0-T2 task_id_allocate.sh stale-reap race replaced with python3 fcntl.flock atomic critical section. 50/50 12-way contention PASS, 30/30 task_numbering PASS, 20/20 16-way under CPU load PASS.",
+      "work_steps": "scripts/devs_task_id_allocate.sh full rewrite + tests/test_phase0_task_id_allocator_race.sh + docs/phase0_task_id_allocator_race_fix.md.",
+      "test_methods": "TEST_METHOD:UNIT TEST_METHOD:STATIC_DOC",
+      "review_personas": "REVIEW_PERSONA:OPS_REVIEWER REVIEW_PERSONA:SPEC_REVIEWER",
+      "verification_evidence": "tests/test_phase0_task_id_allocator_race.sh PASS=16 single-run; 50/50 12-way contention rounds PASS; 30/30 tests/test_phase0_task_numbering.sh PASS; 20/20 16-way under CPU load (3 yes>/dev/null background) PASS; sh scripts/devs_phase0_quality_gate.sh PASS.",
+      "updated_refs": "instructions/session_progress.md §ミッションキュー / instructions/in_flight_topics.md §TASK-DAIS-PHASE0-TASK-ID-ALLOCATOR-RACE-FIX",
+      "remaining_steps": "Codex review / squash merge to main / main public status sync / official DONE promotion via Phase 0 helper.",
+      "blocked_on": "none",
+      "next_action": "Codex review of scripts/devs_task_id_allocate.sh + tests; then main merge via Phase 0 squash auto-merge; then promote to DONE via scripts/devs_mission_queue_official_done.sh.",
+      "created_at": "",
+      "completed_at": "2026-05-10",
+      "progress_percent": 90,
+      "eta": "2026-05-10",
+      "graph": {
+        "depends_on": "[]",
+        "parent_of": "",
+        "parallel_with": "",
+        "verdict_input_from": "",
+        "critical_input_from": "",
+        "clarification_input_from": ""
+      },
+      "parent_child_suggest": []
+    },
     {
       "t_id": "DA144-SPC_P",
       "mission_id": "TASK-DAIS-PHASE3-T1-PO-MESSAGE-FORMAT",
