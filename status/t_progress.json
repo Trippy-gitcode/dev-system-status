@@ -1,12 +1,13 @@
 {
-  "generated_at": "2026-05-09T19:03:05Z",
+  "generated_at": "2026-05-09T19:10:02Z",
   "source": "instructions/session_progress.md#Mission Queue",
   "mission_queue_file": "instructions/session_progress.md",
   "task_detail_file": "instructions/in_flight_topics.md",
   "past_log_file": "instructions/session_progress.md#Mission Queue DONE rows",
-  "active_task_count": 31,
+  "active_task_count": 32,
   "completed_task_count": 163,
   "active_task_ids": [
+    "TASK-DAIS-PHASE1-T4-PWS-PR-INTEGRATION",
     "TASK-DAIS-PHASE3-T2-PO-DECISION-AGGREGATION",
     "TASK-DAIS-PHASE2-T6-AUTO-PICKUP",
     "TASK-DAIS-PHASE2-T2-OBJECTIVE-BLOCKER-RESOLVE",
@@ -205,6 +206,38 @@
     "TASK-CLAUDE-RESUME-T0-T7-HANDOFF"
   ],
   "tasks": [
+    {
+      "t_id": "DA153-INF_P",
+      "mission_id": "TASK-DAIS-PHASE1-T4-PWS-PR-INTEGRATION",
+      "status": "QUEUED",
+      "owner": "[Claude:IMPL]",
+      "owner_ai": "[Claude:IMPL]",
+      "target_app": "Dais / 全App",
+      "goal": "PWS shows live GitHub PR list grouped by status (Open / Draft / CI fail / merged), each PR linked to its corresponding TASK-* mission, stale PR (no merge in N days) is highlighted; mobile-friendly card view; gh CLI rate-limit safe.",
+      "goal_steps": "1) scripts/devs_pr_list_export.sh で gh CLI 経由 active PR を取得し docs/status/pr_list.json を書き出す。 2) docs/pwa/pr-integration.{html,js} を実装し PR を Open / Draft / CI fail / Merged に分類して表示する。 3) PR title / body / head_ref から TASK-* と App task ID を抽出して PR card に貼る。 4) updated_at から stale_days を計算し 7 日超で stale-warning class を付与する。 5) tests/test_p1_t4_pws_pr_integration.sh で fixture mode + classifyState + TASK-* mapping + render を検証する。",
+      "work_done": "未着手（実績なし）",
+      "work_steps": "未着手（実績なし、 これから着手）。",
+      "test_methods": "TEST_METHOD:UNIT TEST_METHOD:STATIC_DOC",
+      "review_personas": "REVIEW_PERSONA:UI_REVIEWER REVIEW_PERSONA:OPS_REVIEWER",
+      "verification_evidence": "test -f docs/pwa/pr-integration.html PASS; test -f docs/pwa/pr-integration.js PASS; test -x scripts/devs_pr_list_export.sh PASS; test -f tests/test_p1_t4_pws_pr_integration.sh PASS; sh tests/test_p1_t4_pws_pr_integration.sh PASS>=6; sh scripts/devs_phase0_quality_gate.sh PASS.",
+      "updated_refs": "instructions/session_progress.md §ミッションキュー / instructions/in_flight_topics.md §TASK-DAIS-PHASE1-T4-PWS-PR-INTEGRATION",
+      "remaining_steps": "implementation -> tests -> docs -> phase0 gate PASS -> LOCAL_DONE push.",
+      "blocked_on": "none",
+      "next_action": "scripts/devs_pr_list_export.sh + docs/pwa/pr-integration.{html,js} + style.css + tests を実装。",
+      "created_at": "",
+      "completed_at": "",
+      "progress_percent": 0,
+      "eta": "2026-05-17",
+      "graph": {
+        "depends_on": "TASK-DAIS-PHASE1-T1-PWS-ACTIVE-SESSIONS, TASK-DAIS-PHASE0-T5-BRANCH-PR-WORKFLOW",
+        "parent_of": "",
+        "parallel_with": "",
+        "verdict_input_from": "",
+        "critical_input_from": "",
+        "clarification_input_from": ""
+      },
+      "parent_child_suggest": []
+    },
     {
       "t_id": "DA152-OPS_P",
       "mission_id": "TASK-DAIS-PHASE3-T2-PO-DECISION-AGGREGATION",
