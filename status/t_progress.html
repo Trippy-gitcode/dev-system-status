@@ -235,7 +235,7 @@
   <script>
     // task management v2 (T143 P1 UI、 docs/task_management_v2.md §2.2 8 status / §2.1 16 agent 枠)
     // 8 status enum: 未着手 / 進行中 / CLD レビュー (未) / CLD レビュー (割) / CDX レビュー (未) / CDX レビュー (割) /
-    //                (停) PO 判断 / (停) T*** / (停) 外部 / 完了
+    //                (停) PO 判断 / (停) T*** / (停) 外部 / (待) 完了確認 / 完了
     // 旧 5 status は 8 status へ後方互換 mapping (docs/task_management_v2.md §7.1)。
     const STATUS_V2_LABELS = {
       NOT_STARTED: "未着手",
@@ -247,6 +247,7 @@
       BLOCKED_PO: "(停) PO 判断",
       BLOCKED_TASK: "(停) T***",
       BLOCKED_EXTERNAL: "(停) 外部",
+      PENDING_CONFIRMATION: "(待) 完了確認",
       DONE: "完了"
     };
     // 16 agent 枠: CLD_01..CLD_04 / CLD_rev01..CLD_rev04 / CDX_01..CDX_04 / CDX_rev01..CDX_rev04
@@ -277,6 +278,7 @@
       IN_PROGRESS: "IN_PROGRESS",
       RUNNING: "IN_PROGRESS",
       LOCAL_DONE: "CLD_REVIEW_PENDING", // 反映待ち = レビュー待ち (= §7.1)
+      PENDING_CONFIRMATION: "PENDING_CONFIRMATION",
       COMMITTED: "CDX_REVIEW_PENDING",
       BLOCKED: "BLOCKED_PO",            // 停止中 → 詳細不明時は PO 判断扱い
       DONE: "DONE",
@@ -308,6 +310,7 @@
         IN_PROGRESS: "進行中",
         RUNNING: "進行中",
         LOCAL_DONE: "反映待ち",
+        PENDING_CONFIRMATION: "(待) 完了確認",
         COMMITTED: "反映待ち",
         DONE: "完了",
         COMPLETED: "完了",
@@ -327,6 +330,9 @@
       if (["LOCAL_DONE", "COMMITTED"].includes(key)) {
         return `${base} bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200`;
       }
+      if (key === "PENDING_CONFIRMATION") {
+        return `${base} bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-200`;
+      }
       if (["IN_PROGRESS", "RUNNING"].includes(key)) {
         return `${base} bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-200`;
       }
@@ -339,10 +345,11 @@
       return `${base} bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200`;
     };
 
-    const STATUS_ORDER = ["IN_PROGRESS", "DONE", "QUEUED", "BLOCKED", "LOCAL_DONE", "OTHER"];
-    const BASE_STATUS_KEYS = ["IN_PROGRESS", "DONE", "QUEUED", "BLOCKED", "LOCAL_DONE"];
+    const STATUS_ORDER = ["IN_PROGRESS", "PENDING_CONFIRMATION", "DONE", "QUEUED", "BLOCKED", "LOCAL_DONE", "OTHER"];
+    const BASE_STATUS_KEYS = ["IN_PROGRESS", "PENDING_CONFIRMATION", "DONE", "QUEUED", "BLOCKED", "LOCAL_DONE"];
     const STATUS_META = {
       IN_PROGRESS: { label: "進行中", stroke: "#0f766e", border: "border-teal-200 dark:border-teal-900", text: "text-teal-800 dark:text-teal-200", active: "bg-teal-700 text-white border-teal-700" },
+      PENDING_CONFIRMATION: { label: "(待) 完了確認", stroke: "#9333ea", border: "border-purple-200 dark:border-purple-900", text: "text-purple-800 dark:text-purple-200", active: "bg-purple-700 text-white border-purple-700" },
       DONE: { label: "完了", stroke: "#f97316", border: "border-orange-200 dark:border-orange-900", text: "text-orange-800 dark:text-orange-200", active: "bg-orange-600 text-white border-orange-600" },
       QUEUED: { label: "未着手", stroke: "#2563eb", border: "border-blue-200 dark:border-blue-900", text: "text-blue-800 dark:text-blue-200", active: "bg-blue-600 text-white border-blue-600" },
       BLOCKED: { label: "停止中", stroke: "#e11d48", border: "border-rose-200 dark:border-rose-900", text: "text-rose-800 dark:text-rose-200", active: "bg-rose-600 text-white border-rose-600" },
@@ -354,6 +361,7 @@
     const statusKey = (status) => {
       const key = String(status || "").toUpperCase();
       if (["DONE", "COMPLETED", "PUSHED", "DEPLOYED", "APPLIED"].includes(key)) return "DONE";
+      if (key === "PENDING_CONFIRMATION") return "PENDING_CONFIRMATION";
       if (["LOCAL_DONE", "COMMITTED"].includes(key)) return "LOCAL_DONE";
       if (["IN_PROGRESS", "RUNNING"].includes(key)) return "IN_PROGRESS";
       if (key === "QUEUED") return "QUEUED";
