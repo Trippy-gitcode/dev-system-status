@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0",
+  "auto_assign_enabled": true,
+  "global": {
+    "impl": "load_balance",
+    "spec": "codex_priority",
+    "review": "cross_review_locked"
+  },
+  "by_kind": {
+    "impl_medium": "load_balance",
+    "impl_large": "claude_priority",
+    "ops": "load_balance"
+  },
+  "by_app": {
+    "lais": null,
+    "mais": null,
+    "dais": null
+  },
+  "by_task": {},
+  "load_balance_weights": {
+    "slot": 0.4,
+    "load": 0.2,
+    "context": 0.2,
+    "time": 0.2
+  },
+  "unassigned_warning_threshold": 5,
+  "off_persistence": true,
+  "updated_at": "2026-05-09T20:30:00Z",
+  "updated_by": "[subagent:IMPL]",
+  "_projection_note": "T172 IMPL projection of docs/dais_assign_settings.json. SSoT = docs/dais_assign_settings.json + PWA localStorage 'dais_assign_settings'."
+}

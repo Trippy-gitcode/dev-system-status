@@ -713,3 +713,126 @@ body {
   .edge-critical { background: #742a2a; color: #fed7d7; }
   .edge-clarification { background: #744210; color: #fefcbf; }
 }
+
+/* T172 / TASK-DAIS-ASSIGN-SETTINGS-IMPL (T149 SPEC §3 / §4 / §9 / §12) */
+.assign-settings-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 6px 0 0 0;
+  font-size: 0.95rem;
+}
+.assign-settings-toggle-wrap,
+.assign-settings-priority-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.assign-settings-toggle-wrap input[type="checkbox"] {
+  width: 22px; height: 22px;
+}
+.assign-settings-priority-wrap select {
+  min-height: var(--tap-min);
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+}
+.assign-settings-label { color: var(--fg-muted); }
+.assign-unassigned-badge {
+  margin-left: auto;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: 1px solid var(--border);
+}
+.assign-unassigned-badge.badge-yellow { background: var(--warn); color: #1f1300; }
+.assign-unassigned-badge.badge-red { background: var(--danger); color: #fff; }
+.assign-settings-detail {
+  margin: 12px 0;
+  padding: 8px 10px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.assign-settings-detail summary {
+  cursor: pointer;
+  padding: 6px 0;
+  font-weight: 600;
+}
+.assign-settings-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+@media (min-width: 600px) {
+  .assign-settings-grid { grid-template-columns: 1fr 1fr; }
+}
+.assign-settings-section h3 {
+  margin: 4px 0;
+  font-size: 1rem;
+  color: var(--fg-muted);
+}
+.assign-settings-section label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 6px 0;
+}
+.assign-settings-section select,
+.assign-settings-section input[type="text"] {
+  min-height: var(--tap-min);
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+}
+.assign-task-override-form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+.assign-task-override-form button {
+  min-height: var(--tap-min);
+  align-self: end;
+}
+.assign-task-override-list {
+  list-style: none;
+  margin: 8px 0 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.assign-task-override-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+}
+.assign-task-override-item button {
+  min-height: 32px;
+}
+@media (min-width: 760px) {
+  .assign-task-override-form {
+    grid-template-columns: 1fr 1fr auto;
+  }
+}
+/* §8 クロスレビュー UI 強制 非表示 (= cross_review_locked) */
+#assign-settings-review-selector,
+[data-cross-review-locked="true"] {
+  display: none !important;
+  visibility: hidden;
+}

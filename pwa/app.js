@@ -62,7 +62,12 @@
     // T115 / TASK-DEVSYS-SUPERVISOR-DASHBOARD-LEGACY-VIEW
     // App 単位 view 用。 publish 経路で配信されない場合 fetch 失敗 → 「未取得」 placeholder
     // (brief v1 §1.1 + T110 + T112 連動、 後続 mission で集計 endpoint 配備候補)。
-    retrofitStatus: function () { return statusBase() + 'retrofit_status.json'; }
+    retrofitStatus: function () { return statusBase() + 'retrofit_status.json'; },
+    // T172 / TASK-DAIS-ASSIGN-SETTINGS-IMPL
+    // T149 SPEC §11 設定 JSON file の projection。 SSoT = docs/dais_assign_settings.json
+    // + localStorage('dais_assign_settings'). publish 経路から PWA に配信、
+    // fetch 失敗時は default + localStorage で graceful degrade。
+    assignSettings: function () { return statusBase() + 'assign_settings.json'; }
   };
 
   // legacy ENDPOINTS object: po_inbox path のみ参考用 (PWA は po_inbox を fetch しない)
@@ -104,6 +109,27 @@
     window.__dais_pwa.renderMissionGraph = renderMissionGraph;
     window.__dais_pwa.computeMissionGraph = computeMissionGraph;
     window.__dais_pwa.parseGraphList = parseGraphList;
+    // T163 / TASK-DAIS-PARENT-CHILD-DETECTOR-IMPL
+    // 詳細カード「関連 task suggest」 section (= projection-only field
+    // `parent_child_suggest`、 detector が SSoT を mutate しないため、
+    // accept/edit/skip は po_inbox prefill / 手動 commit 経由で実行)。
+    window.__dais_pwa.renderParentChildSuggestSection = renderParentChildSuggestSection;
+    window.__dais_pwa.buildParentChildAcceptPayload = buildParentChildAcceptPayload;
+    window.__dais_pwa.buildParentChildEditPayload = buildParentChildEditPayload;
+    window.__dais_pwa.openParentChildSkipDialog = openParentChildSkipDialog;
+    window.__dais_pwa.recordParentChildSkip = recordParentChildSkip;
+    // T172 / TASK-DAIS-ASSIGN-SETTINGS-IMPL (T149 SPEC §2-§8)
+    // 階層判定 + 負荷分散 + クロスレビュー UI 強制 + 警告 + OFF 永続化 を test 公開。
+    window.__dais_pwa.defaultAssignSettings = defaultAssignSettings;
+    window.__dais_pwa.mergeAssignSettings = mergeAssignSettings;
+    window.__dais_pwa.resolveAssignPriority = resolveAssignPriority;
+    window.__dais_pwa.computeLoadBalanceScore = computeLoadBalanceScore;
+    window.__dais_pwa.gatherSideStats = gatherSideStats;
+    window.__dais_pwa.countUnassignedTasks = countUnassignedTasks;
+    window.__dais_pwa.shouldHideReviewSelector = shouldHideReviewSelector;
+    window.__dais_pwa.readAssignSettingsLocal = readAssignSettingsLocal;
+    window.__dais_pwa.writeAssignSettingsLocal = writeAssignSettingsLocal;
+    window.__dais_pwa.ASSIGN_SETTINGS_LS_KEY = ASSIGN_SETTINGS_LS_KEY;
   }
 
   var STATE = {
@@ -112,10 +138,202 @@
     outbox: [],
     pickupRules: null,
     retrofitStatus: null, // T115: { apps: { <app>: { retrofitted_count, total_count, ... } } }
+    // T172 / TASK-DAIS-ASSIGN-SETTINGS-IMPL
+    // T149 SPEC §11 設定 JSON. assignSettings = 解決済 設定 (default + remote + localStorage merge)。
+    assignSettings: null,
     lastFetch: null,
     pushSubscribed: false,
     errors: {}
   };
+
+  // ─── T172 / TASK-DAIS-ASSIGN-SETTINGS-IMPL ───────────────────────────
+  // T149 SPEC §2 / §11 設定 JSON schema + §5 階層判定 + §7 負荷分散 4 観点 +
+  // §8 クロスレビュー UI 強制 + §9 未アサイン 5 件警告 + §10 OFF 永続化。
+  // PO 直命 2026-05-09「アサイン設定 提案書」 → T149 SPEC v1.1 → T172 IMPL。
+  var ASSIGN_SETTINGS_LS_KEY = 'dais_assign_settings';
+
+  // §13 推奨デフォルト + §11.2 schema 構造の default object。 assign_settings.json
+  // fetch 失敗時 / localStorage 不在時の fallback。
+  function defaultAssignSettings() {
+    return {
+      schema_version: '1.0',
+      auto_assign_enabled: true,
+      global: {
+        impl: 'load_balance',
+        spec: 'codex_priority',
+        review: 'cross_review_locked'
+      },
+      by_kind: {
+        impl_medium: 'load_balance',
+        impl_large: 'claude_priority',
+        ops: 'load_balance'
+      },
+      by_app: { lais: null, mais: null, dais: null },
+      by_task: {},
+      load_balance_weights: { slot: 0.4, load: 0.2, context: 0.2, time: 0.2 },
+      unassigned_warning_threshold: 5,
+      off_persistence: true,
+      updated_at: null,
+      updated_by: null
+    };
+  }
+
+  // §10 OFF 永続化 + §8 review override 拒否 を強制する merge logic。
+  // localStorage 値が存在し off_persistence=true なら remote/default に優先して
+  // OFF 状態を維持する。 review key は cross_review_locked 固定 (例外なし、 §8.4)。
+  function mergeAssignSettings(remote, local) {
+    var merged = defaultAssignSettings();
+    if (remote && typeof remote === 'object') {
+      Object.keys(remote).forEach(function (k) { merged[k] = remote[k]; });
+    }
+    if (local && typeof local === 'object') {
+      // off_persistence=true 時のみ auto_assign_enabled を localStorage 優先
+      if (merged.off_persistence !== false && typeof local.auto_assign_enabled === 'boolean') {
+        merged.auto_assign_enabled = local.auto_assign_enabled;
+      }
+      ['by_app', 'by_kind', 'by_task'].forEach(function (key) {
+        if (local[key] && typeof local[key] === 'object') {
+          var combined = {};
+          Object.keys(merged[key] || {}).forEach(function (k) { combined[k] = merged[key][k]; });
+          Object.keys(local[key]).forEach(function (k) { combined[k] = local[key][k]; });
+          merged[key] = combined;
+        }
+      });
+    }
+    // §8 cross-review locked 強制 (= API レイヤ override 拒否、 例外なし)
+    if (!merged.global) merged.global = {};
+    merged.global.review = 'cross_review_locked';
+    return merged;
+  }
+
+  function readAssignSettingsLocal() {
+    try {
+      if (typeof window === 'undefined' || !window.localStorage) return null;
+      var raw = window.localStorage.getItem(ASSIGN_SETTINGS_LS_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      return parsed && typeof parsed === 'object' ? parsed : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function writeAssignSettingsLocal(settings) {
+    try {
+      if (typeof window === 'undefined' || !window.localStorage) return false;
+      // §10 OFF 永続化: off_persistence=false 時は永続化しない。
+      var offPersist = settings && settings.off_persistence !== false;
+      if (!offPersist) {
+        window.localStorage.removeItem(ASSIGN_SETTINGS_LS_KEY);
+        return true;
+      }
+      window.localStorage.setItem(ASSIGN_SETTINGS_LS_KEY, JSON.stringify(settings));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // §11.5 階層判定実装擬似コード。review は §8 の例外なしロックを最優先。
+  function resolveAssignPriority(task, settings) {
+    if (!task) return 'load_balance';
+    var s = settings || STATE.assignSettings || defaultAssignSettings();
+    var tid = task.t_id || '';
+    var missionId = task.mission_id || task.task_id || '';
+    var app = String(task.target_app || task.app || '').toLowerCase();
+    var kind = String(task.kind || task.task_kind || '').toLowerCase();
+    // 0. §8 cross-review 強制 (review kind は UI/API 変更不可)
+    if (kind === 'review') return 'cross_review_locked';
+    // 1. タスク別 override (= 最優先、 §5.2 step 1)
+    if (s.by_task) {
+      var keys = [];
+      if (tid) keys.push(tid);
+      if (missionId && missionId !== tid) keys.push(missionId);
+      for (var i = 0; i < keys.length; i += 1) {
+        if (s.by_task[keys[i]]) return s.by_task[keys[i]];
+      }
+    }
+    // 2. App 別設定 (§5.2 step 2)
+    if (s.by_app && s.by_app[app]) return s.by_app[app];
+    // 3. 種類別個別設定 (§5.2 step 3)
+    if (s.by_kind && s.by_kind[kind]) return s.by_kind[kind];
+    // 4. 種類別 spec マッピング (§5.4)
+    if (kind === 'spec') return (s.global && s.global.spec) || 'codex_priority';
+    // 5. グローバルデフォルト
+    return (s.global && s.global.impl) || 'load_balance';
+  }
+
+  // §7.3 score 算出式 (= w_slot * 空き枠 + w_load * 1/進行中量 + w_ctx * コンテキスト残量 + w_time * 1/直近実行時間)
+  // sideStats = { slot, load, context, time } それぞれ正規化済 0-1。
+  function computeLoadBalanceScore(sideStats, weights) {
+    var s = sideStats || {};
+    var w = weights || { slot: 0.4, load: 0.2, context: 0.2, time: 0.2 };
+    function num(v) { return typeof v === 'number' && isFinite(v) ? v : 0; }
+    return (
+      num(w.slot) * num(s.slot) +
+      num(w.load) * num(s.load) +
+      num(w.context) * num(s.context) +
+      num(w.time) * num(s.time)
+    );
+  }
+
+  // §7.4 入力データソース。 agents = STATE.agents、 tasks = STATE.tasks。
+  // 4 観点 (空き枠 / 進行中量 / コンテキスト残量 / 直近実行時間) を CLD/CDX 別に集計。
+  function gatherSideStats(agents, tasks, side) {
+    var prefix = side === 'CLD' ? 'CLD' : 'CDX';
+    var ag = (agents || []).filter(function (a) {
+      var n = String(a.agent || '').toUpperCase();
+      return n.indexOf(prefix) === 0;
+    });
+    // 空き枠 = current_task_id が空 の agent 数 (§7.4)
+    var emptySlots = ag.filter(function (a) { return !a.current_task_id; }).length;
+    // 進行中量 = current_task_id が埋まっている agent 数 (§7.4)
+    var inFlight = ag.filter(function (a) { return !!a.current_task_id; }).length;
+    // 直近実行時間 = last_heartbeat の delta 平均 (簡易、 §7.4)
+    var now = Date.now();
+    var hbAvg = 0;
+    var hbCount = 0;
+    ag.forEach(function (a) {
+      if (a.last_heartbeat) {
+        var t = Date.parse(a.last_heartbeat);
+        if (!isNaN(t)) { hbAvg += (now - t); hbCount += 1; }
+      }
+    });
+    if (hbCount > 0) hbAvg = hbAvg / hbCount; else hbAvg = 0;
+    // コンテキスト残量 = 進行中 task の sub 数で減点 (§7.2、 簡易)
+    var contextLeft = Math.max(0, 4 - inFlight); // 主枠 4 + 予備の単純化
+    return {
+      slot: emptySlots / 4, // 正規化 (4 = max 主枠数)
+      load: inFlight === 0 ? 1 : (1 / inFlight),
+      context: contextLeft / 4,
+      // 直近実行時間が長い = idle = 余裕 → 0-1 正規化 (1h base)
+      time: hbAvg === 0 ? 0.5 : Math.min(1, hbAvg / (60 * 60 * 1000))
+    };
+  }
+
+  // §9 未アサイン警告: status=未着手 / QUEUED で 担当 AI ブランク の task 数。
+  function countUnassignedTasks(tasks) {
+    if (!Array.isArray(tasks)) return 0;
+    return tasks.filter(function (t) {
+      var st = String(t.status || '').toUpperCase();
+      if (st !== 'QUEUED' && st !== '未着手' && st !== 'UNASSIGNED') return false;
+      var owner = sanitizeLine(t.owner || t.owner_ai || '');
+      // 「(停)」 系 (PO 判断 / T*** / 外部) は滞留対象外 (§9.3)
+      if (/\(停\)|PO 判断|外部/.test(owner)) return false;
+      return owner === '' || owner === '—' || owner.toLowerCase() === 'unassigned';
+    }).length;
+  }
+
+  // §8 クロスレビュー UI 強制: review 対象は UI で選択不可。
+  // 実装側 actor 選択時に review actor pulldown を非表示にするための判定。
+  function shouldHideReviewSelector(implOwnerTag) {
+    // 実装側が決まれば review 側は cross_review_locked で自動決定 (§8 強制)
+    // → review pulldown 非表示 (= UI 変更不可)
+    if (!implOwnerTag) return false;
+    var t = String(implOwnerTag);
+    return /\[(Claude|Codex|subagent):(IMPL|SPEC|OPS)\]/.test(t);
+  }
+
 
   var RULE_DEFS = [
     { key: 'claude-impl', target_app: 'Dais', owner_tag: '[Claude:IMPL]' },
@@ -595,6 +813,206 @@
     var built = buildTaskDecompositionPayload(task);
     openPrefillModal('親子タスク化を依頼', built.payload, built.poInboxId + '.md');
     return true;
+  }
+
+  // ─── T163 / TASK-DAIS-PARENT-CHILD-DETECTOR-IMPL ────────────────────
+  // 詳細カード内「関連 task suggest」 section の rendering / 操作。
+  //
+  // 重要 (T148 §4.2 / 役割境界 不変則):
+  //   PWA は detector の suggest を **表示** する だけで、 Mission Queue /
+  //   TASK detail / projection を直接 mutate しない。 [Apply] / [Edit] /
+  //   [Skip] は それぞれ:
+  //     - [Apply] = po_inbox prefill (= 既存 1-site UX を流用)
+  //     - [Edit]  = relationship を変更してから po_inbox prefill
+  //     - [Skip]  = recordParentChildSkip → verify/parent_child_suggest_skip_log.md
+  //   へ流し、 確定書込は scripts/devs_mission_queue_lock.sh +
+  //   scripts/devs_mission_register_and_push.sh 経由で行う。
+  //
+  // task オブジェクトは t_progress.json の各 entry。 projection には
+  // `parent_child_suggest` field (= projection-only) が array で乗る:
+  //   [{ related_task_id, score, relationship, signals: [..] }, ...]
+  function getParentChildSuggestList(task) {
+    if (!task) return [];
+    var raw = task.parent_child_suggest;
+    if (!Array.isArray(raw)) return [];
+    return raw.filter(function (s) { return s && s.related_task_id; });
+  }
+
+  function buildParentChildAcceptPayload(task, suggestion) {
+    if (!task || !suggestion) return null;
+    var now = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+    var date = now.slice(0, 10).replace(/-/g, '');
+    var topic = (task.t_id || 'task').toLowerCase().replace(/[^a-z0-9]+/g, '-') +
+      '-relate-' + (suggestion.relationship || 'related');
+    var poInboxId = topic + '-' + date + '-01';
+    var missionId = task.mission_id || task.task_id || '';
+    var rel = suggestion.relationship || 'verdict_input_from';
+    var related = suggestion.related_task_id || '';
+    var score = (typeof suggestion.score === 'number') ? suggestion.score.toFixed(2) : String(suggestion.score || '');
+    var signals = Array.isArray(suggestion.signals) ? suggestion.signals.join(' + ') : '';
+    var payload = [
+      '---',
+      'po_inbox_id: ' + poInboxId,
+      'created_at: ' + now,
+      'po_intent: ' + sanitizeLine((task.t_id || '') + ' に ' + rel + ' = ' + related + ' を追加'),
+      'suggested_owner: [Codex:OPS]',
+      'priority: ' + (task.priority || 'medium'),
+      'target_app: ' + (task.target_app || 'Dais'),
+      'expected_completion_level: IMPL_TESTED',
+      'status: open',
+      'claimed_by: ',
+      'mission_id: ' + missionId,
+      'source: pwa-parent-child-suggest-accept',
+      'parent_child_suggest_score: ' + score,
+      'parent_child_suggest_signals: ' + signals,
+      '---',
+      '',
+      '# ' + (task.t_id || '') + ' parent_child_suggest accept',
+      '',
+      'PWA 詳細カードの「関連 task suggest」から accept。',
+      '',
+      '## suggested edit',
+      '',
+      '`instructions/in_flight_topics.md` の `### ' + missionId + '` に',
+      '`- **' + rel + '**: ' + related + '` を追記してください。',
+      '',
+      '## detector context',
+      '',
+      'score: ' + score,
+      'relationship: ' + rel,
+      'signals: ' + signals,
+      'related_task_id: ' + related,
+      '',
+      '## task概要',
+      '',
+      'goal: ' + (task.goal || '(none)'),
+      'status: ' + (task.status || '—'),
+      'owner: ' + (task.owner || '—'),
+      ''
+    ].join('\n');
+    return { poInboxId: poInboxId, payload: payload, relationship: rel };
+  }
+
+  function buildParentChildEditPayload(task, suggestion, overrideRelationship) {
+    if (!task || !suggestion) return null;
+    var clone = {
+      related_task_id: suggestion.related_task_id,
+      score: suggestion.score,
+      relationship: overrideRelationship || suggestion.relationship,
+      signals: suggestion.signals
+    };
+    var built = buildParentChildAcceptPayload(task, clone);
+    if (built) {
+      built.payload = built.payload.replace(
+        'source: pwa-parent-child-suggest-accept',
+        'source: pwa-parent-child-suggest-edit'
+      );
+    }
+    return built;
+  }
+
+  function recordParentChildSkip(task, suggestion) {
+    // SSoT は触らない。 同 session 内の memo として localStorage に記録し、
+    // 永続化 (= verify/parent_child_suggest_skip_log.md への append) は
+    // `scripts/devs_parent_child_detector.sh --skip TASK-A:TASK-B` を
+    // 呼ぶ手順を payload で示す (= human が CLI で実行)。
+    if (!task || !suggestion) return null;
+    var key = 'parent_child_suggest_skip:' + (task.mission_id || task.task_id || '') +
+      ':' + (suggestion.related_task_id || '');
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(key, new Date().toISOString());
+      }
+    } catch (e) { /* ignore quota */ }
+    return key;
+  }
+
+  function openParentChildSkipDialog(task, suggestion) {
+    if (!task || !suggestion) return false;
+    recordParentChildSkip(task, suggestion);
+    var related = suggestion.related_task_id || '';
+    var src = task.mission_id || task.task_id || '';
+    var hint = [
+      '# parent_child_suggest skip 永続化手順',
+      '',
+      '同一 score の再 suggest を防ぐため、 以下を実行してください:',
+      '',
+      '`sh scripts/devs_parent_child_detector.sh --skip ' + src + ':' + related + '`',
+      '',
+      '実行すると `verify/parent_child_suggest_skip_log.md` に append-only で記録されます。',
+      'SSoT (Mission Queue / TASK detail / projection) は変更されません。'
+    ].join('\n');
+    openPrefillModal('関連 task suggest を skip', hint, 'parent_child_suggest_skip_hint.md');
+    return true;
+  }
+
+  function renderParentChildSuggestSection(task) {
+    // 詳細カード描画用 helper。 戻り値 = HTMLElement (= 親要素に append)。
+    // task オブジェクトは t_progress.json の entry。
+    var section = el('section', {
+      class: 'parent-child-suggest',
+      'data-section': 'parent_child_suggest',
+      'aria-label': '関連 task suggest (T148)'
+    });
+    section.appendChild(el('h4', { class: 'pcs-title', text: '関連 task suggest (T148)' }));
+    var suggestions = getParentChildSuggestList(task);
+    if (!suggestions.length) {
+      section.appendChild(el('p', {
+        class: 'pcs-empty',
+        text: '関連 task suggest はありません (= score < 0.3 / detector 未走査)。'
+      }));
+      return section;
+    }
+    var list = el('ul', { class: 'pcs-list' });
+    suggestions.forEach(function (s) {
+      var rel = s.relationship || 'verdict_input_from';
+      var rid = s.related_task_id || '';
+      var score = (typeof s.score === 'number') ? s.score.toFixed(2) : String(s.score || '');
+      var signals = Array.isArray(s.signals) ? s.signals.join(' + ') : '';
+      var li = el('li', { class: 'pcs-item' });
+      li.appendChild(el('div', {
+        class: 'pcs-line',
+        text: rel + ': ' + rid + ' (score ' + score + ', signals: ' + signals + ')'
+      }));
+      var btnApply = el('button', {
+        class: 'primary-btn',
+        type: 'button',
+        'data-action': 'parent_child_suggest_apply',
+        'aria-label': rid + ' を ' + rel + ' で受け入れる',
+        onclick: function (event) {
+          event.stopPropagation();
+          var built = buildParentChildAcceptPayload(task, s);
+          if (built) openPrefillModal('Apply: ' + rel, built.payload, built.poInboxId + '.md');
+        }
+      }, 'Apply');
+      var btnEdit = el('button', {
+        class: 'ghost-btn',
+        type: 'button',
+        'data-action': 'parent_child_suggest_edit',
+        'aria-label': rid + ' の relationship を変更して受け入れる',
+        onclick: function (event) {
+          event.stopPropagation();
+          var alt = window.prompt('relationship を変更 (depends_on / parent_of / parallel_with / verdict_input_from / critical_input_from / clarification_input_from):', rel);
+          if (!alt) return;
+          var built = buildParentChildEditPayload(task, s, alt);
+          if (built) openPrefillModal('Edit: ' + alt, built.payload, built.poInboxId + '.md');
+        }
+      }, 'Edit');
+      var btnSkip = el('button', {
+        class: 'ghost-btn',
+        type: 'button',
+        'data-action': 'parent_child_suggest_skip',
+        'aria-label': rid + ' を skip',
+        onclick: function (event) {
+          event.stopPropagation();
+          openParentChildSkipDialog(task, s);
+        }
+      }, 'Skip');
+      li.appendChild(el('div', { class: 'pcs-actions' }, [btnApply, btnEdit, btnSkip]));
+      list.appendChild(li);
+    });
+    section.appendChild(list);
+    return section;
   }
 
   function openTaskAssignModal(task) {
@@ -1111,6 +1529,39 @@
     });
   }
 
+  // ─── T163: 関連 task suggest list (親子・並列・input 候補) ───────────
+  // STATE.tasks の各 entry の projection-only field `parent_child_suggest` を
+  // 集約して 詳細カード を 1 つ ずつ 描画 する。
+  function renderParentChildSuggestList() {
+    var list = $('#parent-child-suggest-list');
+    if (!list) return;
+    list.innerHTML = '';
+    if (STATE.errors.tProgress) {
+      list.appendChild(el('li', { class: 'empty', text: 't_progress.json を取得できないため関連 task suggest を表示できません。' }));
+      return;
+    }
+    var tasks = (STATE.tasks || []).filter(function (t) {
+      var arr = t && t.parent_child_suggest;
+      return Array.isArray(arr) && arr.length;
+    });
+    if (!tasks.length) {
+      list.appendChild(el('li', {
+        class: 'empty',
+        text: '関連 task suggest はありません (= detector 未走査 / score < 0.3 のみ)。'
+      }));
+      return;
+    }
+    tasks.forEach(function (t) {
+      var card = el('li', { class: 'parent-child-suggest-card' });
+      card.appendChild(el('div', { class: 'pcs-card-head' }, [
+        el('span', { class: 'pcs-card-tid', text: t.t_id || '' }),
+        el('span', { class: 'pcs-card-mid', text: t.mission_id || '' })
+      ]));
+      card.appendChild(renderParentChildSuggestSection(t));
+      list.appendChild(card);
+    });
+  }
+
   // ─── 進捗 サマリー ───────────────────────────────────────────────────
   function renderProgressSummary() {
     var active = (STATE.tasks || []).filter(function (t) {
@@ -1162,6 +1613,182 @@
   }
 
   // ─── データ取得 ──────────────────────────────────────────────────────
+  // ─── T172 assign_settings UI render ────────────────────────────────
+  // §3.1 ページトップ toggle / §4 priority プルダウン / §9 未アサインバッジ /
+  // §12.2 設定画面 (4 階層 UI)。
+  function renderAssignSettingsUI() {
+    var s = STATE.assignSettings || defaultAssignSettings();
+    // toggle (= 自動アサイン ON/OFF)
+    var toggleEl = $('#assign-settings-toggle');
+    if (toggleEl) {
+      toggleEl.checked = !!s.auto_assign_enabled;
+      toggleEl.setAttribute('aria-checked', s.auto_assign_enabled ? 'true' : 'false');
+    }
+    // priority pulldown (= グローバル impl デフォルト)
+    var prioEl = $('#assign-settings-priority');
+    if (prioEl) {
+      prioEl.value = (s.global && s.global.impl) || 'load_balance';
+    }
+    // 未アサイン件数バッジ (§9、 5 件閾値)
+    var badgeEl = $('#assign-unassigned-badge');
+    if (badgeEl) {
+      var count = countUnassignedTasks(STATE.tasks || []);
+      var threshold = s.unassigned_warning_threshold || 5;
+      if (count >= threshold) {
+        badgeEl.hidden = false;
+        badgeEl.textContent = '⚠️ 未アサインタスク ' + count + ' 件';
+        badgeEl.className = 'assign-unassigned-badge ' +
+          (count >= 10 ? 'badge-red' : 'badge-yellow');
+      } else {
+        badgeEl.hidden = true;
+        badgeEl.textContent = '';
+      }
+    }
+    // 設定詳細 (§12.2)
+    var detailEl = $('#assign-settings-detail');
+    if (detailEl) {
+      // 各 by_kind / by_app の現状値を読み出し表示 (UI from data)
+      ['impl_medium', 'impl_large', 'ops'].forEach(function (k) {
+        var sel = detailEl.querySelector('[data-kind="' + k + '"]');
+        if (sel) sel.value = (s.by_kind && s.by_kind[k]) || '';
+      });
+      ['lais', 'mais', 'dais'].forEach(function (a) {
+        var sel = detailEl.querySelector('[data-app="' + a + '"]');
+        if (sel) sel.value = (s.by_app && s.by_app[a]) || '';
+      });
+    }
+    renderAssignTaskOverrides(s);
+    // §8 review pulldown 非表示確認: index.html で初期描画時から hidden、 ここで強制
+    var reviewSel = $('#assign-settings-review-selector');
+    if (reviewSel) {
+      reviewSel.hidden = true;
+      reviewSel.style.display = 'none';
+    }
+  }
+
+  function priorityLabel(value) {
+    if (value === 'claude_priority') return 'Claude 優先';
+    if (value === 'codex_priority') return 'Codex 優先';
+    if (value === 'load_balance') return '負荷分散';
+    if (value === 'cross_review_locked') return 'クロスレビュー固定';
+    return value || '(未指定)';
+  }
+
+  function normalizeAssignTaskKey(raw) {
+    var v = String(raw || '').trim();
+    return v.replace(/\s+/g, '');
+  }
+
+  function renderAssignTaskOverrides(settings) {
+    var list = $('#assign-settings-task-list');
+    if (!list) return;
+    list.innerHTML = '';
+    var byTask = (settings && settings.by_task) || {};
+    var keys = Object.keys(byTask).filter(function (k) { return !!byTask[k]; }).sort();
+    if (!keys.length) {
+      list.appendChild(el('li', { class: 'empty', text: 'タスク別 override なし' }));
+      return;
+    }
+    keys.forEach(function (key) {
+      var li = el('li', { class: 'assign-task-override-item' });
+      li.appendChild(el('span', { text: key + ' → ' + priorityLabel(byTask[key]) }));
+      li.appendChild(el('button', {
+        class: 'ghost-btn',
+        type: 'button',
+        'data-task-override-remove': key,
+        onclick: function (event) {
+          event.stopPropagation();
+          STATE.assignSettings = STATE.assignSettings || defaultAssignSettings();
+          if (!STATE.assignSettings.by_task) STATE.assignSettings.by_task = {};
+          delete STATE.assignSettings.by_task[key];
+          STATE.assignSettings.updated_at = new Date().toISOString();
+          writeAssignSettingsLocal(STATE.assignSettings);
+          renderAssignSettingsUI();
+          setStatus('タスク別 override を削除: ' + key, 'ok');
+        }
+      }, '削除'));
+      list.appendChild(li);
+    });
+  }
+
+  function setupAssignSettingsControls() {
+    var toggleEl = $('#assign-settings-toggle');
+    if (toggleEl) {
+      toggleEl.addEventListener('change', function () {
+        STATE.assignSettings = STATE.assignSettings || defaultAssignSettings();
+        STATE.assignSettings.auto_assign_enabled = !!toggleEl.checked;
+        STATE.assignSettings.updated_at = new Date().toISOString();
+        STATE.assignSettings.updated_by = '[PO:DECISION]';
+        // §10 OFF 永続化 (= localStorage で再起動時 OFF 維持)
+        writeAssignSettingsLocal(STATE.assignSettings);
+        renderAssignSettingsUI();
+        setStatus(
+          '自動アサイン ' + (toggleEl.checked ? 'ON' : 'OFF') + ' に切替 (= localStorage 永続化)',
+          toggleEl.checked ? 'ok' : 'warn'
+        );
+      });
+    }
+    var prioEl = $('#assign-settings-priority');
+    if (prioEl) {
+      prioEl.addEventListener('change', function () {
+        STATE.assignSettings = STATE.assignSettings || defaultAssignSettings();
+        if (!STATE.assignSettings.global) STATE.assignSettings.global = {};
+        STATE.assignSettings.global.impl = prioEl.value;
+        STATE.assignSettings.global.review = 'cross_review_locked'; // §8 強制
+        STATE.assignSettings.updated_at = new Date().toISOString();
+        STATE.assignSettings.updated_by = '[PO:DECISION]';
+        writeAssignSettingsLocal(STATE.assignSettings);
+        renderAssignSettingsUI();
+        setStatus('実装系デフォルト = ' + prioEl.value, 'ok');
+      });
+    }
+    // 詳細 by_kind / by_app handler
+    var detailEl = $('#assign-settings-detail');
+    if (detailEl) {
+      detailEl.querySelectorAll('select[data-kind]').forEach(function (sel) {
+        sel.addEventListener('change', function () {
+          STATE.assignSettings = STATE.assignSettings || defaultAssignSettings();
+          if (!STATE.assignSettings.by_kind) STATE.assignSettings.by_kind = {};
+          STATE.assignSettings.by_kind[sel.dataset.kind] = sel.value || null;
+          STATE.assignSettings.updated_at = new Date().toISOString();
+          writeAssignSettingsLocal(STATE.assignSettings);
+        });
+      });
+      detailEl.querySelectorAll('select[data-app]').forEach(function (sel) {
+        sel.addEventListener('change', function () {
+          STATE.assignSettings = STATE.assignSettings || defaultAssignSettings();
+          if (!STATE.assignSettings.by_app) STATE.assignSettings.by_app = {};
+          STATE.assignSettings.by_app[sel.dataset.app] = sel.value || null;
+          STATE.assignSettings.updated_at = new Date().toISOString();
+          writeAssignSettingsLocal(STATE.assignSettings);
+        });
+      });
+    }
+    var taskAdd = $('#assign-settings-task-add');
+    if (taskAdd) {
+      taskAdd.addEventListener('click', function () {
+        var idEl = $('#assign-settings-task-id');
+        var prioEl = $('#assign-settings-task-priority');
+        var key = normalizeAssignTaskKey(idEl && idEl.value);
+        var prio = prioEl && prioEl.value;
+        if (!key || !prio) {
+          setStatus('タスク別 override は Task ID と priority を指定してください', 'warn');
+          return;
+        }
+        STATE.assignSettings = STATE.assignSettings || defaultAssignSettings();
+        if (!STATE.assignSettings.by_task) STATE.assignSettings.by_task = {};
+        STATE.assignSettings.by_task[key] = prio;
+        STATE.assignSettings.updated_at = new Date().toISOString();
+        STATE.assignSettings.updated_by = '[PO:DECISION]';
+        writeAssignSettingsLocal(STATE.assignSettings);
+        if (idEl) idEl.value = '';
+        if (prioEl) prioEl.value = '';
+        renderAssignSettingsUI();
+        setStatus('タスク別 override を保存: ' + key + ' → ' + priorityLabel(prio), 'ok');
+      });
+    }
+  }
+
   function refresh() {
     setStatus('読み込み中…');
     var jobs = [];
@@ -1211,6 +1838,18 @@
       STATE.errors.pickupRules = true;
     }));
 
+    // T172 / TASK-DAIS-ASSIGN-SETTINGS-IMPL: assign_settings.json を fetch 後、
+    // localStorage の OFF 永続化値と merge (= §10 + §11.2 schema)。
+    jobs.push(fetchJson(PATHS.assignSettings()).then(function (d) {
+      var local = readAssignSettingsLocal();
+      STATE.assignSettings = mergeAssignSettings(d, local);
+    }).catch(function (err) {
+      console.warn('assign_settings fetch failed (default + localStorage 使用):', err);
+      var local = readAssignSettingsLocal();
+      STATE.assignSettings = mergeAssignSettings(null, local);
+      STATE.errors.assignSettings = true;
+    }));
+
     return Promise.all(jobs).then(function () {
       STATE.lastFetch = new Date();
       renderAgents();
@@ -1220,7 +1859,9 @@
       renderProgressSummary();
       renderAppView();
       renderMissionGraph(); // T139: Mission Graph 親子 / 並列 / verdict propagate
+      renderParentChildSuggestList(); // T163: 詳細カード「関連 task suggest」 section
       renderProgressBoard(); // T128 拡張: 進捗 row click → modal 起動
+      renderAssignSettingsUI(); // T172: assign_settings UI (toggle + priority + 警告バッジ + 詳細)
       var stamp = STATE.lastFetch.toISOString().replace(/\.\d{3}Z$/, 'Z');
       setStatus('更新: ' + stamp + ' (agents=' + STATE.agents.length + ', tasks=' + STATE.tasks.length + ', outbox=' + STATE.outbox.length + ')', 'ok');
     });
@@ -1253,6 +1894,13 @@
     setupRules();
     setupPushToggle();
     setupProgressLinks();
+    setupAssignSettingsControls(); // T172: assign_settings (§3 toggle + §4 priority + §12 詳細)
+    // T172: 起動直後に localStorage 永続化値を即座反映 (= 再起動時 OFF 維持、 §10)
+    var localBoot = readAssignSettingsLocal();
+    if (localBoot) {
+      STATE.assignSettings = mergeAssignSettings(STATE.assignSettings, localBoot);
+      renderAssignSettingsUI();
+    }
 
     $('#assign-refresh').addEventListener('click', refresh);
     $('#assign-filter').addEventListener('input', renderTasks);

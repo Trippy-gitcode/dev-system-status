@@ -19,6 +19,23 @@
   <header class="app-header">
     <h1>Dais Supervisor</h1>
     <div class="status-line" id="status-line">起動中…</div>
+    <!-- T172 / TASK-DAIS-ASSIGN-SETTINGS-IMPL (T149 SPEC §3.1 / §4 / §9) -->
+    <!-- ページトップ クイック切替: 自動アサイン ON/OFF + 実装系 default + 未アサイン警告 -->
+    <div class="assign-settings-bar" id="assign-settings-bar" data-section="assign_settings">
+      <label class="assign-settings-toggle-wrap" for="assign-settings-toggle">
+        <input type="checkbox" id="assign-settings-toggle" data-assign-settings="auto_assign_enabled" aria-label="自動アサイン ON/OFF" />
+        <span class="assign-settings-label">自動アサイン</span>
+      </label>
+      <label class="assign-settings-priority-wrap" for="assign-settings-priority">
+        <span class="assign-settings-label">実装系</span>
+        <select id="assign-settings-priority" data-assign-settings="global.impl" aria-label="実装系 priority">
+          <option value="claude_priority">Claude 優先</option>
+          <option value="codex_priority">Codex 優先</option>
+          <option value="load_balance">負荷分散</option>
+        </select>
+      </label>
+      <span class="assign-unassigned-badge" id="assign-unassigned-badge" hidden role="status" aria-live="polite"></span>
+    </div>
   </header>
 
   <!-- 全 agent 状態 strip (常時表示、 PO 質問「active/offline/作業中」 に対応) -->
@@ -63,6 +80,96 @@
         </label>
       </div>
       <p class="hint">PWA は SSoT に直接書込まないため、変更指示を po_inbox 形式でコピーします。</p>
+
+      <!-- T172 / TASK-DAIS-ASSIGN-SETTINGS-IMPL (T149 SPEC §12.2 / §5 / §8) -->
+      <!-- 設定画面 詳細: 4 階層 (グローバル / App / 種類 / task)、 review はクロスレビュー固定 (UI 非表示)。 -->
+      <h2 class="section-title">アサイン設定 詳細 (4 階層)</h2>
+      <p class="section-desc">T149 SPEC §5 — タスク別 &gt; App 別 &gt; 種類別 &gt; グローバル の上書き順。 レビュー系は §8 クロスレビュー原則 (= 実装と逆 AI 自動) で UI 変更不可、 プルダウン非表示。</p>
+      <details class="assign-settings-detail" id="assign-settings-detail" data-section="assign_settings_detail">
+        <summary>設定を編集 (= 4 階層 上書き)</summary>
+        <div class="assign-settings-grid">
+          <div class="assign-settings-section">
+            <h3>種類別 (= グローバル上書き)</h3>
+            <label>Impl(中)
+              <select data-kind="impl_medium">
+                <option value="">(未指定)</option>
+                <option value="claude_priority">Claude 優先</option>
+                <option value="codex_priority">Codex 優先</option>
+                <option value="load_balance">負荷分散</option>
+              </select>
+            </label>
+            <label>Impl(大)
+              <select data-kind="impl_large">
+                <option value="">(未指定)</option>
+                <option value="claude_priority">Claude 優先</option>
+                <option value="codex_priority">Codex 優先</option>
+                <option value="load_balance">負荷分散</option>
+              </select>
+            </label>
+            <label>OPS
+              <select data-kind="ops">
+                <option value="">(未指定)</option>
+                <option value="claude_priority">Claude 優先</option>
+                <option value="codex_priority">Codex 優先</option>
+                <option value="load_balance">負荷分散</option>
+              </select>
+            </label>
+          </div>
+          <div class="assign-settings-section">
+            <h3>App 別 (= 種類別を上書き)</h3>
+            <label>Lais
+              <select data-app="lais">
+                <option value="">(未指定)</option>
+                <option value="claude_priority">Claude 優先</option>
+                <option value="codex_priority">Codex 優先</option>
+                <option value="load_balance">負荷分散</option>
+              </select>
+            </label>
+            <label>Mais
+              <select data-app="mais">
+                <option value="">(未指定)</option>
+                <option value="claude_priority">Claude 優先</option>
+                <option value="codex_priority">Codex 優先</option>
+                <option value="load_balance">負荷分散</option>
+              </select>
+            </label>
+            <label>Dais
+              <select data-app="dais">
+                <option value="">(未指定)</option>
+                <option value="claude_priority">Claude 優先</option>
+                <option value="codex_priority">Codex 優先</option>
+                <option value="load_balance">負荷分散</option>
+              </select>
+            </label>
+          </div>
+          <div class="assign-settings-section assign-task-override-section">
+            <h3>タスク別 (= App 別を上書き)</h3>
+            <div class="assign-task-override-form">
+              <label>Task ID
+                <input id="assign-settings-task-id" type="text" placeholder="T172 / TASK-..." autocomplete="off" />
+              </label>
+              <label>Priority
+                <select id="assign-settings-task-priority">
+                  <option value="">(未指定)</option>
+                  <option value="claude_priority">Claude 優先</option>
+                  <option value="codex_priority">Codex 優先</option>
+                  <option value="load_balance">負荷分散</option>
+                </select>
+              </label>
+              <button id="assign-settings-task-add" class="ghost-btn" type="button">追加</button>
+            </div>
+            <ul id="assign-settings-task-list" class="assign-task-override-list" aria-live="polite">
+              <li class="empty">タスク別 override なし</li>
+            </ul>
+          </div>
+        </div>
+        <!-- §8 クロスレビュー UI: review プルダウンは存在しないこと自体が仕様。 -->
+        <!-- 既存実装で誤って描画されたら強制非表示にする hidden hook 配備 (= JS が確認)。 -->
+        <div id="assign-settings-review-selector" hidden style="display:none;" data-cross-review-locked="true">
+          <!-- §8 例外なし、 cross_review_locked enum 固定。 UI 上で表示されない。 -->
+        </div>
+        <p class="hint">タスク別 override は localStorage に保存し、PWA から SSoT へは直接書き込みません。 詳細は <code>docs/dais_assign_settings_spec.md</code> §5 / §11.5 階層判定擬似コード。</p>
+      </details>
 
       <h2 class="section-title">緊急通知</h2>
       <p class="section-desc">brief v1 §1.5 — 緊急 PO 判断必要時のみ push 通知。 Apple Push 加入までは po_outbox 表示で代替。</p>
@@ -123,6 +230,19 @@
         <p class="section-desc">T139 — depends_on / parent_of / parallel_with の Mission 結合と、 critical_input_from で BLOCK 判定 されている task を一覧。 PO 直命 2026-05-09「Task 同士を結ぶ仕組み、 親子 / 並列 OK 一目」 反映。</p>
         <ul class="mission-graph-list" id="mission-graph-list" aria-live="polite">
           <li class="empty">読み込み中…</li>
+        </ul>
+
+        <!-- T163 / TASK-DAIS-PARENT-CHILD-DETECTOR-IMPL -->
+        <!-- 詳細カード「関連 task suggest」 section の anchor。 t_progress.json -->
+        <!-- の各 task entry に projection-only field `parent_child_suggest` が -->
+        <!-- 載り、 app.js renderParentChildSuggestSection() が描画する。 SSoT -->
+        <!-- (Mission Queue / TASK detail) は detector が直接 mutate しない -->
+        <!-- (T148 §4.2 自動書込禁止)。 [Apply] / [Edit] / [Skip] は po_inbox -->
+        <!-- prefill 経由で確定書込する手順を提示する。 -->
+        <h2 class="section-title">関連 task suggest (T148 / parent_child_suggest)</h2>
+        <p class="section-desc">T163 — 6 素性 scoring (= name 前方一致 / changed_files / brief 章 / App+Phase / Jaccard / function_refs) で score &ge; 0.3 の関連 task を suggest。 score 単独で SSoT は更新しません。 Apply / Edit / Skip は po_inbox prefill を生成します。</p>
+        <ul class="parent-child-suggest-list" id="parent-child-suggest-list" aria-live="polite" data-section="parent_child_suggest">
+          <li class="empty">関連 task suggest 読み込み中… (detector 未走査時は空のままです)</li>
         </ul>
       </details>
     </section>
