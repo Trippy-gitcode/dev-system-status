@@ -3,8 +3,8 @@
  * T125 / TASK-DAIS-PWA-ROOT-URL-CONSOLIDATION
  *
  * 戦略:
- *   - static shell (HTML / CSS / JS / icons / manifest) = cache-first
- *   - JSON endpoint (agent_registry / t_progress) = network-first, fallback to cache
+ *   - static shell (PWA HTML / CSS / JS / icons / manifest) = cache-first
+ *   - JSON endpoint + progress iframe HTML (t_progress.html) = network-first, fallback to cache
  *   - service worker は offline でも shell が起動し、 直近 fetch 済み JSON を表示できる
  *   - precache list は 相対 path (./) のみ使用、 root + /pwa/ 双方の scope で 自動成立
  *     (T125 URL 1 本化、 root URL アクセス で PWA がそのまま表示)
@@ -14,7 +14,7 @@
  *     VAPID key 配備後に有効化される。
  */
 
-var CACHE_VERSION = 'dais-pwa-v3-2026-05-09';
+var CACHE_VERSION = 'dais-pwa-v4-2026-05-09-t144';
 var STATIC_CACHE = CACHE_VERSION + '-static';
 var DATA_CACHE = CACHE_VERSION + '-data';
 
@@ -62,10 +62,12 @@ self.addEventListener('fetch', function (event) {
 
   var url = new URL(req.url);
 
-  // JSON endpoints: network-first
-  var isData = /\.json($|\?)/.test(url.pathname);
+  // JSON endpoints + progress iframe HTML: network-first
+  var isJsonData = /\.json$/.test(url.pathname);
+  var isProgressHtml = /\/t_progress\.html$/.test(url.pathname);
+  var isNetworkFirst = isJsonData || isProgressHtml;
 
-  if (isData) {
+  if (isNetworkFirst) {
     event.respondWith(
       fetch(req).then(function (resp) {
         var copy = resp.clone();
@@ -75,7 +77,12 @@ self.addEventListener('fetch', function (event) {
         return resp;
       }).catch(function () {
         return caches.match(req).then(function (hit) {
-          return hit || new Response(JSON.stringify({ error: 'offline', tasks: [], agents: [] }),
+          if (hit) return hit;
+          if (isProgressHtml) {
+            return new Response('<!doctype html><title>Dais progress offline</title><p>progress offline</p>',
+              { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+          }
+          return new Response(JSON.stringify({ error: 'offline', tasks: [], agents: [] }),
             { status: 200, headers: { 'Content-Type': 'application/json' } });
         });
       })

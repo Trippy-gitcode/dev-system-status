@@ -42,13 +42,14 @@
 
   function tProgressUrl() {
     var pb = pwaBase();
+    var suffix = '?progress_ts=' + Date.now();
     if (/\/docs\/pwa\/$/.test(pb)) {
-      return pb.replace(/pwa\/$/, 'status/t_progress.html');
+      return pb.replace(/pwa\/$/, 'status/t_progress.html') + suffix;
     }
     if (/\/pwa\/$/.test(pb)) {
-      return pb.replace(/pwa\/$/, 't_progress.html');
+      return pb.replace(/pwa\/$/, 't_progress.html') + suffix;
     }
-    return pb + 't_progress.html';
+    return pb + 't_progress.html' + suffix;
   }
 
   // path resolver function (= path 検出 lazy 評価で test mockable)
