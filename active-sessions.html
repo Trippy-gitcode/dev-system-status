@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d1117" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Dais Active Sessions" />
+  <meta name="description" content="Dais Supervisor PWA — Active Sessions Panel (P1-T1 / DA141-INF_P): live agent claim / branch / worktree / heartbeat freshness for 16-32 agent scale." />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png" />
+  <link rel="stylesheet" href="./style.css" />
+  <title>Dais Active Sessions</title>
+</head>
+<body>
+  <!--
+    P1-T1 / DA141-INF_P / TASK-DAIS-PHASE1-T1-PWS-ACTIVE-SESSIONS
+    Active Sessions Panel:
+      - lists every agent currently doing work
+      - claim / branch / worktree / heartbeat freshness color
+      - duplicate-claim warning (= same task_id held by >=2 sessions)
+      - mobile breakpoint @ 640px (table -> stacked card)
+      - 16-32 session scale tested via fixtures + tests/test_p1_t1_pws_active_sessions.sh
+    Data sources (read-only, static):
+      - docs/status/agent_heartbeats.json
+      - docs/status/agent_registry.json
+    Pure additive: no edits to existing index.html / app.js / t_progress.html behavior.
+  -->
+  <header class="app-header">
+    <h1>Active Sessions</h1>
+    <div class="status-line" id="active-sessions-status">読み込み中…</div>
+    <nav class="active-sessions-nav" aria-label="dashboard navigation">
+      <a class="ghost-btn" href="./index.html">← Supervisor に戻る</a>
+      <a class="ghost-btn" href="./t_progress.html">進捗ボード</a>
+    </nav>
+  </header>
+
+  <main class="active-sessions-main">
+    <section class="active-sessions-summary" aria-label="サマリー">
+      <div class="kpi"><div class="kpi-num" id="active-sessions-kpi-total">—</div><div class="kpi-label">total</div></div>
+      <div class="kpi"><div class="kpi-num kpi-fresh" id="active-sessions-kpi-fresh">—</div><div class="kpi-label">fresh</div></div>
+      <div class="kpi"><div class="kpi-num kpi-stale" id="active-sessions-kpi-stale">—</div><div class="kpi-label">stale</div></div>
+      <div class="kpi"><div class="kpi-num kpi-dead" id="active-sessions-kpi-dead">—</div><div class="kpi-label">dead</div></div>
+      <div class="kpi"><div class="kpi-num kpi-dup" id="active-sessions-kpi-dup">—</div><div class="kpi-label">dup-claim</div></div>
+    </section>
+
+    <section class="active-sessions-controls" aria-label="フィルタ">
+      <input
+        type="search"
+        id="active-sessions-filter"
+        placeholder="agent / task / branch で絞り込み…"
+        aria-label="active session filter"
+      />
+      <button id="active-sessions-refresh" class="ghost-btn" type="button">再読込</button>
+    </section>
+
+    <!-- Duplicate claim warning bar (hidden when no duplicates) -->
+    <div
+      class="active-sessions-warn"
+      id="active-sessions-dup-warning"
+      role="status"
+      aria-live="polite"
+      hidden
+    ></div>
+
+    <!-- Table view (>=640px wide). On <640px, CSS collapses tbody rows to stacked cards. -->
+    <div class="active-sessions-table-wrap">
+      <table
+        class="active-sessions-table"
+        id="active-sessions-table"
+        aria-label="Active Sessions"
+      >
+        <thead>
+          <tr>
+            <th scope="col">agent</th>
+            <th scope="col">claim (task_id)</th>
+            <th scope="col">branch</th>
+            <th scope="col">worktree</th>
+            <th scope="col">heartbeat</th>
+            <th scope="col">age</th>
+          </tr>
+        </thead>
+        <tbody id="active-sessions-tbody" data-row-role="agent-row">
+          <tr><td colspan="6" class="active-sessions-empty">読み込み中…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="hint">
+      色分け: <span class="dot dot-fresh" aria-hidden="true"></span> fresh (&lt;15 分) /
+      <span class="dot dot-stale" aria-hidden="true"></span> stale (15-60 分) /
+      <span class="dot dot-dead" aria-hidden="true"></span> dead (&gt;60 分)。
+      重複 claim (= 同一 task_id を 2 セッション以上で保持) は黄色の警告バーで表示。
+    </p>
+  </main>
+
+  <footer class="app-footer">
+    <small>
+      Dais Supervisor PWA · P1-T1 / DA141-INF_P · Active Sessions ·
+      <code>docs/status/agent_heartbeats.json</code> +
+      <code>docs/status/agent_registry.json</code>
+    </small>
+  </footer>
+
+  <script src="./active-sessions.js" defer></script>
+</body>
+</html>
