@@ -309,6 +309,8 @@
         QUEUED: "未着手",
         IN_PROGRESS: "進行中",
         RUNNING: "進行中",
+        STALLED: "⚠️ 停止検出",
+        stalled: "⚠️ 停止検出",
         LOCAL_DONE: "反映待ち",
         PENDING_CONFIRMATION: "(待) 完了確認",
         COMMITTED: "反映待ち",
@@ -342,14 +344,19 @@
       if (key === "BLOCKED") {
         return `${base} bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200`;
       }
+      if (key === "STALLED") {
+        // T140 OPS H1 fix: STALLED は赤色 + ⚠️ で視覚区別 (動いてるフリ罠の検出表示)
+        return `${base} bg-red-200 text-red-900 ring-2 ring-red-600 animate-pulse dark:bg-red-900 dark:text-red-100 dark:ring-red-300`;
+      }
       return `${base} bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200`;
     };
 
-    const STATUS_ORDER = ["IN_PROGRESS", "PENDING_CONFIRMATION", "DONE", "QUEUED", "BLOCKED", "LOCAL_DONE", "OTHER"];
-    const BASE_STATUS_KEYS = ["IN_PROGRESS", "PENDING_CONFIRMATION", "DONE", "QUEUED", "BLOCKED", "LOCAL_DONE"];
+    const STATUS_ORDER = ["IN_PROGRESS", "PENDING_CONFIRMATION", "STALLED", "DONE", "QUEUED", "BLOCKED", "LOCAL_DONE", "OTHER"];
+    const BASE_STATUS_KEYS = ["IN_PROGRESS", "PENDING_CONFIRMATION", "STALLED", "DONE", "QUEUED", "BLOCKED", "LOCAL_DONE"];
     const STATUS_META = {
       IN_PROGRESS: { label: "進行中", stroke: "#0f766e", border: "border-teal-200 dark:border-teal-900", text: "text-teal-800 dark:text-teal-200", active: "bg-teal-700 text-white border-teal-700" },
       PENDING_CONFIRMATION: { label: "(待) 完了確認", stroke: "#9333ea", border: "border-purple-200 dark:border-purple-900", text: "text-purple-800 dark:text-purple-200", active: "bg-purple-700 text-white border-purple-700" },
+      STALLED: { label: "⚠️ 停止検出", stroke: "#dc2626", border: "border-red-300 dark:border-red-700", text: "text-red-900 dark:text-red-100", active: "bg-red-600 text-white border-red-600" },
       DONE: { label: "完了", stroke: "#f97316", border: "border-orange-200 dark:border-orange-900", text: "text-orange-800 dark:text-orange-200", active: "bg-orange-600 text-white border-orange-600" },
       QUEUED: { label: "未着手", stroke: "#2563eb", border: "border-blue-200 dark:border-blue-900", text: "text-blue-800 dark:text-blue-200", active: "bg-blue-600 text-white border-blue-600" },
       BLOCKED: { label: "停止中", stroke: "#e11d48", border: "border-rose-200 dark:border-rose-900", text: "text-rose-800 dark:text-rose-200", active: "bg-rose-600 text-white border-rose-600" },
@@ -366,6 +373,8 @@
       if (["IN_PROGRESS", "RUNNING"].includes(key)) return "IN_PROGRESS";
       if (key === "QUEUED") return "QUEUED";
       if (key === "BLOCKED") return "BLOCKED";
+      // T140 OPS H1 fix: STALLED row を視覚区別するため独立 key
+      if (key === "STALLED") return "STALLED";
       return "OTHER";
     };
 
