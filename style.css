@@ -1046,3 +1046,68 @@ body {
     margin-right: 6px;
   }
 }
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * P1-T3 / DA150-INF_P / TASK-DAIS-PHASE1-T3-PWS-APP-FILTER
+ * App prefix filter chip strip (shared across active-sessions / parent-child /
+ * index pages). Vanilla CSS, framework-free, mobile-first.
+ *
+ *   .app-filter             - flex container, wraps to multi-row at <=640px
+ *   .app-filter-chip        - single chip button (DA / LA / MA / すべて)
+ *   .app-filter-chip.active - currently selected chip (= active app prefix)
+ *
+ * Reuses the existing ghost-btn min tap size + accent color tokens.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+.app-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px;
+  align-items: center;
+  background: var(--bg-elev);
+  border-bottom: 1px solid var(--border);
+}
+
+.app-filter-chip {
+  min-height: var(--tap-min);
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.app-filter-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.app-filter-chip.active {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+
+.app-filter-chip:active {
+  background: var(--bg-elev);
+}
+
+/* Mobile breakpoint: chips wrap onto 2 rows and shrink slightly so the row
+ * remains thumb-friendly even on a narrow iPhone screen. */
+@media (max-width: 640px) {
+  .app-filter {
+    padding: 6px 10px;
+    gap: 4px;
+  }
+  .app-filter-chip {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    flex: 0 1 auto;
+  }
+}

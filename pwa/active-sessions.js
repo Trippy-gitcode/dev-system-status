@@ -317,6 +317,20 @@ async function fetchJson(url) {
   }
 }
 
+/**
+ * Apply the P1-T3 app prefix filter on top of the existing text filter.
+ * Pure helper — kept here so test harness can import it via require().
+ */
+function applyAppPrefixFilter(rows) {
+  if (typeof window === 'undefined' || !window.PwsAppFilter) return rows;
+  try {
+    const app = window.PwsAppFilter.getActiveApp();
+    return window.PwsAppFilter.applyFilter(rows, app);
+  } catch (_) {
+    return rows;
+  }
+}
+
 async function loadAndRender(state) {
   const heartbeats = await fetchJson(HEARTBEATS_URL);
   const registry = await fetchJson(REGISTRY_URL);
@@ -336,7 +350,9 @@ async function loadAndRender(state) {
     state.duplicateClaims = detectDuplicateClaims(rows);
     state.now = new Date();
     state.summary = computeSummary(rows, state.duplicateClaims, state.now);
-    state.filteredRows = filterRows(rows, state.filterQuery);
+    // P1-T3: app prefix filter -> text filter (chained, both pure).
+    const appFiltered = applyAppPrefixFilter(rows);
+    state.filteredRows = filterRows(appFiltered, state.filterQuery);
     state.errorMessage = '';
   }
 
@@ -351,7 +367,8 @@ function bindUi(state) {
   if (filterInput) {
     filterInput.addEventListener('input', () => {
       state.filterQuery = filterInput.value || '';
-      state.filteredRows = filterRows(state.allRows, state.filterQuery);
+      const appFiltered = applyAppPrefixFilter(state.allRows);
+      state.filteredRows = filterRows(appFiltered, state.filterQuery);
       state.summary = computeSummary(state.allRows, state.duplicateClaims, state.now);
       renderActiveSessionsPanel(state);
     });
@@ -360,6 +377,38 @@ function bindUi(state) {
     refreshBtn.addEventListener('click', () => {
       loadAndRender(state).catch(() => {});
     });
+  }
+
+  // P1-T3: app filter chip strip.
+  if (typeof window !== 'undefined' && window.PwsAppFilter) {
+    try {
+      window.PwsAppFilter.ensureFilterChipBar({
+        containerId: 'active-sessions-app-filter',
+        mainSelector: '.active-sessions-main',
+        onChange: (app) => {
+          window.PwsAppFilter.setActiveApp(app);
+          // Re-render chips so the active highlight follows the click.
+          window.PwsAppFilter.renderFilterChips(
+            'active-sessions-app-filter',
+            window.PwsAppFilter.getActiveApp(),
+            (a) => {
+              window.PwsAppFilter.setActiveApp(a);
+              const filtered = applyAppPrefixFilter(state.allRows);
+              state.filteredRows = filterRows(filtered, state.filterQuery);
+              renderActiveSessionsPanel(state);
+              window.PwsAppFilter.renderFilterChips(
+                'active-sessions-app-filter',
+                window.PwsAppFilter.getActiveApp(),
+                () => {}
+              );
+            }
+          );
+          const filtered = applyAppPrefixFilter(state.allRows);
+          state.filteredRows = filterRows(filtered, state.filterQuery);
+          renderActiveSessionsPanel(state);
+        },
+      });
+    } catch (_) { /* swallow; chips are progressive enhancement */ }
   }
 }
 

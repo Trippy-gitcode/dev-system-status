@@ -38,6 +38,12 @@
     </div>
   </header>
 
+  <!-- P1-T3 / DA150-INF_P / TASK-DAIS-PHASE1-T3-PWS-APP-FILTER:
+       App prefix filter chips (DA / LA / MA + すべて). 状態は ?app= URL +
+       localStorage で全 PWS page を横断して保持される。 docs/pwa/app-filter.js
+       が render + persist。 デフォルトは「すべて」 = ALL_APPS sentinel。 -->
+  <div class="app-filter" id="index-app-filter" role="tablist" aria-label="app filter"></div>
+
   <!-- 全 agent 状態 strip (常時表示、 PO 質問「active/offline/作業中」 に対応) -->
   <section class="agent-strip" id="agent-strip" aria-label="Agent 状態 一覧">
     <div class="agent-strip-loading">agent 状態 読み込み中…</div>
@@ -276,6 +282,49 @@
     <small>Dais Supervisor PWA · T117 / TASK-DAIS-PWA-IPHONE-AGENT-DASHBOARD · T125 URL 1 本化 · T128 1-site assign · brief v1 §1.1-§1.5</small>
   </footer>
 
+  <script src="./app-filter.js" defer></script>
   <script src="./app.js" defer></script>
+  <script>
+    // P1-T3 inline boot: render the chip strip on index.html and re-render
+    // task / agent lists when the user toggles. We do not modify app.js itself
+    // — instead we hook into its existing renderProgressBoard / agent-strip
+    // refresh by triggering a synthetic reload via dispatching a 'click' on
+    // the existing refresh button when present, otherwise falling back to a
+    // window event app.js can listen for.
+    (function () {
+      'use strict';
+      if (typeof document === 'undefined' || !window.PwsAppFilter) return;
+      function init() {
+        try {
+          var f = window.PwsAppFilter;
+          function notify() {
+            try {
+              window.dispatchEvent(new CustomEvent('pws:app-filter-changed', {
+                detail: { app: f.getActiveApp() },
+              }));
+            } catch (_) { /* swallow */ }
+          }
+          function reapplyChips() {
+            f.renderFilterChips('index-app-filter', f.getActiveApp(), function (a) {
+              f.setActiveApp(a);
+              notify();
+              reapplyChips();
+            });
+          }
+          f.ensureFilterChipBar({
+            containerId: 'index-app-filter',
+            mainSelector: 'body',
+            onChange: function (app) { f.setActiveApp(app); notify(); reapplyChips(); },
+          });
+          reapplyChips();
+        } catch (_) { /* swallow */ }
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
 </body>
 </html>

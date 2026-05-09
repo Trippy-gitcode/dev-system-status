@@ -514,6 +514,21 @@ async function fetchText(url) {
   }
 }
 
+/**
+ * P1-T3: apply the configured app prefix filter to the parsed task array.
+ * Cross-app tasks survive every filter view (see applyFilter() semantics in
+ * docs/pwa/app-filter.js).
+ */
+function applyAppPrefixFilterToTasks(tasks) {
+  if (typeof window === 'undefined' || !window.PwsAppFilter) return tasks;
+  try {
+    const app = window.PwsAppFilter.getActiveApp();
+    return window.PwsAppFilter.applyFilter(tasks, app);
+  } catch (_) {
+    return tasks;
+  }
+}
+
 async function loadAndRender(state) {
   const text = await fetchText(TASK_DETAIL_URL);
   if (!text) {
@@ -527,7 +542,9 @@ async function loadAndRender(state) {
     renderPanel(state);
     return;
   }
-  state.tasks = parseTaskDetail(text);
+  const allTasks = parseTaskDetail(text);
+  state.allTasks = allTasks;
+  state.tasks = applyAppPrefixFilterToTasks(allTasks);
   state.forest = buildTree(state.tasks);
   state.cycles = detectCycles(state.tasks);
   state.blockReasons = computeBlockReasons(state.tasks);
@@ -553,6 +570,33 @@ function bindUi(state) {
     refreshBtn.addEventListener('click', () => {
       loadAndRender(state).catch(() => {});
     });
+  }
+
+  // P1-T3: app filter chip strip — re-runs the full pipeline so cycles /
+  // blockReasons / summary reflect the filtered set.
+  if (typeof window !== 'undefined' && window.PwsAppFilter) {
+    try {
+      const reapply = () => {
+        const allTasks = state.allTasks || state.tasks || [];
+        state.tasks = applyAppPrefixFilterToTasks(allTasks);
+        state.forest = buildTree(state.tasks);
+        state.cycles = detectCycles(state.tasks);
+        state.blockReasons = computeBlockReasons(state.tasks);
+        state.summary = summarize(state.tasks, state.cycles, state.blockReasons);
+        state.filteredForest = filterForest(state.forest, state.filterQuery);
+        renderPanel(state);
+        window.PwsAppFilter.renderFilterChips(
+          'pcc-app-filter',
+          window.PwsAppFilter.getActiveApp(),
+          (a) => { window.PwsAppFilter.setActiveApp(a); reapply(); }
+        );
+      };
+      window.PwsAppFilter.ensureFilterChipBar({
+        containerId: 'pcc-app-filter',
+        mainSelector: '.pcc-main',
+        onChange: (app) => { window.PwsAppFilter.setActiveApp(app); reapply(); },
+      });
+    } catch (_) { /* swallow */ }
   }
 }
 

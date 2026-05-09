@@ -39,6 +39,11 @@
   </header>
 
   <main class="active-sessions-main">
+    <!-- P1-T3 / DA150-INF_P / TASK-DAIS-PHASE1-T3-PWS-APP-FILTER:
+         App prefix filter chips (DA / LA / MA + すべて). 状態は ?app= URL +
+         localStorage に永続化。 docs/pwa/app-filter.js が render + persist。 -->
+    <div class="app-filter" id="active-sessions-app-filter" role="tablist" aria-label="app filter"></div>
+
     <section class="active-sessions-summary" aria-label="サマリー">
       <div class="kpi"><div class="kpi-num" id="active-sessions-kpi-total">—</div><div class="kpi-label">total</div></div>
       <div class="kpi"><div class="kpi-num kpi-fresh" id="active-sessions-kpi-fresh">—</div><div class="kpi-label">fresh</div></div>
@@ -105,6 +110,7 @@
     </small>
   </footer>
 
+  <script src="./app-filter.js" defer></script>
   <script src="./active-sessions.js" defer></script>
 </body>
 </html>
