@@ -460,14 +460,21 @@
 
     // T152 readability gate: 進捗表に出す目的文を 100 文字以下・専門表記なしに保つ。
     // PO 直命 2026-05-09: 「ヘッダーから "実現したいこと" 削除、 内容は 100 文字以下、
-    //  Gate 形式・md ファイル名 など の記載は禁止、 違反時は安全な短文 fallback」。
+    //  Gate 形式・md ファイル名・path・script・test・log など の記載は禁止、
+    //  違反時は安全な短文 fallback」。
     // 100 字超は末尾を「…」で graceful 切り詰め (= 全件 fallback で進捗表が読めなくなるのを回避)。
     // 禁止語ヒット時のみ完全 fallback (専門表記の漏出を防止)。
     const INTENT_SUMMARY_FALLBACK = "目的の表示に課題があります（要確認）";
     const INTENT_SUMMARY_MAX_LEN = 100;
     const INTENT_SUMMARY_BANNED_PATTERNS = [
-      /Gate\s+[A-Za-z0-9]/,         // "Gate A" / "Gate B" 形式
-      /\b[A-Za-z0-9_.-]+\.md\b/i    // *.md ファイル名
+      /Gate\s+[A-Za-z0-9]/i,                          // "Gate A" / "Gate B" 形式
+      /\b[A-Za-z0-9_.-]+\.md\b/i,                      // *.md ファイル名
+      /\b[A-Za-z0-9_.-]+\.sh\b/i,                      // shell script file
+      /\btest_[A-Za-z0-9_.-]+\b/i,                     // test_* identifier
+      /\b(?:script|scripts|test|tests|log|logs)\b/i,   // raw engineering terms
+      /\b(?:scripts?|tests?|logs?)\//i,                // script/test/log paths
+      /(?:^|[\s`"'「『(（])(?:\.{1,2}\/|\/(?:Users|private|tmp|var|etc|home|opt|usr)\b)/i,
+      /(?:^|[\s`"'「『(（])(?=[A-Za-z0-9_.-]*[a-z_.-])[A-Za-z0-9_.-]+\/(?=[A-Za-z0-9_.\/-]*[a-z_.-])[A-Za-z0-9_.\/-]+/
     ];
     const intentSummaryReadability = (text) => {
       const original = String(text == null ? "" : text);
