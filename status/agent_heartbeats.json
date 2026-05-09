@@ -88,7 +88,7 @@
     "worktree_path": "/Users/futoshi/Desktop/dev-system/.claude/worktrees/serene-heyrovsky-dcc42b"
   },
   "unknown": {
-    "agent_pid": 43063,
+    "agent_pid": 26612,
     "branch": "codex/T97/mais-knowledge-retrofit-review",
     "capability": {
       "function_refs": [
@@ -99,7 +99,7 @@
       "test_methods": []
     },
     "current_task_id": "",
-    "last_heartbeat": "2026-05-09T01:13:06Z",
+    "last_heartbeat": "2026-05-09T02:17:01Z",
     "worktree_path": "/Users/futoshi/Desktop/dev-system"
   }
 }
