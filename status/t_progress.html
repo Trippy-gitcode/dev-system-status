@@ -33,6 +33,17 @@
       <p class="inline-flex w-fit items-center rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-200" id="generated">loading...</p>
     </header>
 
+    <!-- task management v2: PO 判断ボード (T143 P1 UI、 docs/task_management_v2.md §3.3) -->
+    <!-- po-decision-board / 決定待ち / PO 判断待ち をページトップ summary 表示 -->
+    <section id="po-decision-board" class="po-decision-board mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 shadow-sm dark:border-amber-700 dark:bg-amber-950/40" aria-label="PO 判断ボード" hidden>
+      <div class="flex items-center gap-2">
+        <span class="text-xl" aria-hidden="true">🔔</span>
+        <h2 class="text-lg font-extrabold text-amber-900 dark:text-amber-100">PO 判断待ち <span id="po-decision-count" class="ml-1 text-base font-extrabold text-amber-800 dark:text-amber-200">(0 件)</span></h2>
+      </div>
+      <p class="mt-1 text-xs font-semibold text-amber-800 dark:text-amber-200">タップで下部の詳細カードへスクロール、 回答 Box で回答できる。</p>
+      <ul id="po-decision-list" class="mt-3 space-y-1.5 text-[15px] font-semibold text-amber-900 dark:text-amber-100"></ul>
+    </section>
+
     <section id="progress-summary" class="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-[#171b22]" aria-label="summary">
       <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
@@ -70,7 +81,9 @@
         </div>
       </div>
       <div class="overflow-x-auto">
-        <table class="min-w-full text-left text-[15px]">
+        <!-- task management v2: 2 行構成 / two-row / task-row-2line で T 番号縦結合 (rowspan=2) -->
+        <!-- docs/task_management_v2.md §3.1 (タスク行 2 行 UI 構成、 上段 = メタ情報、 下段 = 実現したいこと) -->
+        <table class="min-w-full text-left text-[15px] task-row-2line two-row">
           <thead class="bg-[#eaf1f8] text-xs font-extrabold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
             <tr>
               <th class="whitespace-nowrap px-4 py-3">T番号</th>
@@ -91,6 +104,57 @@
       <h2 class="mb-3 text-lg font-extrabold text-slate-900 dark:text-white">開発プロセス T番号</h2>
       <div class="grid gap-3" id="task-rows"></div>
       <p class="py-4 text-sm text-slate-500 dark:text-slate-400" id="empty-state" hidden>表示できるタスクがありません。</p>
+    </section>
+
+    <!-- task management v2: 詳細カード (T143 P1 UI、 docs/task_management_v2.md §3.4) -->
+    <!-- detail-card / task-detail / 詳細カード = PO 判断時のみ回答 Box + 変更履歴 表示 -->
+    <section id="task-detail-card" class="task-detail detail-card mt-5 rounded-xl border border-slate-300 bg-white shadow-sm dark:border-slate-700 dark:bg-[#171b22]" aria-label="詳細カード" hidden>
+      <header class="flex flex-col gap-2 border-b border-slate-200 px-4 py-3 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between">
+        <h2 class="text-base font-extrabold text-slate-900 dark:text-white">
+          <span class="detail-tid font-black text-mint">T---</span>
+          <span class="ml-2">詳細カード</span>
+        </h2>
+        <button type="button" id="detail-close" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-extrabold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800">閉じる</button>
+      </header>
+      <div class="grid gap-3 px-4 py-4 text-[14px] sm:grid-cols-2">
+        <div><span class="text-xs font-extrabold text-slate-500 dark:text-slate-400">対象</span><p class="detail-target font-semibold text-slate-900 dark:text-slate-100">-</p></div>
+        <div><span class="text-xs font-extrabold text-slate-500 dark:text-slate-400">種類</span><p class="detail-kind font-semibold text-slate-900 dark:text-slate-100">-</p></div>
+        <div><span class="text-xs font-extrabold text-slate-500 dark:text-slate-400">状態</span><p class="detail-status font-semibold text-slate-900 dark:text-slate-100">-</p></div>
+        <div><span class="text-xs font-extrabold text-slate-500 dark:text-slate-400">担当 AI</span><p class="detail-agent font-semibold text-slate-900 dark:text-slate-100">-</p></div>
+        <div class="sm:col-span-2"><span class="text-xs font-extrabold text-slate-500 dark:text-slate-400">実現したいこと</span><p class="detail-intent font-semibold text-slate-800 dark:text-slate-100">-</p></div>
+        <div class="sm:col-span-2 detail-deps-box" hidden>
+          <span class="text-xs font-extrabold text-slate-500 dark:text-slate-400">依存</span>
+          <p class="detail-deps font-semibold text-slate-800 dark:text-slate-100">-</p>
+        </div>
+      </div>
+      <!-- 16 agent 枠 active 表示 (条件表示、 active 中の枠のみ可視、 docs/task_management_v2.md §2.1) -->
+      <!-- CLD_01 / CLD_02 / CLD_03 / CLD_04 / CLD_rev01 / CLD_rev02 / CLD_rev03 / CLD_rev04 -->
+      <!-- CDX_01 / CDX_02 / CDX_03 / CDX_04 / CDX_rev01 / CDX_rev02 / CDX_rev03 / CDX_rev04 -->
+      <section class="detail-agent-slots mx-4 mb-3" aria-label="16 agent 枠 (active のみ表示)">
+        <div class="mb-2 text-xs font-extrabold text-slate-500 dark:text-slate-400">担当 AI 候補 (active 枠のみ表示)</div>
+        <div id="detail-agent-slot-grid" class="flex flex-wrap gap-1.5"></div>
+      </section>
+      <!-- PO 判断時のみ回答 Box (= (停) PO 判断 status の task でのみ可視) -->
+      <div id="detail-po-answer-box" class="mx-4 mb-3 rounded-lg border border-amber-300 bg-amber-50 p-3 dark:border-amber-700 dark:bg-amber-950/30" hidden>
+        <div class="mb-2 flex items-center gap-2 text-sm font-extrabold text-amber-900 dark:text-amber-100">
+          <span aria-hidden="true">🔔</span><span>PO 判断: 回答 Box</span>
+        </div>
+        <p class="detail-po-question mb-2 text-[14px] font-semibold text-amber-900 dark:text-amber-100">-</p>
+        <textarea id="detail-po-answer-text" class="block w-full rounded-md border border-amber-300 bg-white p-2 text-[14px] font-medium text-slate-800 dark:border-amber-800 dark:bg-slate-900 dark:text-slate-100" rows="3" placeholder="PO の回答を入力。 [回答済] 押下で po-decisions.md に追記候補が SSoT に渡る。"></textarea>
+        <div class="mt-2 flex justify-end">
+          <button type="button" id="detail-po-answered" class="rounded-md border border-amber-400 bg-amber-200 px-3 py-1.5 text-xs font-extrabold text-amber-900 hover:bg-amber-300 dark:border-amber-700 dark:bg-amber-900 dark:text-amber-100">[回答済]</button>
+        </div>
+      </div>
+      <!-- 変更履歴 section (= T143 P2 で配備される task_status_change_log.jsonl 表示枠、 P1 では空表示でも OK) -->
+      <section class="change-history mx-4 mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900/40" aria-label="変更履歴">
+        <div class="mb-2 flex items-center justify-between">
+          <h3 class="text-sm font-extrabold text-slate-700 dark:text-slate-200">変更履歴 <span class="ml-1 text-xs font-bold text-slate-500 dark:text-slate-400">(直近 10 件)</span></h3>
+          <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400">source: docs/status/task_status_change_log.jsonl</span>
+        </div>
+        <ul id="detail-change-history-list" class="space-y-1 text-[13px] text-slate-700 dark:text-slate-200" data-source="status_change_log">
+          <li class="text-slate-500 dark:text-slate-400">(変更履歴は T143 P2 で配備、 現在は空表示)</li>
+        </ul>
+      </section>
     </section>
   </main>
 
@@ -160,7 +224,8 @@
             <ul class="refs-list list-disc space-y-1.5 pl-5 text-[15px] leading-7 text-slate-800 dark:text-slate-100"></ul>
           </div>
         </div>
-        <div class="mt-4 flex justify-end border-t border-slate-200 pt-4 dark:border-slate-800">
+        <div class="mt-4 flex flex-wrap justify-end gap-2 border-t border-slate-200 pt-4 dark:border-slate-800">
+          <button type="button" class="open-detail-card rounded-lg border border-mint bg-mint/10 px-3 py-2 text-sm font-extrabold text-mint shadow-sm hover:bg-mint/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-mint dark:border-teal-700 dark:bg-teal-950 dark:text-teal-200">詳細カードを開く</button>
           <button type="button" class="back-to-quick rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-extrabold text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-mint dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800">早見表に戻る</button>
         </div>
       </div>
@@ -168,6 +233,74 @@
   </template>
 
   <script>
+    // task management v2 (T143 P1 UI、 docs/task_management_v2.md §2.2 8 status / §2.1 16 agent 枠)
+    // 8 status enum: 未着手 / 進行中 / CLD レビュー (未) / CLD レビュー (割) / CDX レビュー (未) / CDX レビュー (割) /
+    //                (停) PO 判断 / (停) T*** / (停) 外部 / 完了
+    // 旧 5 status は 8 status へ後方互換 mapping (docs/task_management_v2.md §7.1)。
+    const STATUS_V2_LABELS = {
+      NOT_STARTED: "未着手",
+      IN_PROGRESS: "進行中",
+      CLD_REVIEW_PENDING: "CLD レビュー (未)",
+      CLD_REVIEW_ASSIGNED: "CLD レビュー (割)",
+      CDX_REVIEW_PENDING: "CDX レビュー (未)",
+      CDX_REVIEW_ASSIGNED: "CDX レビュー (割)",
+      BLOCKED_PO: "(停) PO 判断",
+      BLOCKED_TASK: "(停) T***",
+      BLOCKED_EXTERNAL: "(停) 外部",
+      DONE: "完了"
+    };
+    // 16 agent 枠: CLD_01..CLD_04 / CLD_rev01..CLD_rev04 / CDX_01..CDX_04 / CDX_rev01..CDX_rev04
+    // 番号ペア固定: CLD_01 実装 → CDX_rev01 がレビュー (= 番号対応、 docs/task_management_v2.md §2.1.1)
+    const AGENT_SLOTS_CLD_IMPL = ["CLD_01", "CLD_02", "CLD_03", "CLD_04"];
+    const AGENT_SLOTS_CLD_REVIEW = ["CLD_rev01", "CLD_rev02", "CLD_rev03", "CLD_rev04"];
+    const AGENT_SLOTS_CDX_IMPL = ["CDX_01", "CDX_02", "CDX_03", "CDX_04"];
+    const AGENT_SLOTS_CDX_REVIEW = ["CDX_rev01", "CDX_rev02", "CDX_rev03", "CDX_rev04"];
+    const AGENT_SLOTS_16 = [
+      ...AGENT_SLOTS_CLD_IMPL,
+      ...AGENT_SLOTS_CLD_REVIEW,
+      ...AGENT_SLOTS_CDX_IMPL,
+      ...AGENT_SLOTS_CDX_REVIEW
+    ];
+    // active 中の枠のみ条件表示 (= 全 16 枠を常時表示しない、 acceptance #3 に対応)
+    const isAgentSlotActive = (slotId, tasks) => {
+      if (!Array.isArray(tasks) || !slotId) return false;
+      const re = new RegExp(`(^|[^A-Za-z0-9_])${slotId}([^A-Za-z0-9_]|$)`, "i");
+      return tasks.some((t) => {
+        const blob = `${t.owner_ai || ""} ${t.owner || ""} ${t.work_steps || ""} ${t.work_done || ""} ${t.agent_id || ""}`;
+        return re.test(blob);
+      });
+    };
+
+    // 旧 status → v2 status mapping (= 後方互換)
+    const STATUS_V1_TO_V2 = {
+      QUEUED: "NOT_STARTED",
+      IN_PROGRESS: "IN_PROGRESS",
+      RUNNING: "IN_PROGRESS",
+      LOCAL_DONE: "CLD_REVIEW_PENDING", // 反映待ち = レビュー待ち (= §7.1)
+      COMMITTED: "CDX_REVIEW_PENDING",
+      BLOCKED: "BLOCKED_PO",            // 停止中 → 詳細不明時は PO 判断扱い
+      DONE: "DONE",
+      COMPLETED: "DONE",
+      PUSHED: "DONE",
+      DEPLOYED: "DONE",
+      APPLIED: "DONE"
+    };
+    const statusV2Key = (task) => {
+      // task.status_v2 が直接指定されていればそれを優先 (= P2 で書込予定)
+      const explicit = String(task && task.status_v2 ? task.status_v2 : "").trim().toUpperCase().replace(/[^A-Z_]/g, "");
+      if (explicit && STATUS_V2_LABELS[explicit]) return explicit;
+      const v1 = String(task && task.status ? task.status : "").toUpperCase();
+      // BLOCKED が明示的に T*** や 外部 待ちなら blocked_on / next_action から推論
+      if (v1 === "BLOCKED") {
+        const blocked = `${task.blocked_on || ""} ${task.next_action || ""}`.toLowerCase();
+        if (/外部|external|api|third.?party/.test(blocked)) return "BLOCKED_EXTERNAL";
+        if (/t\d{2,}/i.test(blocked)) return "BLOCKED_TASK";
+        return "BLOCKED_PO";
+      }
+      return STATUS_V1_TO_V2[v1] || "NOT_STARTED";
+    };
+    const statusV2Label = (task) => STATUS_V2_LABELS[statusV2Key(task)] || "未着手";
+
     const statusLabel = (status) => {
       const map = {
         BLOCKED: "停止中",
@@ -827,50 +960,122 @@
       }
     };
 
+    // task management v2 (T143 P1 UI、 docs/task_management_v2.md §3.1):
+    // 全タスク行を 2 行構成 (two-row / task-row-2line) でレンダリング。
+    // 上段 = T番号 (rowspan=2 縦結合) + 対象 / ステータス / 担当 AI / 完了率 / 完了見込み
+    // 下段 = T番号セル (rowspan で抜ける) + 実現したいこと (colspan=5)
     const renderQuickRows = (node, tasks, generatedAt) => {
       node.textContent = "";
       for (const task of tasks) {
-        const tr = document.createElement("tr");
-        tr.className = "cursor-pointer align-top outline-none hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-mint dark:hover:bg-slate-800/70";
-        tr.tabIndex = 0;
-        tr.setAttribute("role", "button");
-        tr.setAttribute("aria-label", `${task.t_id || "タスク"} のカードへ移動`);
-        tr.dataset.complete = isComplete(task) ? "true" : "false";
-        tr.dataset.completedAt = String(task.completed_at || "").slice(0, 10);
-        tr.dataset.targets = targetParts(task).join("\t");
-        tr.dataset.statusKey = statusKey(task.status);
-        tr.addEventListener("click", () => navigateToTask(task));
-        tr.addEventListener("keydown", (event) => {
+        // 共通 dataset (両 row に同じ filter 用 dataset を付ける = applyTaskFilters 互換維持)
+        const sharedDataset = {
+          complete: isComplete(task) ? "true" : "false",
+          completedAt: String(task.completed_at || "").slice(0, 10),
+          targets: targetParts(task).join("\t"),
+          statusKey: statusKey(task.status)
+        };
+        const navigate = () => navigateToTask(task);
+        const onKey = (event) => {
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
-            navigateToTask(task);
+            navigate();
           }
-        });
-        const cells = [
-          task.t_id || "-",
-          cleanText(task.target_app, task) || "-",
-          statusLabel(task.status),
-          quickActorLabel(task),
-          quickSummary(task) || "未記録",
-          `${Number(task.progress_percent ?? 0)}%`,
-          isComplete(task) ? String(task.completed_at || "-").slice(0, 10) : etaLabel(task, generatedAt)
-        ];
-        for (const [index, value] of cells.entries()) {
-          const td = document.createElement("td");
-          td.className = index === 4 ? "px-4 py-3 leading-6 text-slate-800 dark:text-slate-100" : "whitespace-nowrap px-4 py-3 text-slate-700 dark:text-slate-200";
-          if (index === 0) td.className += " font-black text-mint";
-          if (index === 1) td.className += " text-xs font-extrabold text-slate-600 dark:text-slate-300";
-          if (index === 2) {
-            const badge = document.createElement("span");
-            badge.className = statusClass(task.status);
-            badge.textContent = value;
-            td.appendChild(badge);
-          } else {
-            td.textContent = value;
-          }
-          tr.appendChild(td);
-        }
-        node.appendChild(tr);
+        };
+        const longPressHook = (tr) => {
+          // 詳細カード長押しは T143 P2 で wiring 予定、 P1 は通常 click (= row click → assign modal 互換)。
+          tr.addEventListener("click", navigate);
+          tr.addEventListener("keydown", onKey);
+        };
+
+        // 上段 (meta 行)
+        const tr1 = document.createElement("tr");
+        tr1.className = "task-row-2line two-row task-row-meta cursor-pointer align-top outline-none hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-mint dark:hover:bg-slate-800/70";
+        tr1.tabIndex = 0;
+        tr1.setAttribute("role", "button");
+        tr1.setAttribute("aria-label", `${task.t_id || "タスク"} のカードへ移動`);
+        Object.assign(tr1.dataset, sharedDataset, { row: "meta" });
+        longPressHook(tr1);
+
+        // T番号 (rowspan=2 で縦結合)
+        const tdTid = document.createElement("td");
+        tdTid.className = "whitespace-nowrap px-4 py-3 font-black text-mint align-top";
+        tdTid.rowSpan = 2;
+        tdTid.textContent = task.t_id || "-";
+        tr1.appendChild(tdTid);
+
+        // 対象
+        const tdTarget = document.createElement("td");
+        tdTarget.className = "whitespace-nowrap px-4 py-3 text-xs font-extrabold text-slate-600 dark:text-slate-300";
+        tdTarget.textContent = cleanText(task.target_app, task) || "-";
+        tr1.appendChild(tdTarget);
+
+        // ステータス (badge、 v2 label を併記、 旧 label は data-* に保持)
+        const tdStatus = document.createElement("td");
+        tdStatus.className = "whitespace-nowrap px-4 py-3 text-slate-700 dark:text-slate-200";
+        const badge = document.createElement("span");
+        badge.className = statusClass(task.status);
+        badge.textContent = statusLabel(task.status);
+        badge.setAttribute("data-status-v2", statusV2Label(task));
+        badge.setAttribute("aria-label", `${statusLabel(task.status)} / v2: ${statusV2Label(task)}`);
+        tdStatus.appendChild(badge);
+        tr1.appendChild(tdStatus);
+
+        // 担当AI
+        const tdActor = document.createElement("td");
+        tdActor.className = "whitespace-nowrap px-4 py-3 text-slate-700 dark:text-slate-200";
+        tdActor.textContent = quickActorLabel(task);
+        tr1.appendChild(tdActor);
+
+        // 上段右側 (完了率 + 完了見込み を 1 セルにまとめて 3 列分使う) — meta 行の残り 3 cols を埋める
+        // 既存 column 数 = 7 (T番号 / 対象 / ステータス / 担当AI / 実現したいこと / 完了率 / 完了見込み)。
+        // T番号 rowspan=2 / 対象 / ステータス / 担当AI を上段に置くと残り 3 col。
+        // 完了率 / 完了見込み は 上段に置き、 残り 1 cell は空白で埋める (= layout 維持)。
+        const tdProgressText = document.createElement("td");
+        tdProgressText.className = "whitespace-nowrap px-4 py-3 text-slate-700 dark:text-slate-200";
+        tdProgressText.textContent = `${Number(task.progress_percent ?? 0)}%`;
+        // 「実現したいこと」 列との order を合わせるため tdProgressText を 5 列目には置かず、 6 列目に置く。
+        // しかし colspan で 2 col を埋める方が UI が自然。 ここでは 3 col 占有で完結:
+        const tdMetaFiller = document.createElement("td");
+        tdMetaFiller.className = "whitespace-nowrap px-4 py-3 text-slate-700 dark:text-slate-200";
+        tdMetaFiller.setAttribute("aria-hidden", "true");
+        tdMetaFiller.textContent = "";
+        // 5 列目 = 「実現したいこと」 列 だが、 上段では空セルで占有 (下段で colspan 5 で表示)。
+        tr1.appendChild(tdMetaFiller);
+        tr1.appendChild(tdProgressText);
+
+        const tdEta = document.createElement("td");
+        tdEta.className = "whitespace-nowrap px-4 py-3 text-slate-700 dark:text-slate-200";
+        tdEta.textContent = isComplete(task) ? String(task.completed_at || "-").slice(0, 10) : etaLabel(task, generatedAt);
+        tr1.appendChild(tdEta);
+
+        node.appendChild(tr1);
+
+        // 下段 (intent 行) = 「実現したいこと」 を colspan=5 で表示 (T番号は rowspan で抜ける)
+        const tr2 = document.createElement("tr");
+        tr2.className = "task-row-2line two-row task-row-intent cursor-pointer align-top outline-none hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-mint dark:hover:bg-slate-800/70";
+        tr2.tabIndex = 0;
+        tr2.setAttribute("role", "button");
+        tr2.setAttribute("aria-label", `${task.t_id || "タスク"} の実現したいこと`);
+        Object.assign(tr2.dataset, sharedDataset, { row: "intent" });
+        longPressHook(tr2);
+
+        const tdIntent = document.createElement("td");
+        tdIntent.colSpan = 6; // 対象 / ステータス / 担当AI / 実現したいこと / 完了率 / 完了見込み = 6 col
+        tdIntent.className = "px-4 pb-3 pt-0 leading-6 text-slate-800 dark:text-slate-100 task-row-intent-cell";
+        const intentInner = document.createElement("div");
+        intentInner.className = "flex flex-col gap-1";
+        const intentLabel = document.createElement("span");
+        intentLabel.className = "text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500";
+        intentLabel.textContent = "実現したいこと";
+        const intentText = document.createElement("span");
+        intentText.className = "text-[14px] font-semibold text-slate-800 dark:text-slate-100";
+        intentText.textContent = quickSummary(task) || "未記録";
+        intentInner.appendChild(intentLabel);
+        intentInner.appendChild(intentText);
+        tdIntent.appendChild(intentInner);
+        tr2.appendChild(tdIntent);
+
+        node.appendChild(tr2);
       }
     };
 
@@ -976,6 +1181,22 @@
       card.scrollIntoView({ behavior: "smooth", block: "start" });
       card.focus({ preventScroll: true });
     };
+    // task management v2 (T143 P1 UI): 既存 navigateToTask / openPrefillModal / openIssueDeeplink
+    // 互換 export (= row click → assign modal 経路 / GitHub Issue deeplink 経路 を test から確認できるように)。
+    // pwa/app.js 側の openPrefillModal / openIssueDeeplink を window 経由で参照可能化 (T128 互換維持)。
+    if (typeof window !== "undefined") {
+      window.__t_progress_v2 = window.__t_progress_v2 || {};
+      window.__t_progress_v2.navigateToTask = navigateToTask;
+      // pwa/app.js が同 origin で読み込まれている場合は openPrefillModal / openIssueDeeplink を proxy export
+      window.__t_progress_v2.openPrefillModal = function () {
+        const fn = (window.__dais_pwa || {}).openPrefillModal;
+        return typeof fn === "function" ? fn.apply(null, arguments) : null;
+      };
+      window.__t_progress_v2.openIssueDeeplink = function () {
+        const fn = (window.__dais_pwa || {}).openIssueDeeplink;
+        return typeof fn === "function" ? fn.apply(null, arguments) : null;
+      };
+    }
 
     const navigateToQuickTable = () => {
       const quickTable = document.getElementById("quick-table");
@@ -1044,6 +1265,9 @@
         addList(card.querySelector(".review-list"), methodItems(task));
         addList(card.querySelector(".refs-list"), splitRefs(task.updated_refs, task));
         card.querySelector(".back-to-quick").addEventListener("click", navigateToQuickTable);
+        // task management v2 (T143 P1 UI): 「詳細カードを開く」 button → openDetailCard(task)
+        const openDetailBtn = card.querySelector(".open-detail-card");
+        if (openDetailBtn) openDetailBtn.addEventListener("click", () => openDetailCard(task));
         node.appendChild(card);
       }
     };
@@ -1073,6 +1297,163 @@
       return `${generated}|${tasks.length}`;
     };
 
+    // task management v2 (T143 P1 UI): PO 判断ボード レンダリング
+    // (停) PO 判断 status の task をページトップに集約、 クリックで詳細カードへスクロール。
+    const isPoDecisionTask = (task) => statusV2Key(task) === "BLOCKED_PO";
+    const poQuestionFor = (task) => {
+      // 質問文は task.po_question / next_action / blocked_on / goal の順で fallback。
+      const fields = [task.po_question, task.next_action, task.blocked_on, cleanText(task.goal, task)];
+      for (const field of fields) {
+        const value = String(field || "").trim();
+        if (value) return value.replace(/\s+/g, " ").slice(0, 90);
+      }
+      return "PO 判断の内容が未記載 (詳細カードで確認)";
+    };
+    const renderPoDecisionBoard = (tasks) => {
+      const section = document.getElementById("po-decision-board");
+      const list = document.getElementById("po-decision-list");
+      const counter = document.getElementById("po-decision-count");
+      if (!section || !list || !counter) return;
+      const poTasks = (tasks || []).filter(isPoDecisionTask);
+      counter.textContent = `(${poTasks.length} 件)`;
+      list.textContent = "";
+      if (!poTasks.length) {
+        section.hidden = true;
+        return;
+      }
+      section.hidden = false;
+      for (const task of poTasks) {
+        const li = document.createElement("li");
+        li.className = "flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 hover:bg-amber-100 dark:hover:bg-amber-900/40";
+        li.setAttribute("role", "button");
+        li.tabIndex = 0;
+        const tid = document.createElement("span");
+        tid.className = "min-w-12 font-black text-amber-900 dark:text-amber-100";
+        tid.textContent = task.t_id || "T-";
+        const q = document.createElement("span");
+        q.className = "flex-1 text-amber-900 dark:text-amber-100";
+        q.textContent = poQuestionFor(task);
+        const arrow = document.createElement("span");
+        arrow.className = "text-amber-700 dark:text-amber-300";
+        arrow.textContent = "→";
+        li.appendChild(tid); li.appendChild(q); li.appendChild(arrow);
+        const handler = () => openDetailCard(task);
+        li.addEventListener("click", handler);
+        li.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            handler();
+          }
+        });
+        list.appendChild(li);
+      }
+    };
+
+    // task management v2 (T143 P1 UI): 16 agent 枠 active 表示 (条件表示)
+    const renderAgentSlotGrid = (gridNode, tasks) => {
+      if (!gridNode) return;
+      gridNode.textContent = "";
+      const activeSlots = AGENT_SLOTS_16.filter((slot) => isAgentSlotActive(slot, tasks));
+      if (!activeSlots.length) {
+        const empty = document.createElement("span");
+        empty.className = "text-xs font-bold text-slate-500 dark:text-slate-400";
+        empty.textContent = "(現在 active な agent 枠なし)";
+        gridNode.appendChild(empty);
+        return;
+      }
+      for (const slot of activeSlots) {
+        const badge = document.createElement("span");
+        const isReview = /rev/i.test(slot);
+        const isCdx = /^CDX/.test(slot);
+        badge.className = isCdx
+          ? `inline-flex items-center rounded-full px-2.5 py-1 text-xs font-extrabold ${isReview ? "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-200" : "bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-200"}`
+          : `inline-flex items-center rounded-full px-2.5 py-1 text-xs font-extrabold ${isReview ? "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200" : "bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-200"}`;
+        badge.textContent = slot;
+        gridNode.appendChild(badge);
+      }
+    };
+
+    // task management v2 (T143 P1 UI): 詳細カード open / close
+    let currentDetailTask = null;
+    const openDetailCard = (task) => {
+      const card = document.getElementById("task-detail-card");
+      if (!card || !task) return;
+      currentDetailTask = task;
+      card.hidden = false;
+      card.querySelector(".detail-tid").textContent = task.t_id || "T-";
+      card.querySelector(".detail-target").textContent = cleanText(task.target_app, task) || "-";
+      // 種類 (Spec / Impl / OPS) を assignee_tag から推論 (= P2 で kind field 直接書込予定)
+      const tag = `${task.owner || ""} ${task.owner_ai || ""} ${task.work_steps || ""}`;
+      let kind = "-";
+      if (/SPEC/i.test(tag)) kind = "Spec";
+      else if (/IMPL/i.test(tag)) kind = "Impl";
+      else if (/OPS/i.test(tag)) kind = "OPS";
+      card.querySelector(".detail-kind").textContent = kind;
+      card.querySelector(".detail-status").textContent = statusV2Label(task);
+      card.querySelector(".detail-agent").textContent = quickActorLabel(task) || "-";
+      card.querySelector(".detail-intent").textContent = quickSummary(task) || "-";
+      // 依存 (depends_on)
+      const depsBox = card.querySelector(".detail-deps-box");
+      const depsP = card.querySelector(".detail-deps");
+      const deps = (task.graph && task.graph.depends_on) || "";
+      if (String(deps).trim() && String(deps).trim() !== "[]") {
+        depsBox.hidden = false;
+        depsP.textContent = String(deps);
+      } else {
+        depsBox.hidden = true;
+      }
+      // 16 agent 枠 (詳細カード内グリッドに active 枠表示)
+      renderAgentSlotGrid(card.querySelector("#detail-agent-slot-grid"), currentTasks);
+      // PO 判断時のみ回答 Box (= (停) PO 判断 status のときだけ可視)
+      const poBox = document.getElementById("detail-po-answer-box");
+      const poQ = card.querySelector(".detail-po-question");
+      if (isPoDecisionTask(task)) {
+        poBox.hidden = false;
+        poQ.textContent = poQuestionFor(task);
+      } else {
+        poBox.hidden = true;
+      }
+      // 変更履歴 section (T143 P2 で配備される task_status_change_log.jsonl 表示枠、 P1 では空でも OK)
+      // 抽出 source: docs/status/task_status_change_log.jsonl から t_id 一致 event を 10 件描画。
+      const histList = card.querySelector("#detail-change-history-list");
+      if (histList) {
+        histList.textContent = "";
+        const placeholder = document.createElement("li");
+        placeholder.className = "text-slate-500 dark:text-slate-400";
+        placeholder.textContent = `(${task.t_id || "task"} の変更履歴は T143 P2 配備後に表示、 現在は空表示)`;
+        histList.appendChild(placeholder);
+      }
+      card.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    const closeDetailCard = () => {
+      const card = document.getElementById("task-detail-card");
+      if (!card) return;
+      card.hidden = true;
+      currentDetailTask = null;
+    };
+    const wireDetailCardOnce = (() => {
+      let wired = false;
+      return () => {
+        if (wired) return;
+        const closeBtn = document.getElementById("detail-close");
+        if (closeBtn) closeBtn.addEventListener("click", closeDetailCard);
+        const answeredBtn = document.getElementById("detail-po-answered");
+        if (answeredBtn) {
+          answeredBtn.addEventListener("click", () => {
+            // [回答済] 押下時の SSoT 連携は T143 P2/P6 で wiring 予定。 P1 では UI 上の確認のみ。
+            const text = (document.getElementById("detail-po-answer-text") || {}).value || "";
+            // eslint-disable-next-line no-console
+            console.log("[T143 P1] PO answered (preview):", { task: currentDetailTask && currentDetailTask.t_id, text });
+            if (text.trim()) {
+              answeredBtn.textContent = "回答送信予定 (P2)";
+              answeredBtn.disabled = true;
+            }
+          });
+        }
+        wired = true;
+      };
+    })();
+
     const renderAll = (data) => {
       const generatedAt = data.generated_at || "";
       document.getElementById("generated").textContent = generatedAt ? formatGeneratedAt(generatedAt) : "未生成";
@@ -1086,6 +1467,9 @@
       renderStatusControls(tasks);
       renderProgressChart(tasks, generatedAt);
       renderDateDial(tasks);
+      // task management v2 (T143 P1 UI) 追加 rendering
+      renderPoDecisionBoard(tasks);
+      wireDetailCardOnce();
       applyTaskFilters();
     };
 
