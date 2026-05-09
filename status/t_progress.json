@@ -1,12 +1,13 @@
 {
-  "generated_at": "2026-05-09T19:15:34Z",
+  "generated_at": "2026-05-09T19:17:58Z",
   "source": "instructions/session_progress.md#Mission Queue",
   "mission_queue_file": "instructions/session_progress.md",
   "task_detail_file": "instructions/in_flight_topics.md",
   "past_log_file": "instructions/session_progress.md#Mission Queue DONE rows",
-  "active_task_count": 33,
+  "active_task_count": 34,
   "completed_task_count": 163,
   "active_task_ids": [
+    "TASK-DAIS-PHASE3-T4-EMERGENCY-NOTIFICATION",
     "TASK-DAIS-PHASE2-T4-MORNING-DIGEST-FORMAT",
     "TASK-DAIS-PHASE1-T4-PWS-PR-INTEGRATION",
     "TASK-DAIS-PHASE3-T2-PO-DECISION-AGGREGATION",
@@ -207,6 +208,38 @@
     "TASK-CLAUDE-RESUME-T0-T7-HANDOFF"
   ],
   "tasks": [
+    {
+      "t_id": "DA153-OPS_P",
+      "mission_id": "TASK-DAIS-PHASE3-T4-EMERGENCY-NOTIFICATION",
+      "status": "QUEUED",
+      "owner": "[Claude:IMPL]",
+      "owner_ai": "[Claude:IMPL]",
+      "target_app": "Dais / 全App",
+      "goal": "scripts/devs_emergency_notify.sh emits emergency PWA push notifications (Web Push API + iOS PWA support) only for items the P3-T2 aggregator classified as emergency tier; notification body has title + 1 line + deeplink; snooze and history persisted.",
+      "goal_steps": "design PWA service worker push handler -> implement scripts/devs_emergency_notify.sh (--push / --list-pending / --snooze / --history) -> add docs/pwa/sw.js subscription handler -> tests with synthetic emergency record + service worker fixture + duplicate suppression + snooze coverage.",
+      "work_done": "未着手（実績なし）",
+      "work_steps": "未着手（実績なし、 これから着手）。",
+      "test_methods": "TEST_METHOD:UNIT TEST_METHOD:STATIC_DOC",
+      "review_personas": "REVIEW_PERSONA:UI_REVIEWER REVIEW_PERSONA:OPS_REVIEWER",
+      "verification_evidence": "test -f docs/phase3_emergency_notification.md PASS; test -x scripts/devs_emergency_notify.sh PASS; test -f tests/test_p3_t4_emergency_notification.sh PASS; sh tests/test_p3_t4_emergency_notification.sh PASS>=6; sh scripts/devs_phase0_quality_gate.sh PASS.",
+      "updated_refs": "instructions/session_progress.md §ミッションキュー / instructions/in_flight_topics.md §TASK-DAIS-PHASE3-T4-EMERGENCY-NOTIFICATION",
+      "remaining_steps": "implementation -> tests -> docs -> phase0 gate PASS -> LOCAL_DONE push.",
+      "blocked_on": "none",
+      "next_action": "scripts/devs_emergency_notify.sh を実装し、 P3-T2 aggregator output から emergency tier 案件を取り出し PWA push 経路に渡す。",
+      "created_at": "",
+      "completed_at": "",
+      "progress_percent": 0,
+      "eta": "2026-05-17",
+      "graph": {
+        "depends_on": "TASK-DAIS-PHASE3-T2-PO-DECISION-AGGREGATION",
+        "parent_of": "",
+        "parallel_with": "",
+        "verdict_input_from": "",
+        "critical_input_from": "",
+        "clarification_input_from": ""
+      },
+      "parent_child_suggest": []
+    },
     {
       "t_id": "DA153-DOC_P",
       "mission_id": "TASK-DAIS-PHASE2-T4-MORNING-DIGEST-FORMAT",
