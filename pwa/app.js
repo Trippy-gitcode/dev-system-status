@@ -90,6 +90,11 @@
     window.__dais_pwa.renderProgressBoard = renderProgressBoard;       // 進捗 board render
     window.__dais_pwa.isTaskClickable = isTaskClickable;               // QUEUED / IN_PROGRESS / LOCAL_DONE 判定
     window.__dais_pwa.buildProgressTaskPayload = buildProgressTaskPayload; // payload 生成 (test 公開)
+    // T147 / TASK-DAIS-HEAVY-TASK-DECOMPOSITION-RULE
+    // Heavy task manual decomposition affordance.
+    window.__dais_pwa.isTaskDecompositionCandidate = isTaskDecompositionCandidate;
+    window.__dais_pwa.buildTaskDecompositionPayload = buildTaskDecompositionPayload;
+    window.__dais_pwa.openTaskDecompositionModal = openTaskDecompositionModal;
     // T139 / TASK-DEVSYS-MISSION-GRAPH-SSOT-AND-VERDICT-PROPAGATE
     // Mission Graph view: depends_on / parent_of / parallel_with の視覚化 +
     // critical_input_from がある task を BLOCK badge で 視認 化。
@@ -450,6 +455,94 @@
     return { poInboxId: poInboxId, payload: payload };
   }
 
+  function taskSearchText(task) {
+    return JSON.stringify(task || {}).toLowerCase();
+  }
+
+  function countChangedFiles(task) {
+    var raw = task && (task.changed_files || task.changedFiles || task.updated_refs || '');
+    if (Array.isArray(raw)) return raw.length;
+    raw = String(raw || '');
+    if (!raw || raw === 'none' || raw === 'なし') return 0;
+    if (raw.indexOf(';') >= 0) return raw.split(';').filter(Boolean).length;
+    return raw.split(/\s+\/\s+|,\s*/).filter(function (p) { return p.trim(); }).length;
+  }
+
+  function countReviewPersonas(task) {
+    var raw = task && (task.review_personas || task.reviewPersonas || '');
+    if (Array.isArray(raw)) return raw.length;
+    return (String(raw || '').match(/REVIEW_PERSONA:[A-Z0-9_]+/g) || []).length;
+  }
+
+  function chooseTaskDecompositionPattern(task) {
+    var text = taskSearchText(task);
+    if (/architecture|アーキ|migration|移行/.test(text)) return 'architecture';
+    if (/refactor|リファクタ|再設計/.test(text)) return 'refactor';
+    if (/bug|バグ|不具合|再現|fix/.test(text)) return 'bugfix';
+    return 'feature';
+  }
+
+  function isTaskDecompositionCandidate(task) {
+    if (!task || !isTaskClickable(task)) return false;
+    var text = taskSearchText(task);
+    if (/task_kind.*parent|parent_task|decomposition_parent/.test(text)) return false;
+    var hasSpec = /(spec|仕様|要件|設計|schema|スキーマ|acceptance|criteria)/.test(text);
+    var hasImpl = /(impl|実装|backend|frontend|test|テスト|deploy|release|push|PR)/i.test(text);
+    return (hasSpec && hasImpl) ||
+      countChangedFiles(task) >= 5 ||
+      countReviewPersonas(task) >= 3 ||
+      /(大規模|sub期待値)/.test(text);
+  }
+
+  function buildTaskDecompositionPayload(task) {
+    var now = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+    var date = now.slice(0, 10).replace(/-/g, '');
+    var topic = (task.t_id || 'task').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-decompose';
+    var poInboxId = topic + '-' + date + '-01';
+    var missionId = task.mission_id || task.task_id || '';
+    var pattern = chooseTaskDecompositionPattern(task);
+    var payload = [
+      '---',
+      'po_inbox_id: ' + poInboxId,
+      'created_at: ' + now,
+      'po_intent: ' + sanitizeLine((task.t_id || '') + ' を親子タスク化'),
+      'suggested_owner: [Codex:OPS]',
+      'priority: ' + (task.priority || 'medium'),
+      'target_app: ' + (task.target_app || 'Dais'),
+      'expected_completion_level: IMPL_TESTED',
+      'status: open',
+      'claimed_by: ',
+      'mission_id: ' + missionId,
+      'source: pwa-task-decomposition',
+      'decomposition_pattern: ' + pattern,
+      '---',
+      '',
+      '# ' + (task.t_id || '') + ' parent/child decomposition request',
+      '',
+      'PWA 進捗ボードの「分解する」から生成。',
+      '',
+      '## suggested commands',
+      '',
+      '`sh scripts/devs_task_decomposition_check.sh --task-id ' + missionId + '`',
+      '`sh scripts/devs_task_decomposition_apply.sh --task-id ' + missionId + ' --pattern ' + pattern + ' --dry-run`',
+      '',
+      '## task概要',
+      '',
+      'goal: ' + (task.goal || '(none)'),
+      'status: ' + (task.status || '—'),
+      'owner: ' + (task.owner || '—'),
+      ''
+    ].join('\n');
+    return { poInboxId: poInboxId, payload: payload, pattern: pattern };
+  }
+
+  function openTaskDecompositionModal(task) {
+    if (!isTaskDecompositionCandidate(task)) return false;
+    var built = buildTaskDecompositionPayload(task);
+    openPrefillModal('親子タスク化を依頼', built.payload, built.poInboxId + '.md');
+    return true;
+  }
+
   function openTaskAssignModal(task) {
     // 進捗 board row click から呼ばれる。 DONE 等 click 対象外は openPrefillModal を
     // 呼ばず即 return (= modal 起動しない)、 row click handler 側でも guard する
@@ -495,6 +588,20 @@
       var meta = el('div', { class: 'task-meta', text:
         'owner: ' + (t.owner || '—') + ' · status: ' + st + ' · click でアサイン'
       });
+      var children = [head, goal, meta];
+      if (isTaskDecompositionCandidate(t)) {
+        children.push(el('div', { class: 'assign-buttons' }, [
+          el('button', {
+            class: 'ghost-btn',
+            type: 'button',
+            'aria-label': (t.t_id || '') + ' を親子タスク化',
+            onclick: function (event) {
+              event.stopPropagation();
+              openTaskDecompositionModal(t);
+            }
+          }, '分解する')
+        ]));
+      }
       // row 自体を clickable に。 keyboard accessibility 用に role="button" + tabindex=0。
       var row = el('li', {
         class: 'task-clickable',
@@ -502,7 +609,7 @@
         tabindex: '0',
         'aria-label': (t.t_id || '') + ' をアサイン',
         data: { taskId: t.t_id || '', missionId: t.mission_id || '', status: st }
-      }, [head, goal, meta]);
+      }, children);
       // click handler (進捗 row click → modal)。
       row.addEventListener('click', function () { openTaskAssignModal(t); });
       // keyboard (Enter / Space) でも 起動 (= a11y)。
