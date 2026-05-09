@@ -88,8 +88,8 @@
     "worktree_path": "/Users/futoshi/Desktop/dev-system/.claude/worktrees/serene-heyrovsky-dcc42b"
   },
   "unknown": {
-    "agent_pid": 7367,
-    "branch": "codex/T97/mais-knowledge-retrofit-review",
+    "agent_pid": 6921,
+    "branch": "codex/T144/pwa-progress-cache",
     "capability": {
       "function_refs": [
         "AGENT_HEARTBEAT_UPDATE"
@@ -99,7 +99,7 @@
       "test_methods": []
     },
     "current_task_id": "",
-    "last_heartbeat": "2026-05-08T15:07:02Z",
-    "worktree_path": "/Users/futoshi/Desktop/dev-system"
+    "last_heartbeat": "2026-05-09T00:35:24Z",
+    "worktree_path": "/private/tmp/dev-system-t144-pwa-progress-cache"
   }
 }
