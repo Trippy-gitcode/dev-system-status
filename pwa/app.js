@@ -90,6 +90,9 @@
     window.__dais_pwa.renderProgressBoard = renderProgressBoard;       // 進捗 board render
     window.__dais_pwa.isTaskClickable = isTaskClickable;               // QUEUED / IN_PROGRESS / LOCAL_DONE 判定
     window.__dais_pwa.buildProgressTaskPayload = buildProgressTaskPayload; // payload 生成 (test 公開)
+    window.__dais_pwa.isPendingConfirmationTask = isPendingConfirmationTask;
+    window.__dais_pwa.buildPoConfirmationPayload = buildPoConfirmationPayload;
+    window.__dais_pwa.openPoConfirmationModal = openPoConfirmationModal;
     // T147 / TASK-DAIS-HEAVY-TASK-DECOMPOSITION-RULE
     // Heavy task manual decomposition affordance.
     window.__dais_pwa.isTaskDecompositionCandidate = isTaskDecompositionCandidate;
@@ -413,6 +416,15 @@
     return st === 'QUEUED' || st === 'IN_PROGRESS' || st === 'LOCAL_DONE';
   }
 
+  function isPendingConfirmationTask(task) {
+    if (!task) return false;
+    return String(task.status || '').toUpperCase() === 'PENDING_CONFIRMATION';
+  }
+
+  function isProgressVisibleTask(task) {
+    return isTaskClickable(task) || isPendingConfirmationTask(task);
+  }
+
   function buildProgressTaskPayload(task) {
     // 進捗 row click 用の po_inbox prefill payload。
     // 既存 owner があればそれを suggested_owner、 無ければ [Claude:IMPL] を default。
@@ -450,6 +462,48 @@
       'goal: ' + (task.goal || '(none)'),
       'current owner: ' + (task.owner || '—'),
       'current status: ' + st,
+      ''
+    ].join('\n');
+    return { poInboxId: poInboxId, payload: payload };
+  }
+
+  function buildPoConfirmationPayload(task) {
+    var now = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+    var date = now.slice(0, 10).replace(/-/g, '');
+    var topic = (task.t_id || 'task').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-po-confirm';
+    var poInboxId = topic + '-' + date + '-01';
+    var missionId = task.mission_id || task.task_id || '';
+    var payload = [
+      '---',
+      'po_inbox_id: ' + poInboxId,
+      'created_at: ' + now,
+      'po_intent: ' + sanitizeLine((task.t_id || '') + ' PO 確認済 Gate G event 記録'),
+      'suggested_owner: [PO:DECISION]',
+      'priority: ' + (task.priority || 'high'),
+      'target_app: ' + (task.target_app || 'Dais'),
+      'expected_completion_level: PO_DECISION',
+      'status: open',
+      'claimed_by: ',
+      'mission_id: ' + missionId,
+      'source: pwa-po-confirmation',
+      'verification_gate: verification_gate_po_tap',
+      'verification_gate_result: PASS',
+      'reason: po_confirmation',
+      '---',
+      '',
+      '# ' + (task.t_id || '') + ' PO confirmation',
+      '',
+      'PWA 進捗ボードの「PO 確認済」から生成。',
+      'PENDING_CONFIRMATION task の Gate G を PASS として記録してください。',
+      '',
+      '## suggested command',
+      '',
+      '`sh scripts/devs_status_log_append.sh --task-id ' + missionId + ' --field verification_gate_po_tap --old "" --new PASS --changed-by "[PO:DECISION]" --reason "po_confirmation" --trigger "docs/pwa/app.js"`',
+      '',
+      '## task 概要',
+      '',
+      'goal: ' + (task.goal || '(none)'),
+      'current status: PENDING_CONFIRMATION',
       ''
     ].join('\n');
     return { poInboxId: poInboxId, payload: payload };
@@ -553,9 +607,17 @@
     return true;
   }
 
+  function openPoConfirmationModal(task) {
+    if (!isPendingConfirmationTask(task)) return false;
+    var built = buildPoConfirmationPayload(task);
+    openPrefillModal('PO 確認済 Gate G event を生成', built.payload, built.poInboxId + '.md');
+    return true;
+  }
+
   function renderProgressBoard() {
     // 進捗 タブ の task row 一覧 (= 既存 iframe 上に追加表示)。
-    // QUEUED / IN_PROGRESS / LOCAL_DONE の active task のみ表示、 click で modal 起動。
+    // QUEUED / IN_PROGRESS / LOCAL_DONE / PENDING_CONFIRMATION を表示。
+    // PENDING_CONFIRMATION は PO 確認済 Gate G event を生成する。
     var list = $('#progress-board-list');
     if (!list) return;
     list.innerHTML = '';
@@ -563,13 +625,13 @@
       list.appendChild(el('li', { class: 'empty', text: 't_progress.json を取得できないため進捗ボードを表示できません。' }));
       return;
     }
-    var active = (STATE.tasks || []).filter(isTaskClickable);
+    var active = (STATE.tasks || []).filter(isProgressVisibleTask);
     if (!active.length) {
-      list.appendChild(el('li', { class: 'empty', text: 'click 対象 (QUEUED / IN_PROGRESS / LOCAL_DONE) の task はありません。' }));
+      list.appendChild(el('li', { class: 'empty', text: 'click 対象 (QUEUED / IN_PROGRESS / LOCAL_DONE / PENDING_CONFIRMATION) の task はありません。' }));
       return;
     }
-    // status 順 (IN_PROGRESS → QUEUED → LOCAL_DONE) + t_id 降順
-    var order = { IN_PROGRESS: 0, QUEUED: 1, LOCAL_DONE: 2 };
+    // status 順 (確認待ち → IN_PROGRESS → QUEUED → LOCAL_DONE) + t_id 降順
+    var order = { PENDING_CONFIRMATION: 0, IN_PROGRESS: 1, QUEUED: 2, LOCAL_DONE: 3 };
     var sorted = active.slice().sort(function (a, b) {
       var sa = order[String(a.status || '').toUpperCase()] || 9;
       var sb = order[String(b.status || '').toUpperCase()] || 9;
@@ -585,11 +647,24 @@
       var goalText = (t.goal || '').slice(0, 200);
       if ((t.goal || '').length > 200) goalText += '…';
       var goal = el('div', { class: 'task-goal', text: goalText });
+      var pending = isPendingConfirmationTask(t);
       var meta = el('div', { class: 'task-meta', text:
-        'owner: ' + (t.owner || '—') + ' · status: ' + st + ' · click でアサイン'
+        'owner: ' + (t.owner || '—') + ' · status: ' + st + ' · ' + (pending ? 'PO 確認済で Gate G event' : 'click でアサイン')
       });
       var children = [head, goal, meta];
-      if (isTaskDecompositionCandidate(t)) {
+      if (pending) {
+        children.push(el('div', { class: 'assign-buttons' }, [
+          el('button', {
+            class: 'primary-btn',
+            type: 'button',
+            'aria-label': (t.t_id || '') + ' を PO 確認済にする',
+            onclick: function (event) {
+              event.stopPropagation();
+              openPoConfirmationModal(t);
+            }
+          }, 'PO 確認済')
+        ]));
+      } else if (isTaskDecompositionCandidate(t)) {
         children.push(el('div', { class: 'assign-buttons' }, [
           el('button', {
             class: 'ghost-btn',
@@ -604,19 +679,23 @@
       }
       // row 自体を clickable に。 keyboard accessibility 用に role="button" + tabindex=0。
       var row = el('li', {
-        class: 'task-clickable',
+        class: 'task-clickable' + (pending ? ' task-pending-confirmation' : ''),
         role: 'button',
         tabindex: '0',
-        'aria-label': (t.t_id || '') + ' をアサイン',
+        'aria-label': pending ? (t.t_id || '') + ' を PO 確認済にする' : (t.t_id || '') + ' をアサイン',
         data: { taskId: t.t_id || '', missionId: t.mission_id || '', status: st }
       }, children);
       // click handler (進捗 row click → modal)。
-      row.addEventListener('click', function () { openTaskAssignModal(t); });
+      row.addEventListener('click', function () {
+        if (isPendingConfirmationTask(t)) openPoConfirmationModal(t);
+        else openTaskAssignModal(t);
+      });
       // keyboard (Enter / Space) でも 起動 (= a11y)。
       row.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          openTaskAssignModal(t);
+          if (isPendingConfirmationTask(t)) openPoConfirmationModal(t);
+          else openTaskAssignModal(t);
         }
       });
       list.appendChild(row);

@@ -80,7 +80,7 @@
       <!-- 各 row は app.js renderProgressBoard() が動的に生成し、 class="task-clickable" -->
       <!-- + role="button" + tabindex="0" + cursor: pointer (style.css) でアサイン可能化 -->
       <h2 class="section-title">クリックでアサイン</h2>
-      <p class="section-desc">QUEUED / IN_PROGRESS / LOCAL_DONE の task を click → 「GitHub Issue で送信」 で 1 タップ assign。重い task は「分解する」から親子タスク化を依頼できます。 DONE は click 対象外。</p>
+      <p class="section-desc">QUEUED / IN_PROGRESS / LOCAL_DONE の task を click → 「GitHub Issue で送信」 で 1 タップ assign。PENDING_CONFIRMATION は「PO 確認済」で Gate G event を生成。重い task は「分解する」から親子タスク化を依頼できます。 DONE は click 対象外。</p>
       <ul class="task-list progress-board-list" id="progress-board-list" aria-live="polite" data-row-role="button" data-row-class="task-clickable" style="cursor: pointer;">
         <li class="empty">読み込み中…</li>
       </ul>
