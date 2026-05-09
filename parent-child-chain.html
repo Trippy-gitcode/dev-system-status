@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d1117" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Dais Parent-Child Chain" />
+  <meta name="description" content="Dais Supervisor PWA — Parent-Child Chain (P1-T2 / DA147-INF_P): TASK の parent_id + depends_on を tree 表示し、 status 色分け / BLOCKED 原因 / 循環依存警告を可視化。" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png" />
+  <link rel="stylesheet" href="./style.css" />
+  <title>Dais Parent-Child Chain</title>
+</head>
+<body>
+  <!--
+    P1-T2 / DA147-INF_P / TASK-DAIS-PHASE1-T2-PWS-PARENT-CHILD-CHAIN
+    Parent-Child Chain visualization:
+      - reads instructions/in_flight_topics.md (TASK detail blocks)
+      - builds a forest from parent_id + depends_on
+      - color-codes nodes by status (queued / in_progress / local_done / done / blocked)
+      - highlights BLOCKED tasks with their unsatisfied dependency
+      - detects dependency cycles via DFS and surfaces a visible warning bar
+      - mobile breakpoint @ 640px (CSS reuses .pcc-* classes)
+      - 30+ node fixtures exercised by tests/test_p1_t2_pws_parent_child_chain.sh
+    Pure additive: no edits to existing index.html / app.js / active-sessions.html behavior.
+  -->
+  <header class="app-header">
+    <h1>Parent-Child Chain</h1>
+    <div class="status-line" id="pcc-status">読み込み中…</div>
+    <nav class="pcc-nav" aria-label="dashboard navigation">
+      <a class="ghost-btn" href="./index.html">← Supervisor に戻る</a>
+      <a class="ghost-btn" href="./active-sessions.html">Active Sessions</a>
+      <a class="ghost-btn" href="./t_progress.html">進捗ボード</a>
+    </nav>
+  </header>
+
+  <main class="pcc-main">
+    <section class="pcc-summary" aria-label="サマリー">
+      <div class="kpi"><div class="kpi-num" id="pcc-kpi-total">—</div><div class="kpi-label">total</div></div>
+      <div class="kpi"><div class="kpi-num kpi-queued" id="pcc-kpi-queued">—</div><div class="kpi-label">queued</div></div>
+      <div class="kpi"><div class="kpi-num kpi-in-progress" id="pcc-kpi-in-progress">—</div><div class="kpi-label">in_progress</div></div>
+      <div class="kpi"><div class="kpi-num kpi-blocked" id="pcc-kpi-blocked">—</div><div class="kpi-label">blocked</div></div>
+      <div class="kpi"><div class="kpi-num kpi-cycles" id="pcc-kpi-cycles">—</div><div class="kpi-label">cycles</div></div>
+    </section>
+
+    <section class="pcc-controls" aria-label="フィルタ">
+      <input
+        type="search"
+        id="pcc-filter"
+        placeholder="task / mission / title / status で絞り込み…"
+        aria-label="parent-child filter"
+      />
+      <button id="pcc-refresh" class="ghost-btn" type="button">再読込</button>
+    </section>
+
+    <!-- Cycle warning bar (hidden when no cycles) -->
+    <div
+      class="pcc-warn"
+      id="pcc-cycle-warning"
+      role="status"
+      aria-live="polite"
+      hidden
+    ></div>
+
+    <!-- Tree root: vanilla nested <ul><li> rendered by parent-child-chain.js. -->
+    <div class="pcc-tree-wrap">
+      <div class="pcc-tree-root" id="pcc-tree-root" data-row-role="task-node">
+        <ul class="pcc-tree"><li class="pcc-empty">読み込み中…</li></ul>
+      </div>
+    </div>
+
+    <p class="hint">
+      色分け:
+      <span class="pcc-status-badge status-queued">queued</span>
+      <span class="pcc-status-badge status-in-progress">in_progress</span>
+      <span class="pcc-status-badge status-local-done">local_done</span>
+      <span class="pcc-status-badge status-done">done</span>
+      <span class="pcc-status-badge status-blocked">blocked</span>。
+      BLOCKED の task は不足している depends_on を併記。 循環依存検出時は黄色警告バー + ⚠ cycle マーカーを表示。
+      モバイル (&le;640px) では tree がインデント付き card stack に折り返します。
+    </p>
+  </main>
+
+  <footer class="app-footer">
+    <small>
+      Dais Supervisor PWA · P1-T2 / DA147-INF_P · Parent-Child Chain ·
+      <code>instructions/in_flight_topics.md</code>
+    </small>
+  </footer>
+
+  <script src="./parent-child-chain.js" defer></script>
+</body>
+</html>
