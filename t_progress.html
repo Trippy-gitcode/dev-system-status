@@ -33,7 +33,7 @@
       <p class="inline-flex w-fit items-center rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-200" id="generated">loading...</p>
     </header>
 
-    <!-- task management v2: PO 判断ボード (T143 P1 UI、 docs/task_management_v2.md §3.3) -->
+    <!-- task management v2: PO 判断ボード (DA114-REV_C P1 UI、 docs/task_management_v2.md §3.3) -->
     <!-- po-decision-board / 決定待ち / PO 判断待ち をページトップ summary 表示 -->
     <section id="po-decision-board" class="po-decision-board mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 shadow-sm dark:border-amber-700 dark:bg-amber-950/40" aria-label="PO 判断ボード" hidden>
       <div class="flex items-center gap-2">
@@ -106,7 +106,7 @@
       <p class="py-4 text-sm text-slate-500 dark:text-slate-400" id="empty-state" hidden>表示できるタスクがありません。</p>
     </section>
 
-    <!-- task management v2: 詳細カード (T143 P1 UI、 docs/task_management_v2.md §3.4) -->
+    <!-- task management v2: 詳細カード (DA114-REV_C P1 UI、 docs/task_management_v2.md §3.4) -->
     <!-- detail-card / task-detail / 詳細カード = PO 判断時のみ回答 Box + 変更履歴 表示 -->
     <section id="task-detail-card" class="task-detail detail-card mt-5 rounded-xl border border-slate-300 bg-white shadow-sm dark:border-slate-700 dark:bg-[#171b22]" aria-label="詳細カード" hidden>
       <header class="flex flex-col gap-2 border-b border-slate-200 px-4 py-3 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between">
@@ -145,14 +145,14 @@
           <button type="button" id="detail-po-answered" class="rounded-md border border-amber-400 bg-amber-200 px-3 py-1.5 text-xs font-extrabold text-amber-900 hover:bg-amber-300 dark:border-amber-700 dark:bg-amber-900 dark:text-amber-100">[回答済]</button>
         </div>
       </div>
-      <!-- 変更履歴 section (= T143 P2 で配備される task_status_change_log.jsonl 表示枠、 P1 では空表示でも OK) -->
+      <!-- 変更履歴 section (= DA114-REV_C P2 で配備される task_status_change_log.jsonl 表示枠、 P1 では空表示でも OK) -->
       <section class="change-history mx-4 mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900/40" aria-label="変更履歴">
         <div class="mb-2 flex items-center justify-between">
           <h3 class="text-sm font-extrabold text-slate-700 dark:text-slate-200">変更履歴 <span class="ml-1 text-xs font-bold text-slate-500 dark:text-slate-400">(直近 10 件)</span></h3>
           <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400">source: docs/status/task_status_change_log.jsonl</span>
         </div>
         <ul id="detail-change-history-list" class="space-y-1 text-[13px] text-slate-700 dark:text-slate-200" data-source="status_change_log">
-          <li class="text-slate-500 dark:text-slate-400">(変更履歴は T143 P2 で配備、 現在は空表示)</li>
+          <li class="text-slate-500 dark:text-slate-400">(変更履歴は DA114-REV_C P2 で配備、 現在は空表示)</li>
         </ul>
       </section>
     </section>
@@ -233,7 +233,7 @@
   </template>
 
   <script>
-    // task management v2 (T143 P1 UI、 docs/task_management_v2.md §2.2 8 status / §2.1 16 agent 枠)
+    // task management v2 (DA114-REV_C P1 UI、 docs/task_management_v2.md §2.2 8 status / §2.1 16 agent 枠)
     // 8 status enum: 未着手 / 進行中 / CLD レビュー (未) / CLD レビュー (割) / CDX レビュー (未) / CDX レビュー (割) /
     //                (停) PO 判断 / (停) T*** / (停) 外部 / (待) 完了確認 / 完了
     // 旧 5 status は 8 status へ後方互換 mapping (docs/task_management_v2.md §7.1)。
@@ -345,7 +345,7 @@
         return `${base} bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200`;
       }
       if (key === "STALLED") {
-        // T140 OPS H1 fix: STALLED は赤色 + ⚠️ で視覚区別 (動いてるフリ罠の検出表示)
+        // DA112-REV_C OPS H1 fix: STALLED は赤色 + ⚠️ で視覚区別 (動いてるフリ罠の検出表示)
         return `${base} bg-red-200 text-red-900 ring-2 ring-red-600 animate-pulse dark:bg-red-900 dark:text-red-100 dark:ring-red-300`;
       }
       return `${base} bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200`;
@@ -373,7 +373,7 @@
       if (["IN_PROGRESS", "RUNNING"].includes(key)) return "IN_PROGRESS";
       if (key === "QUEUED") return "QUEUED";
       if (key === "BLOCKED") return "BLOCKED";
-      // T140 OPS H1 fix: STALLED row を視覚区別するため独立 key
+      // DA112-REV_C OPS H1 fix: STALLED row を視覚区別するため独立 key
       if (key === "STALLED") return "STALLED";
       return "OTHER";
     };
@@ -467,7 +467,7 @@
       return text;
     };
 
-    // T152 readability gate: 進捗表に出す目的文を 100 文字以下・専門表記なしに保つ。
+    // DA121-OPS_C readability gate: 進捗表に出す目的文を 100 文字以下・専門表記なしに保つ。
     // PO 直命 2026-05-09: 「ヘッダーから "実現したいこと" 削除、 内容は 100 文字以下、
     //  Gate 形式・md ファイル名・path・script・test・log など の記載は禁止、
     //  違反時は安全な短文 fallback」。
@@ -1015,7 +1015,7 @@
       }
     };
 
-    // task management v2 (T143 P1 UI、 docs/task_management_v2.md §3.1):
+    // task management v2 (DA114-REV_C P1 UI、 docs/task_management_v2.md §3.1):
     // 全タスク行を 2 行構成 (two-row / task-row-2line) でレンダリング。
     // 上段 = T番号 (rowspan=2 縦結合) + 対象 / ステータス / 担当 AI / 完了率 / 完了見込み
     // 下段 = T番号セル (rowspan で抜ける) + 実現したいこと (colspan=5)
@@ -1037,7 +1037,7 @@
           }
         };
         const longPressHook = (tr) => {
-          // 詳細カード長押しは T143 P2 で wiring 予定、 P1 は通常 click (= row click → assign modal 互換)。
+          // 詳細カード長押しは DA114-REV_C P2 で wiring 予定、 P1 は通常 click (= row click → assign modal 互換)。
           tr.addEventListener("click", navigate);
           tr.addEventListener("keydown", onKey);
         };
@@ -1115,11 +1115,11 @@
         longPressHook(tr2);
 
         const tdIntent = document.createElement("td");
-        tdIntent.colSpan = 6; // 対象 / ステータス / 担当AI / (旧 実現したいこと、 T152 でラベル削除) / 完了率 / 完了見込み = 6 col
+        tdIntent.colSpan = 6; // 対象 / ステータス / 担当AI / (旧 実現したいこと、 DA121-OPS_C でラベル削除) / 完了率 / 完了見込み = 6 col
         tdIntent.className = "px-4 pb-3 pt-0 leading-6 text-slate-800 dark:text-slate-100 task-row-intent-cell";
         const intentInner = document.createElement("div");
         intentInner.className = "flex flex-col gap-1";
-        // T152 PO 直命 2026-05-09: header から「実現したいこと」削除 + 目的文を非エンジニア向け 100 字以下 + 禁止語 fallback で表示
+        // DA121-OPS_C PO 直命 2026-05-09: header から「実現したいこと」削除 + 目的文を非エンジニア向け 100 字以下 + 禁止語 fallback で表示
         const intentText = document.createElement("span");
         intentText.className = "text-[14px] font-semibold text-slate-800 dark:text-slate-100";
         intentText.textContent = safeIntentSummary(quickSummary(task)) || "未記録";
@@ -1233,9 +1233,9 @@
       card.scrollIntoView({ behavior: "smooth", block: "start" });
       card.focus({ preventScroll: true });
     };
-    // task management v2 (T143 P1 UI): 既存 navigateToTask / openPrefillModal / openIssueDeeplink
+    // task management v2 (DA114-REV_C P1 UI): 既存 navigateToTask / openPrefillModal / openIssueDeeplink
     // 互換 export (= row click → assign modal 経路 / GitHub Issue deeplink 経路 を test から確認できるように)。
-    // pwa/app.js 側の openPrefillModal / openIssueDeeplink を window 経由で参照可能化 (T128 互換維持)。
+    // pwa/app.js 側の openPrefillModal / openIssueDeeplink を window 経由で参照可能化 (DA110-DOC_C 互換維持)。
     if (typeof window !== "undefined") {
       window.__t_progress_v2 = window.__t_progress_v2 || {};
       window.__t_progress_v2.navigateToTask = navigateToTask;
@@ -1317,14 +1317,14 @@
         addList(card.querySelector(".review-list"), methodItems(task));
         addList(card.querySelector(".refs-list"), splitRefs(task.updated_refs, task));
         card.querySelector(".back-to-quick").addEventListener("click", navigateToQuickTable);
-        // task management v2 (T143 P1 UI): 「詳細カードを開く」 button → openDetailCard(task)
+        // task management v2 (DA114-REV_C P1 UI): 「詳細カードを開く」 button → openDetailCard(task)
         const openDetailBtn = card.querySelector(".open-detail-card");
         if (openDetailBtn) openDetailBtn.addEventListener("click", () => openDetailCard(task));
         node.appendChild(card);
       }
     };
 
-    // T81: client side polling autorefresh (PO 指示 2026-05-07)
+    // DA075-OPS_P: client side polling autorefresh (PO 指示 2026-05-07)
     // Browser をリロードしなくても、 push + publish 完了後に最新の Mission 状態を反映する。
     const POLLING_INTERVAL_MS = 8000; // 8 秒間隔で再 fetch (5-10 秒範囲)
     const FETCH_TIMEOUT_MS = 8000;    // fetch 1 回あたり 8 秒で timeout
@@ -1349,7 +1349,7 @@
       return `${generated}|${tasks.length}`;
     };
 
-    // task management v2 (T143 P1 UI): PO 判断ボード レンダリング
+    // task management v2 (DA114-REV_C P1 UI): PO 判断ボード レンダリング
     // (停) PO 判断 status の task をページトップに集約、 クリックで詳細カードへスクロール。
     const isPoDecisionTask = (task) => statusV2Key(task) === "BLOCKED_PO";
     const poQuestionFor = (task) => {
@@ -1401,7 +1401,7 @@
       }
     };
 
-    // task management v2 (T143 P1 UI): 16 agent 枠 active 表示 (条件表示)
+    // task management v2 (DA114-REV_C P1 UI): 16 agent 枠 active 表示 (条件表示)
     const renderAgentSlotGrid = (gridNode, tasks) => {
       if (!gridNode) return;
       gridNode.textContent = "";
@@ -1425,7 +1425,7 @@
       }
     };
 
-    // task management v2 (T143 P1 UI): 詳細カード open / close
+    // task management v2 (DA114-REV_C P1 UI): 詳細カード open / close
     let currentDetailTask = null;
     const openDetailCard = (task) => {
       const card = document.getElementById("task-detail-card");
@@ -1465,14 +1465,14 @@
       } else {
         poBox.hidden = true;
       }
-      // 変更履歴 section (T143 P2 で配備される task_status_change_log.jsonl 表示枠、 P1 では空でも OK)
+      // 変更履歴 section (DA114-REV_C P2 で配備される task_status_change_log.jsonl 表示枠、 P1 では空でも OK)
       // 抽出 source: docs/status/task_status_change_log.jsonl から t_id 一致 event を 10 件描画。
       const histList = card.querySelector("#detail-change-history-list");
       if (histList) {
         histList.textContent = "";
         const placeholder = document.createElement("li");
         placeholder.className = "text-slate-500 dark:text-slate-400";
-        placeholder.textContent = `(${task.t_id || "task"} の変更履歴は T143 P2 配備後に表示、 現在は空表示)`;
+        placeholder.textContent = `(${task.t_id || "task"} の変更履歴は DA114-REV_C P2 配備後に表示、 現在は空表示)`;
         histList.appendChild(placeholder);
       }
       card.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1492,10 +1492,10 @@
         const answeredBtn = document.getElementById("detail-po-answered");
         if (answeredBtn) {
           answeredBtn.addEventListener("click", () => {
-            // [回答済] 押下時の SSoT 連携は T143 P2/P6 で wiring 予定。 P1 では UI 上の確認のみ。
+            // [回答済] 押下時の SSoT 連携は DA114-REV_C P2/P6 で wiring 予定。 P1 では UI 上の確認のみ。
             const text = (document.getElementById("detail-po-answer-text") || {}).value || "";
             // eslint-disable-next-line no-console
-            console.log("[T143 P1] PO answered (preview):", { task: currentDetailTask && currentDetailTask.t_id, text });
+            console.log("[DA114-REV_C P1] PO answered (preview):", { task: currentDetailTask && currentDetailTask.t_id, text });
             if (text.trim()) {
               answeredBtn.textContent = "回答送信予定 (P2)";
               answeredBtn.disabled = true;
@@ -1519,7 +1519,7 @@
       renderStatusControls(tasks);
       renderProgressChart(tasks, generatedAt);
       renderDateDial(tasks);
-      // task management v2 (T143 P1 UI) 追加 rendering
+      // task management v2 (DA114-REV_C P1 UI) 追加 rendering
       renderPoDecisionBoard(tasks);
       wireDetailCardOnce();
       applyTaskFilters();
