@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-05-10T05:57:31Z",
+  "generated_at": "2026-05-10T06:03:48Z",
   "source": "instructions/agent_assignments/*.json",
   "agents": {
     "CC_0": {
@@ -45,9 +45,9 @@
           "target_repo": "dev-system",
           "priority": 100,
           "assignment_status": "COMPLETED",
-          "pwa_status_key": "WAITING_REVIEW",
+          "pwa_status_key": "DONE",
           "queue_position": null,
-          "queue_label": "完了済み"
+          "queue_label": ""
         },
         {
           "task_id": "TASK-DAIS-PHASE4-PWA-STATUS-MAPPING",
@@ -58,9 +58,9 @@
           "target_repo": "dev-system",
           "priority": 80,
           "assignment_status": "COMPLETED",
-          "pwa_status_key": "WAITING_REVIEW",
+          "pwa_status_key": "DONE",
           "queue_position": null,
-          "queue_label": "完了済み"
+          "queue_label": ""
         },
         {
           "task_id": "TASK-DAIS-PHASE4-AGENT-ASSIGNMENT-QUEUE",
@@ -71,9 +71,9 @@
           "target_repo": "dev-system",
           "priority": 75,
           "assignment_status": "COMPLETED",
-          "pwa_status_key": "WAITING_REVIEW",
+          "pwa_status_key": "DONE",
           "queue_position": null,
-          "queue_label": "完了済み"
+          "queue_label": ""
         },
         {
           "task_id": "TASK-DAIS-PHASE4-SUPERVISOR-DISPATCH-WRITEBACK",
@@ -84,9 +84,9 @@
           "target_repo": "dev-system",
           "priority": 70,
           "assignment_status": "COMPLETED",
-          "pwa_status_key": "WAITING_REVIEW",
+          "pwa_status_key": "DONE",
           "queue_position": null,
-          "queue_label": "完了済み"
+          "queue_label": ""
         },
         {
           "task_id": "TASK-DAIS-PHASE4-GATES-TESTS-BACKCOMPAT",
@@ -97,9 +97,9 @@
           "target_repo": "dev-system",
           "priority": 60,
           "assignment_status": "COMPLETED",
-          "pwa_status_key": "WAITING_REVIEW",
+          "pwa_status_key": "DONE",
           "queue_position": null,
-          "queue_label": "完了済み"
+          "queue_label": ""
         }
       ],
       "head_task_id": null
