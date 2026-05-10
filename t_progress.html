@@ -322,6 +322,7 @@
 
     const PWA_STATUS_LABELS = {
       REGISTERED: "登録",
+      ASSIGNED: "割当",
       IN_PROGRESS: "進行中",
       WAITING_REVIEW: "待機(Rev)",
       WAITING_PO: "待機(Po)",
@@ -335,6 +336,8 @@
     const pwaStatusKey = (task) => {
       const explicit = String(task && task.pwa_status_key ? task.pwa_status_key : "").trim().toUpperCase();
       if (explicit && PWA_STATUS_LABELS[explicit]) return explicit;
+      const assignment = String(task && task.assignment_status ? task.assignment_status : "").toUpperCase();
+      const assignedAgent = String(task && task.assigned_agent ? task.assigned_agent : "").trim();
       const status = String(task && task.status ? task.status : task || "").toUpperCase();
       if (["DONE", "COMPLETED", "PUSHED", "DEPLOYED", "APPLIED"].includes(status)) return "DONE";
       if (["IN_PROGRESS", "RUNNING"].includes(status)) return "IN_PROGRESS";
@@ -342,6 +345,7 @@
       if (["WAITING_PO", "PO_PENDING", "BLOCKED"].includes(status)) return "WAITING_PO";
       if (status === "MONITORING") return "MONITORING";
       if (status === "STALLED") return "STALLED";
+      if (status === "ASSIGNED" || (assignedAgent && (["ASSIGNED", "REQUEUED"].includes(assignment) || ["QUEUED", "REGISTERED", "NOT_STARTED", "PENDING", ""].includes(status)))) return "ASSIGNED";
       if (["QUEUED", "REGISTERED", "NOT_STARTED", "PENDING", ""].includes(status)) return "REGISTERED";
       return "OTHER";
     };
@@ -357,6 +361,7 @@
         QUEUED: "登録",
         REGISTERED: "登録",
         NOT_STARTED: "登録",
+        ASSIGNED: "割当",
         IN_PROGRESS: "進行中",
         RUNNING: "進行中",
         STALLED: "⚠️ 停止検出",
@@ -389,6 +394,9 @@
       if (["WAITING_PO", "PO_PENDING"].includes(key)) {
         return `${base} bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-200`;
       }
+      if (key === "ASSIGNED") {
+        return `${base} bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-200`;
+      }
       if (key === "MONITORING") {
         return `${base} bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-200`;
       }
@@ -408,10 +416,11 @@
       return `${base} bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200`;
     };
 
-    const STATUS_ORDER = ["IN_PROGRESS", "WAITING_REVIEW", "WAITING_PO", "MONITORING", "DONE", "REGISTERED", "STALLED", "OTHER"];
-    const BASE_STATUS_KEYS = ["IN_PROGRESS", "WAITING_REVIEW", "WAITING_PO", "MONITORING", "DONE", "REGISTERED"];
+    const STATUS_ORDER = ["IN_PROGRESS", "ASSIGNED", "WAITING_REVIEW", "WAITING_PO", "MONITORING", "DONE", "REGISTERED", "STALLED", "OTHER"];
+    const BASE_STATUS_KEYS = ["IN_PROGRESS", "ASSIGNED", "WAITING_REVIEW", "WAITING_PO", "MONITORING", "DONE", "REGISTERED"];
     const STATUS_META = {
       IN_PROGRESS: { label: "進行中", stroke: "#0f766e", border: "border-teal-200 dark:border-teal-900", text: "text-teal-800 dark:text-teal-200", active: "bg-teal-700 text-white border-teal-700" },
+      ASSIGNED: { label: "割当", stroke: "#2563eb", border: "border-sky-200 dark:border-sky-900", text: "text-sky-800 dark:text-sky-200", active: "bg-sky-700 text-white border-sky-700" },
       WAITING_REVIEW: { label: "待機(Rev)", stroke: "#2563eb", border: "border-blue-200 dark:border-blue-900", text: "text-blue-800 dark:text-blue-200", active: "bg-blue-600 text-white border-blue-600" },
       WAITING_PO: { label: "待機(Po)", stroke: "#9333ea", border: "border-purple-200 dark:border-purple-900", text: "text-purple-800 dark:text-purple-200", active: "bg-purple-700 text-white border-purple-700" },
       MONITORING: { label: "モニタ", stroke: "#0891b2", border: "border-cyan-200 dark:border-cyan-900", text: "text-cyan-800 dark:text-cyan-200", active: "bg-cyan-700 text-white border-cyan-700" },
@@ -430,6 +439,7 @@
       if (["WAITING_PO", "PO_PENDING", "BLOCKED"].includes(key)) return "WAITING_PO";
       if (key === "MONITORING") return "MONITORING";
       if (["IN_PROGRESS", "RUNNING"].includes(key)) return "IN_PROGRESS";
+      if (key === "ASSIGNED") return "ASSIGNED";
       if (["QUEUED", "REGISTERED", "NOT_STARTED"].includes(key)) return "REGISTERED";
       // DA112-REV_C OPS H1 fix: STALLED row を視覚区別するため独立 key
       if (key === "STALLED") return "STALLED";
@@ -738,12 +748,20 @@
       const explicit = String(task.queue_label || "").trim();
       if (explicit) return explicit;
       const key = pwaStatusKey(task);
-      if (key === "IN_PROGRESS") return "実行中";
+      if (key === "IN_PROGRESS") return "0";
       if (key === "WAITING_REVIEW") return "完了済み";
       if (key === "WAITING_PO") return "PO判断待ち";
       if (key === "MONITORING") return "監視中";
-      if (key === "REGISTERED" && task.assigned_agent && task.queue_position) return String(task.queue_position);
+      if (key === "ASSIGNED" && task.assigned_agent && task.queue_position != null) return String(task.queue_position);
       return "";
+    };
+
+    const queueCellClass = (task) => {
+      const base = "whitespace-nowrap px-4 py-3";
+      if (pwaStatusKey(task) === "IN_PROGRESS") {
+        return `${base} font-black text-blue-700 dark:text-blue-300`;
+      }
+      return `${base} text-slate-700 dark:text-slate-200`;
     };
 
     const formatPhase4Value = (value) => {
@@ -768,6 +786,10 @@
       };
       const deps = task && (task.depends_on || (task.graph && task.graph.depends_on));
       set(".detail-queue", queueLabel(task));
+      const detailQueue = card.querySelector(".detail-queue");
+      if (detailQueue && pwaStatusKey(task) === "IN_PROGRESS") {
+        detailQueue.className = "detail-queue font-black text-blue-700 dark:text-blue-300";
+      }
       set(".detail-next-action", fieldText(task, ["next_action", "blocked_on", "remaining_steps"]));
       set(".detail-po-waiting", pwaStatusKey(task) === "WAITING_PO" || task.po_waiting ? "あり" : "なし");
       set(".detail-monitor-until", fieldText(task, ["monitor_until"]));
@@ -1249,7 +1271,7 @@
         tr1.appendChild(tdActor);
 
         const tdQueue = document.createElement("td");
-        tdQueue.className = "whitespace-nowrap px-4 py-3 text-slate-700 dark:text-slate-200";
+        tdQueue.className = queueCellClass(task);
         tdQueue.textContent = queueLabel(task);
         tr1.appendChild(tdQueue);
 
