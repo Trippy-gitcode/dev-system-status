@@ -1,12 +1,17 @@
 {
-  "generated_at": "2026-05-10T04:40:53Z",
+  "generated_at": "2026-05-10T05:41:10Z",
   "source": "instructions/session_progress.md#Mission Queue",
   "mission_queue_file": "instructions/session_progress.md",
   "task_detail_file": "instructions/in_flight_topics.md",
   "past_log_file": "instructions/session_progress.md#Mission Queue DONE rows",
-  "active_task_count": 18,
+  "active_task_count": 23,
   "completed_task_count": 188,
   "active_task_ids": [
+    "TASK-DAIS-PHASE4-GATES-TESTS-BACKCOMPAT",
+    "TASK-DAIS-PHASE4-SUPERVISOR-DISPATCH-WRITEBACK",
+    "TASK-DAIS-PHASE4-AGENT-ASSIGNMENT-QUEUE",
+    "TASK-DAIS-PHASE4-PWA-STATUS-MAPPING",
+    "TASK-DAIS-PHASE4-SUPERVISOR-COMMAND-STATUS-CONTRACT",
     "TASK-DAIS-TASK-MANAGEMENT-V2-AND-STATUS-CHANGE-LOG",
     "TASK-DAIS-PWA-ONE-SITE-ASSIGN",
     "TASK-lais-F1-TASK-MGMT",
@@ -218,6 +223,240 @@
   ],
   "tasks": [
     {
+      "t_id": "DA169-FIX_P",
+      "mission_id": "TASK-DAIS-PHASE4-GATES-TESTS-BACKCOMPAT",
+      "status": "LOCAL_DONE",
+      "owner": "[Codex:OPS]",
+      "owner_ai": "[Codex:OPS]",
+      "target_app": "Dais",
+      "parent_task_id": "TASK-DAIS-PHASE4-SUPERVISOR-COMMAND-STATUS-CONTRACT",
+      "goal": "Phase4 status/assignment/writebackのregression testsが追加され、既存DONEを巻き戻さず、Mission Queue / DoD / Git Page sync / Public Status Sync / Startup / Phase0 quality gate がPASSする状態。",
+      "goal_steps": "22項目regressionを追加 / phase0 quality gateへ必要最小ratchet / old owner/done_by混入防止 / MONITORING必須field / canonical agent ID gate / writeback incomplete not-DONE / generated projection not master検証。",
+      "work_done": "local_done_by=[Codex:OPS]; Phase4 gates and regression coverage now ratchet status mapping, canonical assigned_agent IDs, queue projection, writeback checks, startup checks, public status sync, and existing DONE rollback prevention.; official DONE requires push/deploy",
+      "work_steps": "未着手（実績なし）",
+      "test_methods": "TEST_METHOD:UNIT TEST_METHOD:DOD_GATE TEST_METHOD:MISSION_SYNC TEST_METHOD:SMOKE",
+      "review_personas": "REVIEW_PERSONA:QA_REVIEWER REVIEW_PERSONA:OPS_REVIEWER REVIEW_PERSONA:SPEC_REVIEWER",
+      "verification_evidence": "DA169 allocated by devs_task_id_allocate.sh; requested regression list captured in Phase4 TASK detail.",
+      "updated_refs": "instructions/session_progress.md §ミッションキュー / instructions/in_flight_topics.md §TASK-DAIS-PHASE4-GATES-TESTS-BACKCOMPAT",
+      "remaining_steps": "wire Phase4 checker into startup/phase0 gate if blast radius remains acceptable.",
+      "blocked_on": "TASK-DAIS-PHASE4-PWA-STATUS-MAPPING, TASK-DAIS-PHASE4-AGENT-ASSIGNMENT-QUEUE, TASK-DAIS-PHASE4-SUPERVISOR-DISPATCH-WRITEBACK",
+      "next_action": "add full ratchet after implementation scripts stabilize.",
+      "created_at": "",
+      "completed_at": "2026-05-10",
+      "progress_percent": 90,
+      "eta": "2026-05-10",
+      "graph": {
+        "depends_on": "[TASK-DAIS-PHASE4-PWA-STATUS-MAPPING, TASK-DAIS-PHASE4-AGENT-ASSIGNMENT-QUEUE, TASK-DAIS-PHASE4-SUPERVISOR-DISPATCH-WRITEBACK]",
+        "parent_id": "TASK-DAIS-PHASE4-SUPERVISOR-COMMAND-STATUS-CONTRACT",
+        "parent_of": "",
+        "parallel_with": "",
+        "verdict_input_from": "",
+        "critical_input_from": "",
+        "clarification_input_from": ""
+      },
+      "parent_child_suggest": [],
+      "pwa_status_key": "WAITING_REVIEW",
+      "pwa_status_label": "待機(Rev)",
+      "queue_label": "完了済み",
+      "queue_position": null,
+      "po_waiting": false,
+      "assignment_status": "COMPLETED",
+      "assigned_agent": "CX_01",
+      "assigned_at": "2026-05-10T12:04:00+09:00",
+      "target_repo": "dev-system",
+      "writeback_status": "NOT_REQUIRED_YET",
+      "depends_on": [
+        "TASK-DAIS-PHASE4-PWA-STATUS-MAPPING",
+        "TASK-DAIS-PHASE4-AGENT-ASSIGNMENT-QUEUE",
+        "TASK-DAIS-PHASE4-SUPERVISOR-DISPATCH-WRITEBACK"
+      ]
+    },
+    {
+      "t_id": "DA168-OPS_P",
+      "mission_id": "TASK-DAIS-PHASE4-SUPERVISOR-DISPATCH-WRITEBACK",
+      "status": "LOCAL_DONE",
+      "owner": "[Codex:OPS]",
+      "owner_ai": "[Codex:OPS]",
+      "target_app": "Dais",
+      "parent_task_id": "TASK-DAIS-PHASE4-SUPERVISOR-COMMAND-STATUS-CONTRACT",
+      "goal": "Supervisor dispatcherの操作責任が明文化され、Cross-App writeback checkerがApp repo DONEの証跡不足をfail-closedに検出する状態。",
+      "goal_steps": "Supervisor command plan / writeback protocol / checker / App repo DONE evidence rule / stale assignment and exception display plan / monitor and WAITING_PO transition contract。",
+      "work_done": "local_done_by=[Codex:OPS]; Phase4 Supervisor/writeback path now records App evidence into assignment SSoT, blocks App DONE without writeback, emits writeback report projection, and keeps Supervisor assignment mutations serialized.; official DONE requires push/deploy",
+      "work_steps": "未着手（実績なし）",
+      "test_methods": "TEST_METHOD:UNIT TEST_METHOD:STATIC_DOC TEST_METHOD:MISSION_SYNC",
+      "review_personas": "REVIEW_PERSONA:OPS_REVIEWER REVIEW_PERSONA:DATA_INTEGRITY_REVIEWER",
+      "verification_evidence": "DA168 allocated by devs_task_id_allocate.sh; writeback protocol drafted in docs/phase4_cross_app_writeback_protocol.md.",
+      "updated_refs": "instructions/session_progress.md §ミッションキュー / instructions/in_flight_topics.md §TASK-DAIS-PHASE4-SUPERVISOR-DISPATCH-WRITEBACK",
+      "remaining_steps": "add assign/requeue/writeback commands and PWA exception display.",
+      "blocked_on": "TASK-DAIS-PHASE4-AGENT-ASSIGNMENT-QUEUE",
+      "next_action": "implement Supervisor dispatcher mutation and evidence ingestion after assignment queue mutation is ready.",
+      "created_at": "",
+      "completed_at": "2026-05-10",
+      "progress_percent": 90,
+      "eta": "2026-05-10",
+      "graph": {
+        "depends_on": "[TASK-DAIS-PHASE4-AGENT-ASSIGNMENT-QUEUE]",
+        "parent_id": "TASK-DAIS-PHASE4-SUPERVISOR-COMMAND-STATUS-CONTRACT",
+        "parent_of": "",
+        "parallel_with": "",
+        "verdict_input_from": "",
+        "critical_input_from": "",
+        "clarification_input_from": ""
+      },
+      "parent_child_suggest": [],
+      "pwa_status_key": "WAITING_REVIEW",
+      "pwa_status_label": "待機(Rev)",
+      "queue_label": "完了済み",
+      "queue_position": null,
+      "po_waiting": false,
+      "assignment_status": "COMPLETED",
+      "assigned_agent": "CX_01",
+      "assigned_at": "2026-05-10T12:03:00+09:00",
+      "target_repo": "dev-system",
+      "writeback_status": "NOT_REQUIRED_YET",
+      "depends_on": [
+        "TASK-DAIS-PHASE4-AGENT-ASSIGNMENT-QUEUE"
+      ]
+    },
+    {
+      "t_id": "DA167-OPS_P",
+      "mission_id": "TASK-DAIS-PHASE4-AGENT-ASSIGNMENT-QUEUE",
+      "status": "LOCAL_DONE",
+      "owner": "[Codex:OPS]",
+      "owner_ai": "[Codex:OPS]",
+      "target_app": "Dais",
+      "parent_task_id": "TASK-DAIS-PHASE4-SUPERVISOR-COMMAND-STATUS-CONTRACT",
+      "goal": "`instructions/agent_assignments/<task_id>.json` を1タスク1assignment record正本とし、`docs/status/agent_queues.json` と `docs/status/agents/*.json` をprojectionとして再生成でき、Agentは自分のhead-of-queueだけ開始できる状態。",
+      "goal_steps": "schema validation / allowed agent ID check / queue_position保存禁止 / projection生成 / next_task and start wrapper / DAIS_AGENT_ID fail-closed / self-vs-other and non-head start block regression。",
+      "work_done": "local_done_by=[Codex:OPS]; Phase4 Agent Queue now has one-task-one-assignment validation, queue projection, head-of-queue start gate, dependency/writeback checks, and claim-lock apply/release flow.; official DONE requires push/deploy",
+      "work_steps": "未着手（実績なし）",
+      "test_methods": "TEST_METHOD:UNIT TEST_METHOD:SCRIPT_SYNTAX TEST_METHOD:MISSION_SYNC",
+      "review_personas": "REVIEW_PERSONA:OPS_REVIEWER REVIEW_PERSONA:QA_REVIEWER",
+      "verification_evidence": "DA167 allocated by devs_task_id_allocate.sh; initial assignment schema documented in docs/phase4_agent_assignment_queue_contract.md.",
+      "updated_refs": "instructions/session_progress.md §ミッションキュー / instructions/in_flight_topics.md §TASK-DAIS-PHASE4-AGENT-ASSIGNMENT-QUEUE",
+      "remaining_steps": "implement assign/requeue/unassign mutation with .dev-system/agent_queue.lock.",
+      "blocked_on": "TASK-DAIS-PHASE4-SUPERVISOR-COMMAND-STATUS-CONTRACT",
+      "next_action": "extend Supervisor-only mutation commands and lock handling after base projection lands.",
+      "created_at": "",
+      "completed_at": "2026-05-10",
+      "progress_percent": 90,
+      "eta": "2026-05-10",
+      "graph": {
+        "depends_on": "[TASK-DAIS-PHASE4-SUPERVISOR-COMMAND-STATUS-CONTRACT]",
+        "parent_id": "TASK-DAIS-PHASE4-SUPERVISOR-COMMAND-STATUS-CONTRACT",
+        "parent_of": "",
+        "parallel_with": "",
+        "verdict_input_from": "",
+        "critical_input_from": "",
+        "clarification_input_from": ""
+      },
+      "parent_child_suggest": [],
+      "pwa_status_key": "WAITING_REVIEW",
+      "pwa_status_label": "待機(Rev)",
+      "queue_label": "完了済み",
+      "queue_position": null,
+      "po_waiting": false,
+      "assignment_status": "COMPLETED",
+      "assigned_agent": "CX_01",
+      "assigned_at": "2026-05-10T12:02:00+09:00",
+      "target_repo": "dev-system",
+      "writeback_status": "NOT_REQUIRED_YET",
+      "depends_on": [
+        "TASK-DAIS-PHASE4-SUPERVISOR-COMMAND-STATUS-CONTRACT"
+      ]
+    },
+    {
+      "t_id": "DA166-IMP_P",
+      "mission_id": "TASK-DAIS-PHASE4-PWA-STATUS-MAPPING",
+      "status": "LOCAL_DONE",
+      "owner": "[Codex:OPS]",
+      "owner_ai": "[Codex:OPS]",
+      "target_app": "Dais",
+      "parent_task_id": "TASK-DAIS-PHASE4-SUPERVISOR-COMMAND-STATUS-CONTRACT",
+      "goal": "PWA/PWSで状態が 登録 / 進行中 / 待機(Rev) / 待機(Po) / モニタ / 完了 に統一され、担当AIは assigned_agent 正本、キューはprojection算出値として表示される状態。",
+      "goal_steps": "status mappingをt_progress projectionへ追加 / HTMLのstatus badgeとfilterを新6状態へ移行 / 担当AI欄をowner_ai推測からassigned_agentへ変更 / キュー列を追加 / required display fieldsを詳細カードやJSONへ反映 / regression追加。",
+      "work_done": "local_done_by=[Codex:OPS]; Phase4 PWA/PWS status mapping now renders canonical state labels, assigned_agent-only actor display, queue labels, and detail contract fields.; official DONE requires push/deploy",
+      "work_steps": "未着手（実績なし）",
+      "test_methods": "TEST_METHOD:UNIT TEST_METHOD:BROWSER_RENDER TEST_METHOD:MISSION_SYNC",
+      "review_personas": "REVIEW_PERSONA:UI_REVIEWER REVIEW_PERSONA:OPS_REVIEWER",
+      "verification_evidence": "DA166 allocated by devs_task_id_allocate.sh; Phase4 status mapping spec drafted in docs/phase4_pwa_status_mapping.md; DA165 dependency records exact implementation path.",
+      "updated_refs": "instructions/session_progress.md §ミッションキュー / instructions/in_flight_topics.md §TASK-DAIS-PHASE4-PWA-STATUS-MAPPING",
+      "remaining_steps": "add remaining PWA detail fields and browser smoke if needed.",
+      "blocked_on": "TASK-DAIS-PHASE4-SUPERVISOR-COMMAND-STATUS-CONTRACT",
+      "next_action": "complete UI display expansion after DA165 specs/projection land.",
+      "created_at": "",
+      "completed_at": "2026-05-10",
+      "progress_percent": 90,
+      "eta": "2026-05-10",
+      "graph": {
+        "depends_on": "[TASK-DAIS-PHASE4-SUPERVISOR-COMMAND-STATUS-CONTRACT]",
+        "parent_id": "TASK-DAIS-PHASE4-SUPERVISOR-COMMAND-STATUS-CONTRACT",
+        "parent_of": "",
+        "parallel_with": "",
+        "verdict_input_from": "",
+        "critical_input_from": "",
+        "clarification_input_from": ""
+      },
+      "parent_child_suggest": [],
+      "pwa_status_key": "WAITING_REVIEW",
+      "pwa_status_label": "待機(Rev)",
+      "queue_label": "完了済み",
+      "queue_position": null,
+      "po_waiting": false,
+      "assignment_status": "COMPLETED",
+      "assigned_agent": "CX_01",
+      "assigned_at": "2026-05-10T12:01:00+09:00",
+      "target_repo": "dev-system",
+      "writeback_status": "NOT_REQUIRED_YET",
+      "depends_on": [
+        "TASK-DAIS-PHASE4-SUPERVISOR-COMMAND-STATUS-CONTRACT"
+      ]
+    },
+    {
+      "t_id": "DA165-SPC_P",
+      "mission_id": "TASK-DAIS-PHASE4-SUPERVISOR-COMMAND-STATUS-CONTRACT",
+      "status": "LOCAL_DONE",
+      "owner": "[Codex:OPS]",
+      "owner_ai": "[Codex:OPS]",
+      "target_app": "Dais",
+      "parent_task_id": "",
+      "goal": "Phase4 の status contract、assignment record、Agent Queue projection、Agent identity、Cross-App writeback、conflict prevention の仕様が docs に入り、最小の assignment JSON / projection / PWA表示 / checker が動く状態。",
+      "goal_steps": "7仕様書作成 / Phase4タスク分解を正規allocatorで登録 / instructions/agent_assignments の1タスク1JSONを導入 / queue projectionとagent wrappersを追加 / t_progress projectionへPWA status fieldsをmerge / PWA早見表に状態・担当AI・キュー表示を反映 / writeback checkerとregression testを追加 / gates PASS。",
+      "work_done": "local_done_by=[Codex:OPS]; Phase4 foundation specs, assignment queue projection, PWA status mapping, supervisor mutation, and writeback checks implemented; tests and phase0 gate PASS; official DONE requires push/deploy",
+      "work_steps": "2026-05-10 Codex:OPS — fresh origin/main worktree `/private/tmp/dev-system-phase4` で `codex/DA165-SPC_P/phase4-supervisor-command` を作成。DA165-DA169を正規allocatorで採番し、7本のPhase4仕様、1タスク1assignment JSON、queue projection、agent wrappers、Supervisor assignment mutation helper、Cross-App writeback checker、PWA/PWS status/担当AI/キュー表示、Phase4 regressionを追加。DA165はLOCAL_DONEへ遷移済み。",
+      "test_methods": "TEST_METHOD:STATIC_DOC TEST_METHOD:UNIT TEST_METHOD:MISSION_SYNC TEST_METHOD:DOD_GATE",
+      "review_personas": "REVIEW_PERSONA:SPEC_REVIEWER REVIEW_PERSONA:OPS_REVIEWER REVIEW_PERSONA:UI_REVIEWER",
+      "verification_evidence": "branch created from origin/main 00e4610; sh scripts/devs_startup_required_checks.sh PASS before Phase4 edits; devs_task_id_allocate.sh allocated DA165-SPC_P through DA169-FIX_P; mission_queue_lock acquire/release PASS; sh tests/test_phase4_supervisor_command_status_contract.sh PASS=60 FAIL=0; sh scripts/devs_agent_assignment_check.sh --check PASS; sh scripts/devs_cross_app_writeback_check.sh --check PASS; sh scripts/devs_git_page_mission_sync_check.sh --check PASS; sh tests/test_t_progress_html_v2_ui.sh PASS=29 FAIL=0; sh tests/test_da163_pws_parent_task_column.sh PASS=21 FAIL=0; sh tests/test_da164_pws_child_parent_fallback.sh PASS=16 FAIL=0; inline JS parse PASS; sh scripts/devs_phase0_quality_gate.sh PASS.",
+      "updated_refs": "instructions/session_progress.md §ミッションキュー / instructions/in_flight_topics.md §TASK-DAIS-PHASE4-SUPERVISOR-COMMAND-STATUS-CONTRACT",
+      "remaining_steps": "review / official DONE promotion for DA165; DA166-DA169 follow-up tasks remain queued.",
+      "blocked_on": "review / official DONE promotion",
+      "next_action": "review DA165 foundation and promote official DONE after branch push/PR review; continue DA166-DA169 if PO wants full Phase4 expansion in the same branch.",
+      "created_at": "",
+      "completed_at": "2026-05-10",
+      "progress_percent": 90,
+      "eta": "2026-05-10",
+      "graph": {
+        "depends_on": "[]",
+        "parent_id": "",
+        "parent_of": "TASK-DAIS-PHASE4-PWA-STATUS-MAPPING, TASK-DAIS-PHASE4-AGENT-ASSIGNMENT-QUEUE, TASK-DAIS-PHASE4-SUPERVISOR-DISPATCH-WRITEBACK, TASK-DAIS-PHASE4-GATES-TESTS-BACKCOMPAT",
+        "parallel_with": "none",
+        "verdict_input_from": "",
+        "critical_input_from": "",
+        "clarification_input_from": ""
+      },
+      "parent_child_suggest": [],
+      "pwa_status_key": "WAITING_REVIEW",
+      "pwa_status_label": "待機(Rev)",
+      "queue_label": "完了済み",
+      "queue_position": null,
+      "po_waiting": false,
+      "assignment_status": "COMPLETED",
+      "assigned_agent": "CX_01",
+      "assigned_at": "2026-05-10T12:00:00+09:00",
+      "target_repo": "dev-system",
+      "writeback_status": "NOT_REQUIRED_YET"
+    },
+    {
       "t_id": "DA114-REV_C",
       "mission_id": "TASK-DAIS-TASK-MANAGEMENT-V2-AND-STATUS-CHANGE-LOG",
       "status": "LOCAL_DONE",
@@ -249,7 +488,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "WAITING_REVIEW",
+      "pwa_status_label": "待機(Rev)",
+      "queue_label": "完了済み",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA110-DOC_C",
@@ -283,7 +527,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "WAITING_REVIEW",
+      "pwa_status_label": "待機(Rev)",
+      "queue_label": "完了済み",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA030-OPS_C",
@@ -317,7 +566,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "IN_PROGRESS",
+      "pwa_status_label": "進行中",
+      "queue_label": "実行中",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA026-SPC_C",
@@ -351,7 +605,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "IN_PROGRESS",
+      "pwa_status_label": "進行中",
+      "queue_label": "実行中",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA018-OPS_C",
@@ -385,7 +644,12 @@
         "critical_input_from": "TASK-LAIS-V0-PHASE0-DUAL-SPEC-REVIEW: 1 件 (= #1 brief §3 主要 feature に Goal CRUD / 進捗バー / ゴール完了ボーナス +50 EXP が独立 feature として立っていない (= 過去 v1.4 §3.2 で中核機能、 brief §3.1 F1…)",
         "clarification_input_from": "TASK-LAIS-V0-PHASE0-DUAL-SPEC-REVIEW: 9 件 (= #1 【cost / 認証】 月額予算 \\$10 個人 MVP の認証 status: brief §6.1 「全 AI API 合計 月額 \\$10」 は新規 paid 増分か、 既存サブスク内収まるか。 Mission Queue 上で… | #2 【プラン整合】 brief §3.3 F3 日記 #11 「プラン別保持期間 (Free=30日 / Light=1年 / Pro=無限)」 vs §9 「Stripe プラン課金 (Free/Light/Pro): Phase 2… | #3 【scope】 過去 v1.4 §3.2.6 アバター進化 PNG 切替演出が消えた = §2.1 success moment として「タスク完了 → EXP → Level/称号変化」 で十分か: 称号変更だけで「主人公として生き…)"
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "REGISTERED",
+      "pwa_status_label": "登録",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA017-OPS_C",
@@ -419,7 +683,12 @@
         "critical_input_from": "TASK-LAIS-V0-PHASE0-DUAL-SPEC-REVIEW: 1 件 (= #1 brief §3 主要 feature に Goal CRUD / 進捗バー / ゴール完了ボーナス +50 EXP が独立 feature として立っていない (= 過去 v1.4 §3.2 で中核機能、 brief §3.1 F1…)",
         "clarification_input_from": "TASK-LAIS-V0-PHASE0-DUAL-SPEC-REVIEW: 9 件 (= #1 【cost / 認証】 月額予算 \\$10 個人 MVP の認証 status: brief §6.1 「全 AI API 合計 月額 \\$10」 は新規 paid 増分か、 既存サブスク内収まるか。 Mission Queue 上で… | #2 【プラン整合】 brief §3.3 F3 日記 #11 「プラン別保持期間 (Free=30日 / Light=1年 / Pro=無限)」 vs §9 「Stripe プラン課金 (Free/Light/Pro): Phase 2… | #3 【scope】 過去 v1.4 §3.2.6 アバター進化 PNG 切替演出が消えた = §2.1 success moment として「タスク完了 → EXP → Level/称号変化」 で十分か: 称号変更だけで「主人公として生き…)"
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "REGISTERED",
+      "pwa_status_label": "登録",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA016-FIX_C",
@@ -453,7 +722,12 @@
         "critical_input_from": "TASK-LAIS-V0-PHASE0-DUAL-SPEC-REVIEW: 1 件 (= #1 brief §3 主要 feature に Goal CRUD / 進捗バー / ゴール完了ボーナス +50 EXP が独立 feature として立っていない (= 過去 v1.4 §3.2 で中核機能、 brief §3.1 F1…)",
         "clarification_input_from": "TASK-LAIS-V0-PHASE0-DUAL-SPEC-REVIEW: 9 件 (= #1 【cost / 認証】 月額予算 \\$10 個人 MVP の認証 status: brief §6.1 「全 AI API 合計 月額 \\$10」 は新規 paid 増分か、 既存サブスク内収まるか。 Mission Queue 上で… | #2 【プラン整合】 brief §3.3 F3 日記 #11 「プラン別保持期間 (Free=30日 / Light=1年 / Pro=無限)」 vs §9 「Stripe プラン課金 (Free/Light/Pro): Phase 2… | #3 【scope】 過去 v1.4 §3.2.6 アバター進化 PNG 切替演出が消えた = §2.1 success moment として「タスク完了 → EXP → Level/称号変化」 で十分か: 称号変更だけで「主人公として生き…)"
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "REGISTERED",
+      "pwa_status_label": "登録",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA015-OPS_C",
@@ -487,7 +761,12 @@
         "critical_input_from": "TASK-LAIS-V0-PHASE0-DUAL-SPEC-REVIEW: 1 件 (= #1 brief §3 主要 feature に Goal CRUD / 進捗バー / ゴール完了ボーナス +50 EXP が独立 feature として立っていない (= 過去 v1.4 §3.2 で中核機能、 brief §3.1 F1…)",
         "clarification_input_from": "TASK-LAIS-V0-PHASE0-DUAL-SPEC-REVIEW: 9 件 (= #1 【cost / 認証】 月額予算 \\$10 個人 MVP の認証 status: brief §6.1 「全 AI API 合計 月額 \\$10」 は新規 paid 増分か、 既存サブスク内収まるか。 Mission Queue 上で… | #2 【プラン整合】 brief §3.3 F3 日記 #11 「プラン別保持期間 (Free=30日 / Light=1年 / Pro=無限)」 vs §9 「Stripe プラン課金 (Free/Light/Pro): Phase 2… | #3 【scope】 過去 v1.4 §3.2.6 アバター進化 PNG 切替演出が消えた = §2.1 success moment として「タスク完了 → EXP → Level/称号変化」 で十分か: 称号変更だけで「主人公として生き…)"
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "IN_PROGRESS",
+      "pwa_status_label": "進行中",
+      "queue_label": "実行中",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "MA010-REV_C",
@@ -521,7 +800,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "REGISTERED",
+      "pwa_status_label": "登録",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "MA009-REV_C",
@@ -555,7 +839,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "REGISTERED",
+      "pwa_status_label": "登録",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "MA008-REV_C",
@@ -589,7 +878,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "REGISTERED",
+      "pwa_status_label": "登録",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "MA007-REV_C",
@@ -623,7 +917,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "REGISTERED",
+      "pwa_status_label": "登録",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "MA006-REV_C",
@@ -657,7 +956,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "REGISTERED",
+      "pwa_status_label": "登録",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "MA005-SPC_C",
@@ -691,7 +995,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "REGISTERED",
+      "pwa_status_label": "登録",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "MA004-SPC_C",
@@ -725,7 +1034,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "REGISTERED",
+      "pwa_status_label": "登録",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "MA003-SPC_C",
@@ -759,7 +1073,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "REGISTERED",
+      "pwa_status_label": "登録",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "MA002-SPC_C",
@@ -793,7 +1112,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "REGISTERED",
+      "pwa_status_label": "登録",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "MA001-REV_P",
@@ -827,7 +1151,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "IN_PROGRESS",
+      "pwa_status_label": "進行中",
+      "queue_label": "実行中",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA164-FIX_P",
@@ -861,7 +1190,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA163-OPS_P",
@@ -895,7 +1229,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA162-OPS_P",
@@ -929,7 +1268,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA161-IMP_P",
@@ -963,7 +1307,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA160-SPC_P",
@@ -997,7 +1346,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA159-FIX_P",
@@ -1031,7 +1385,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA158-FIX_P",
@@ -1065,7 +1424,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA157-OPS_P",
@@ -1099,7 +1463,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA156-OPS_P",
@@ -1133,7 +1502,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA155-OPS_P",
@@ -1167,7 +1541,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA154-DOC_P",
@@ -1201,7 +1580,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA153-INF_P",
@@ -1235,7 +1619,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA152-OPS_P",
@@ -1269,7 +1658,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA151-OPS_P",
@@ -1303,7 +1697,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA150-OPS_P",
@@ -1337,7 +1736,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA150-INF_P",
@@ -1371,7 +1775,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA149-INF_P",
@@ -1405,7 +1814,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA148-INF_P",
@@ -1439,7 +1853,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA147-OPS_P",
@@ -1473,7 +1892,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA146-INF_P",
@@ -1507,7 +1931,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA145-FIX_P",
@@ -1541,7 +1970,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA144-SPC_P",
@@ -1575,7 +2009,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA143-SPC_P",
@@ -1609,7 +2048,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA142-OPS_P",
@@ -1643,7 +2087,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA141-INF_P",
@@ -1677,7 +2126,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA140-OPS_P",
@@ -1711,7 +2165,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA139-OPS_P",
@@ -1745,7 +2204,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA138-OPS_P",
@@ -1779,7 +2243,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA137-FIX_P",
@@ -1813,7 +2282,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA136-OPS_P",
@@ -1847,7 +2321,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA135-OPS_P",
@@ -1881,7 +2360,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA134-REV_P",
@@ -1915,7 +2399,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA133-OPS_P",
@@ -1949,7 +2438,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA132-OPS_P",
@@ -1983,7 +2477,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA131-OPS_P",
@@ -2017,7 +2516,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA130-INF_P",
@@ -2051,7 +2555,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA129-OPS_P",
@@ -2085,7 +2594,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA128-OPS_P",
@@ -2119,7 +2633,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA127-OPS_P",
@@ -2153,7 +2672,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA126-OPS_P",
@@ -2187,7 +2711,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA125-SPC_P",
@@ -2221,7 +2750,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA124-REV_C",
@@ -2255,7 +2789,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA123-OPS_C",
@@ -2289,7 +2828,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA122-REV_C",
@@ -2323,7 +2867,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA121-OPS_C",
@@ -2357,7 +2906,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA120-SPC_C",
@@ -2391,7 +2945,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA119-SPC_C",
@@ -2425,7 +2984,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA118-REV_C",
@@ -2459,7 +3023,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA117-SPC_P",
@@ -2493,7 +3062,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA116-SPC_C",
@@ -2527,7 +3101,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA115-REV_C",
@@ -2561,7 +3140,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA113-REV_C",
@@ -2595,7 +3179,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA112-REV_C",
@@ -2629,7 +3218,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA111-REV_P",
@@ -2663,7 +3257,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA109-OPS_P",
@@ -2697,7 +3296,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA108-SPC_P",
@@ -2731,7 +3335,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA107-REV_C",
@@ -2765,7 +3374,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA106-SPC_C",
@@ -2799,7 +3413,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA105-SPC_P",
@@ -2833,7 +3452,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA104-OPS_C",
@@ -2867,7 +3491,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA103-OPS_C",
@@ -2901,7 +3530,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA102-SPC_P",
@@ -2935,7 +3569,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA101-REV_C",
@@ -2969,7 +3608,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA100-OPS_P",
@@ -3003,7 +3647,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA099-OPS_C",
@@ -3037,7 +3686,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA098-REV_C",
@@ -3071,7 +3725,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA097-REV_C",
@@ -3105,7 +3764,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA096-REV_C",
@@ -3139,7 +3803,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA095-OPS_C",
@@ -3173,7 +3842,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA094-OPS_C",
@@ -3207,7 +3881,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA093-SPC_P",
@@ -3241,7 +3920,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA092-OPS_C",
@@ -3275,7 +3959,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA091-SPC_P",
@@ -3309,7 +3998,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA090-FIX_P",
@@ -3343,7 +4037,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA089-SPC_P",
@@ -3377,7 +4076,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA088-REV_P",
@@ -3411,7 +4115,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA087-REV_C",
@@ -3445,7 +4154,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA086-SPC_C",
@@ -3479,7 +4193,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA085-SPC_C",
@@ -3513,7 +4232,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA084-SPC_P",
@@ -3547,7 +4271,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA083-SPC_P",
@@ -3581,7 +4310,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA082-SPC_P",
@@ -3615,7 +4349,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA081-OPS_P",
@@ -3649,7 +4388,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA080-SPC_P",
@@ -3683,7 +4427,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA079-OPS_P",
@@ -3717,7 +4466,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA078-OPS_P",
@@ -3751,7 +4505,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA077-OPS_P",
@@ -3785,7 +4544,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA076-REV_C",
@@ -3819,7 +4583,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA075-OPS_P",
@@ -3853,7 +4622,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA074-SPC_C",
@@ -3887,7 +4661,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA073-FIX_C",
@@ -3921,7 +4700,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA072-OPS_P",
@@ -3955,7 +4739,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA071-REV_C",
@@ -3989,7 +4778,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA070-REV_C",
@@ -4023,7 +4817,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA069-SPC_C",
@@ -4057,7 +4856,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA068-REV_P",
@@ -4091,7 +4895,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA067-REV_P",
@@ -4125,7 +4934,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA066-REV_C",
@@ -4159,7 +4973,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA065-REV_C",
@@ -4193,7 +5012,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA064-FIX_C",
@@ -4227,7 +5051,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA063-FIX_C",
@@ -4261,7 +5090,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA062-REV_C",
@@ -4295,7 +5129,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA061-OPS_C",
@@ -4329,7 +5168,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA060-OPS_P",
@@ -4363,7 +5207,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA059-REV_P",
@@ -4397,7 +5246,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA058-FIX_P",
@@ -4431,7 +5285,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA057-OPS_C",
@@ -4465,7 +5324,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA056-OPS_C",
@@ -4499,7 +5363,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA055-REV_P",
@@ -4533,7 +5402,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA054-INF_C",
@@ -4567,7 +5441,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA053-OPS_C",
@@ -4601,7 +5480,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA052-FIX_C",
@@ -4635,7 +5519,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA051-REV_C",
@@ -4669,7 +5558,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA050-REV_C",
@@ -4703,7 +5597,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA049-OPS_C",
@@ -4737,7 +5636,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA048-REV_C",
@@ -4771,7 +5675,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA047-REV_C",
@@ -4805,7 +5714,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA046-OPS_C",
@@ -4839,7 +5753,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA045-SPC_P",
@@ -4873,7 +5792,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA044-SPC_C",
@@ -4907,7 +5831,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA043-SPC_C",
@@ -4941,7 +5870,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA042-REV_C",
@@ -4975,7 +5909,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA041-IMP_C",
@@ -5009,7 +5948,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA040-DOC_C",
@@ -5043,7 +5987,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA039-OPS_C",
@@ -5077,7 +6026,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA038-OPS_C",
@@ -5111,7 +6065,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA037-OPS_P",
@@ -5145,7 +6104,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA036-OPS_C",
@@ -5179,7 +6143,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA035-REV_C",
@@ -5213,7 +6182,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA034-OPS_C",
@@ -5247,7 +6221,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA033-OPS_C",
@@ -5281,7 +6260,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA032-OPS_C",
@@ -5315,7 +6299,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA031-SPC_P",
@@ -5349,7 +6338,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA031-OPS_C",
@@ -5383,7 +6377,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA030-SPC_C",
@@ -5417,7 +6416,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA029-REV_P",
@@ -5451,7 +6455,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA029-SPC_C",
@@ -5485,7 +6494,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA028-REV_P",
@@ -5519,7 +6533,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA028-SPC_C",
@@ -5553,7 +6572,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA027-REV_P",
@@ -5587,7 +6611,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA027-REV_C",
@@ -5621,7 +6650,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA026-REV_C",
@@ -5655,7 +6689,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA025-REV_P",
@@ -5689,7 +6728,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA025-REV_C",
@@ -5723,7 +6767,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA024-REV_P",
@@ -5757,7 +6806,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA024-REV_C",
@@ -5791,7 +6845,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA023-REV_P",
@@ -5825,7 +6884,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA023-REV_C",
@@ -5859,7 +6923,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA022-REV_P",
@@ -5893,7 +6962,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA022-REV_C",
@@ -5927,7 +7001,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA021-REV_C",
@@ -5961,7 +7040,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA021-SPC_C",
@@ -5995,7 +7079,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA020-SPC_P",
@@ -6029,7 +7118,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA020-OPS_C",
@@ -6063,7 +7157,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA019-REV_P",
@@ -6097,7 +7196,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA019-OPS_C",
@@ -6131,7 +7235,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA018-FIX_C",
@@ -6165,7 +7274,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA017-FIX_C",
@@ -6199,7 +7313,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA016-OPS_C",
@@ -6233,7 +7352,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA015-SPC_C",
@@ -6267,7 +7391,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA014-SPC_C",
@@ -6301,7 +7430,12 @@
         "critical_input_from": "TASK-LAIS-V0-PHASE0-DUAL-SPEC-REVIEW: 1 件 (= #1 brief §3 主要 feature に Goal CRUD / 進捗バー / ゴール完了ボーナス +50 EXP が独立 feature として立っていない (= 過去 v1.4 §3.2 で中核機能、 brief §3.1 F1…)",
         "clarification_input_from": "TASK-LAIS-V0-PHASE0-DUAL-SPEC-REVIEW: 9 件 (= #1 【cost / 認証】 月額予算 \\$10 個人 MVP の認証 status: brief §6.1 「全 AI API 合計 月額 \\$10」 は新規 paid 増分か、 既存サブスク内収まるか。 Mission Queue 上で… | #2 【プラン整合】 brief §3.3 F3 日記 #11 「プラン別保持期間 (Free=30日 / Light=1年 / Pro=無限)」 vs §9 「Stripe プラン課金 (Free/Light/Pro): Phase 2… | #3 【scope】 過去 v1.4 §3.2.6 アバター進化 PNG 切替演出が消えた = §2.1 success moment として「タスク完了 → EXP → Level/称号変化」 で十分か: 称号変更だけで「主人公として生き…)"
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA014-SPC_C",
@@ -6335,7 +7469,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA013-SPC_C",
@@ -6369,7 +7508,12 @@
         "critical_input_from": "TASK-LAIS-V0-PHASE0-DUAL-SPEC-REVIEW: 1 件 (= #1 brief §3 主要 feature に Goal CRUD / 進捗バー / ゴール完了ボーナス +50 EXP が独立 feature として立っていない (= 過去 v1.4 §3.2 で中核機能、 brief §3.1 F1…)",
         "clarification_input_from": "TASK-LAIS-V0-PHASE0-DUAL-SPEC-REVIEW: 9 件 (= #1 【cost / 認証】 月額予算 \\$10 個人 MVP の認証 status: brief §6.1 「全 AI API 合計 月額 \\$10」 は新規 paid 増分か、 既存サブスク内収まるか。 Mission Queue 上で… | #2 【プラン整合】 brief §3.3 F3 日記 #11 「プラン別保持期間 (Free=30日 / Light=1年 / Pro=無限)」 vs §9 「Stripe プラン課金 (Free/Light/Pro): Phase 2… | #3 【scope】 過去 v1.4 §3.2.6 アバター進化 PNG 切替演出が消えた = §2.1 success moment として「タスク完了 → EXP → Level/称号変化」 で十分か: 称号変更だけで「主人公として生き…)"
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA013-OPS_C",
@@ -6403,7 +7547,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA012-SPC_C",
@@ -6437,7 +7586,12 @@
         "critical_input_from": "TASK-LAIS-V0-PHASE0-DUAL-SPEC-REVIEW: 1 件 (= #1 brief §3 主要 feature に Goal CRUD / 進捗バー / ゴール完了ボーナス +50 EXP が独立 feature として立っていない (= 過去 v1.4 §3.2 で中核機能、 brief §3.1 F1…)",
         "clarification_input_from": "TASK-LAIS-V0-PHASE0-DUAL-SPEC-REVIEW: 9 件 (= #1 【cost / 認証】 月額予算 \\$10 個人 MVP の認証 status: brief §6.1 「全 AI API 合計 月額 \\$10」 は新規 paid 増分か、 既存サブスク内収まるか。 Mission Queue 上で… | #2 【プラン整合】 brief §3.3 F3 日記 #11 「プラン別保持期間 (Free=30日 / Light=1年 / Pro=無限)」 vs §9 「Stripe プラン課金 (Free/Light/Pro): Phase 2… | #3 【scope】 過去 v1.4 §3.2.6 アバター進化 PNG 切替演出が消えた = §2.1 success moment として「タスク完了 → EXP → Level/称号変化」 で十分か: 称号変更だけで「主人公として生き…)"
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA012-SPC_C",
@@ -6471,7 +7625,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA011-SPC_C",
@@ -6505,7 +7664,12 @@
         "critical_input_from": "TASK-LAIS-V0-PHASE0-DUAL-SPEC-REVIEW: 1 件 (= #1 brief §3 主要 feature に Goal CRUD / 進捗バー / ゴール完了ボーナス +50 EXP が独立 feature として立っていない (= 過去 v1.4 §3.2 で中核機能、 brief §3.1 F1…)",
         "clarification_input_from": "TASK-LAIS-V0-PHASE0-DUAL-SPEC-REVIEW: 9 件 (= #1 【cost / 認証】 月額予算 \\$10 個人 MVP の認証 status: brief §6.1 「全 AI API 合計 月額 \\$10」 は新規 paid 増分か、 既存サブスク内収まるか。 Mission Queue 上で… | #2 【プラン整合】 brief §3.3 F3 日記 #11 「プラン別保持期間 (Free=30日 / Light=1年 / Pro=無限)」 vs §9 「Stripe プラン課金 (Free/Light/Pro): Phase 2… | #3 【scope】 過去 v1.4 §3.2.6 アバター進化 PNG 切替演出が消えた = §2.1 success moment として「タスク完了 → EXP → Level/称号変化」 で十分か: 称号変更だけで「主人公として生き…)"
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA011-SPC_P",
@@ -6539,7 +7703,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA010-REV_C",
@@ -6573,7 +7742,12 @@
         "critical_input_from": "TASK-LAIS-V0-PHASE0-DUAL-SPEC-REVIEW: 1 件 (= #1 brief §3 主要 feature に Goal CRUD / 進捗バー / ゴール完了ボーナス +50 EXP が独立 feature として立っていない (= 過去 v1.4 §3.2 で中核機能、 brief §3.1 F1…)",
         "clarification_input_from": "TASK-LAIS-V0-PHASE0-DUAL-SPEC-REVIEW: 9 件 (= #1 【cost / 認証】 月額予算 \\$10 個人 MVP の認証 status: brief §6.1 「全 AI API 合計 月額 \\$10」 は新規 paid 増分か、 既存サブスク内収まるか。 Mission Queue 上で… | #2 【プラン整合】 brief §3.3 F3 日記 #11 「プラン別保持期間 (Free=30日 / Light=1年 / Pro=無限)」 vs §9 「Stripe プラン課金 (Free/Light/Pro): Phase 2… | #3 【scope】 過去 v1.4 §3.2.6 アバター進化 PNG 切替演出が消えた = §2.1 success moment として「タスク完了 → EXP → Level/称号変化」 で十分か: 称号変更だけで「主人公として生き…)"
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA010-OPS_P",
@@ -6607,7 +7781,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA009-REV_P",
@@ -6641,7 +7820,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA009-SPC_P",
@@ -6675,7 +7859,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA008-SPC_P",
@@ -6709,7 +7898,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA008-SPC_P",
@@ -6743,7 +7937,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA007-REV_C",
@@ -6777,7 +7976,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA007-SPC_P",
@@ -6811,7 +8015,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA006-REV_C",
@@ -6845,7 +8054,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA006-SPC_P",
@@ -6879,7 +8093,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA005-DOC_P",
@@ -6913,7 +8132,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA005-SPC_P",
@@ -6947,7 +8171,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA004-REV_P",
@@ -6981,7 +8210,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA004-SPC_P",
@@ -7015,7 +8249,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA003-REV_P",
@@ -7049,7 +8288,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA003-SPC_P",
@@ -7083,7 +8327,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA002-INF_C",
@@ -7117,7 +8366,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA002-SPC_P",
@@ -7151,7 +8405,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "DA001-OPS_P",
@@ -7185,7 +8444,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     },
     {
       "t_id": "LA001-REV_P",
@@ -7219,7 +8483,12 @@
         "critical_input_from": "",
         "clarification_input_from": ""
       },
-      "parent_child_suggest": []
+      "parent_child_suggest": [],
+      "pwa_status_key": "DONE",
+      "pwa_status_label": "完了",
+      "queue_label": "",
+      "queue_position": null,
+      "po_waiting": false
     }
   ]
 }

@@ -1,0 +1,73 @@
+{
+  "agent_id": "CX_01",
+  "active": [],
+  "queue": [],
+  "completed_or_waiting": [
+    {
+      "task_id": "TASK-DAIS-PHASE4-SUPERVISOR-COMMAND-STATUS-CONTRACT",
+      "t_id": "DA165-SPC_P",
+      "assigned_at": "2026-05-10T12:00:00+09:00",
+      "queue_rank": "2026-05-10T12:00:00+09:00__0100__DA165",
+      "target_app": "Dais",
+      "target_repo": "dev-system",
+      "priority": 100,
+      "assignment_status": "COMPLETED",
+      "pwa_status_key": "WAITING_REVIEW",
+      "queue_position": null,
+      "queue_label": "完了済み"
+    },
+    {
+      "task_id": "TASK-DAIS-PHASE4-PWA-STATUS-MAPPING",
+      "t_id": "DA166-IMP_P",
+      "assigned_at": "2026-05-10T12:01:00+09:00",
+      "queue_rank": "2026-05-10T12:01:00+09:00__0080__DA166",
+      "target_app": "Dais",
+      "target_repo": "dev-system",
+      "priority": 80,
+      "assignment_status": "COMPLETED",
+      "pwa_status_key": "WAITING_REVIEW",
+      "queue_position": null,
+      "queue_label": "完了済み"
+    },
+    {
+      "task_id": "TASK-DAIS-PHASE4-AGENT-ASSIGNMENT-QUEUE",
+      "t_id": "DA167-OPS_P",
+      "assigned_at": "2026-05-10T12:02:00+09:00",
+      "queue_rank": "2026-05-10T12:02:00+09:00__0075__DA167",
+      "target_app": "Dais",
+      "target_repo": "dev-system",
+      "priority": 75,
+      "assignment_status": "COMPLETED",
+      "pwa_status_key": "WAITING_REVIEW",
+      "queue_position": null,
+      "queue_label": "完了済み"
+    },
+    {
+      "task_id": "TASK-DAIS-PHASE4-SUPERVISOR-DISPATCH-WRITEBACK",
+      "t_id": "DA168-OPS_P",
+      "assigned_at": "2026-05-10T12:03:00+09:00",
+      "queue_rank": "2026-05-10T12:03:00+09:00__0070__DA168",
+      "target_app": "Dais",
+      "target_repo": "dev-system",
+      "priority": 70,
+      "assignment_status": "COMPLETED",
+      "pwa_status_key": "WAITING_REVIEW",
+      "queue_position": null,
+      "queue_label": "完了済み"
+    },
+    {
+      "task_id": "TASK-DAIS-PHASE4-GATES-TESTS-BACKCOMPAT",
+      "t_id": "DA169-FIX_P",
+      "assigned_at": "2026-05-10T12:04:00+09:00",
+      "queue_rank": "2026-05-10T12:04:00+09:00__0060__DA169",
+      "target_app": "Dais",
+      "target_repo": "dev-system",
+      "priority": 60,
+      "assignment_status": "COMPLETED",
+      "pwa_status_key": "WAITING_REVIEW",
+      "queue_position": null,
+      "queue_label": "完了済み"
+    }
+  ],
+  "head_task_id": null
+}

@@ -82,6 +82,7 @@
               <th class="whitespace-nowrap px-4 py-3">親タスク</th>
               <th class="whitespace-nowrap px-4 py-3">ステータス</th>
               <th class="whitespace-nowrap px-4 py-3">担当AI</th>
+              <th class="whitespace-nowrap px-4 py-3">キュー</th>
               <th class="min-w-80 px-4 py-3" aria-hidden="true"></th>
               <th class="whitespace-nowrap px-4 py-3">完了率</th>
               <th class="whitespace-nowrap px-4 py-3">完了見込み</th>
@@ -117,6 +118,22 @@
         <div class="sm:col-span-2 detail-deps-box" hidden>
           <span class="text-xs font-extrabold text-slate-500 dark:text-slate-400">依存</span>
           <p class="detail-deps font-semibold text-slate-800 dark:text-slate-100">-</p>
+        </div>
+        <div class="sm:col-span-2">
+          <span class="text-xs font-extrabold text-slate-500 dark:text-slate-400">Phase4 管制フィールド</span>
+          <dl id="detail-phase4-fields" class="mt-2 grid gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-[13px] dark:border-slate-800 dark:bg-slate-900/40 sm:grid-cols-2">
+            <div><dt class="font-extrabold text-slate-500 dark:text-slate-400">キュー</dt><dd class="detail-queue font-semibold text-slate-900 dark:text-slate-100">-</dd></div>
+            <div><dt class="font-extrabold text-slate-500 dark:text-slate-400">次アクション</dt><dd class="detail-next-action font-semibold text-slate-900 dark:text-slate-100">-</dd></div>
+            <div><dt class="font-extrabold text-slate-500 dark:text-slate-400">PO待ち</dt><dd class="detail-po-waiting font-semibold text-slate-900 dark:text-slate-100">-</dd></div>
+            <div><dt class="font-extrabold text-slate-500 dark:text-slate-400">モニタ期限</dt><dd class="detail-monitor-until font-semibold text-slate-900 dark:text-slate-100">-</dd></div>
+            <div><dt class="font-extrabold text-slate-500 dark:text-slate-400">モニタ理由</dt><dd class="detail-monitor-reason font-semibold text-slate-900 dark:text-slate-100">-</dd></div>
+            <div><dt class="font-extrabold text-slate-500 dark:text-slate-400">終了条件</dt><dd class="detail-exit-condition font-semibold text-slate-900 dark:text-slate-100">-</dd></div>
+            <div><dt class="font-extrabold text-slate-500 dark:text-slate-400">target_app</dt><dd class="detail-target-app font-semibold text-slate-900 dark:text-slate-100">-</dd></div>
+            <div><dt class="font-extrabold text-slate-500 dark:text-slate-400">target_repo</dt><dd class="detail-target-repo font-semibold text-slate-900 dark:text-slate-100">-</dd></div>
+            <div><dt class="font-extrabold text-slate-500 dark:text-slate-400">evidence_commit</dt><dd class="detail-evidence-commit font-semibold text-slate-900 dark:text-slate-100">-</dd></div>
+            <div><dt class="font-extrabold text-slate-500 dark:text-slate-400">PR</dt><dd class="detail-pr-url font-semibold text-slate-900 dark:text-slate-100">-</dd></div>
+            <div class="sm:col-span-2"><dt class="font-extrabold text-slate-500 dark:text-slate-400">writeback_status</dt><dd class="detail-writeback-status font-semibold text-slate-900 dark:text-slate-100">-</dd></div>
+          </dl>
         </div>
       </div>
       <!-- 16 agent 枠 active 表示 (条件表示、 active 中の枠のみ可視、 docs/task_management_v2.md §2.1) -->
@@ -295,17 +312,54 @@
     };
     const statusV2Label = (task) => STATUS_V2_LABELS[statusV2Key(task)] || "未着手";
 
+    const PWA_STATUS_LABELS = {
+      REGISTERED: "登録",
+      IN_PROGRESS: "進行中",
+      WAITING_REVIEW: "待機(Rev)",
+      WAITING_PO: "待機(Po)",
+      MONITORING: "モニタ",
+      DONE: "完了",
+      BLOCKED: "待機(Po)",
+      STALLED: "停止検出",
+      OTHER: "その他"
+    };
+
+    const pwaStatusKey = (task) => {
+      const explicit = String(task && task.pwa_status_key ? task.pwa_status_key : "").trim().toUpperCase();
+      if (explicit && PWA_STATUS_LABELS[explicit]) return explicit;
+      const status = String(task && task.status ? task.status : task || "").toUpperCase();
+      if (["DONE", "COMPLETED", "PUSHED", "DEPLOYED", "APPLIED"].includes(status)) return "DONE";
+      if (["IN_PROGRESS", "RUNNING"].includes(status)) return "IN_PROGRESS";
+      if (["LOCAL_DONE", "WAITING_REVIEW", "COMMITTED", "PENDING_CONFIRMATION"].includes(status)) return "WAITING_REVIEW";
+      if (["WAITING_PO", "PO_PENDING", "BLOCKED"].includes(status)) return "WAITING_PO";
+      if (status === "MONITORING") return "MONITORING";
+      if (status === "STALLED") return "STALLED";
+      if (["QUEUED", "REGISTERED", "NOT_STARTED", "PENDING", ""].includes(status)) return "REGISTERED";
+      return "OTHER";
+    };
+
+    const pwaStatusLabel = (task) => {
+      const explicit = String(task && task.pwa_status_label ? task.pwa_status_label : "").trim();
+      return explicit || PWA_STATUS_LABELS[pwaStatusKey(task)] || "登録";
+    };
+
     const statusLabel = (status) => {
       const map = {
-        BLOCKED: "停止中",
-        QUEUED: "未着手",
+        BLOCKED: "待機(Po)",
+        QUEUED: "登録",
+        REGISTERED: "登録",
+        NOT_STARTED: "登録",
         IN_PROGRESS: "進行中",
         RUNNING: "進行中",
         STALLED: "⚠️ 停止検出",
         stalled: "⚠️ 停止検出",
-        LOCAL_DONE: "反映待ち",
-        PENDING_CONFIRMATION: "(待) 完了確認",
-        COMMITTED: "反映待ち",
+        LOCAL_DONE: "待機(Rev)",
+        WAITING_REVIEW: "待機(Rev)",
+        PENDING_CONFIRMATION: "待機(Rev)",
+        COMMITTED: "待機(Rev)",
+        WAITING_PO: "待機(Po)",
+        PO_PENDING: "待機(Po)",
+        MONITORING: "モニタ",
         DONE: "完了",
         COMPLETED: "完了",
         PUSHED: "完了",
@@ -321,16 +375,19 @@
       if (["DONE", "COMPLETED", "PUSHED", "DEPLOYED", "APPLIED"].includes(key)) {
         return `${base} bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200`;
       }
-      if (["LOCAL_DONE", "COMMITTED"].includes(key)) {
+      if (["LOCAL_DONE", "COMMITTED", "WAITING_REVIEW"].includes(key)) {
         return `${base} bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200`;
       }
-      if (key === "PENDING_CONFIRMATION") {
+      if (["WAITING_PO", "PO_PENDING"].includes(key)) {
         return `${base} bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-200`;
+      }
+      if (key === "MONITORING") {
+        return `${base} bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-200`;
       }
       if (["IN_PROGRESS", "RUNNING"].includes(key)) {
         return `${base} bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-200`;
       }
-      if (key === "QUEUED") {
+      if (["QUEUED", "REGISTERED", "NOT_STARTED"].includes(key)) {
         return `${base} bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200`;
       }
       if (key === "BLOCKED") {
@@ -343,28 +400,29 @@
       return `${base} bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200`;
     };
 
-    const STATUS_ORDER = ["IN_PROGRESS", "PENDING_CONFIRMATION", "STALLED", "DONE", "QUEUED", "BLOCKED", "LOCAL_DONE", "OTHER"];
-    const BASE_STATUS_KEYS = ["IN_PROGRESS", "PENDING_CONFIRMATION", "STALLED", "DONE", "QUEUED", "BLOCKED", "LOCAL_DONE"];
+    const STATUS_ORDER = ["IN_PROGRESS", "WAITING_REVIEW", "WAITING_PO", "MONITORING", "DONE", "REGISTERED", "STALLED", "OTHER"];
+    const BASE_STATUS_KEYS = ["IN_PROGRESS", "WAITING_REVIEW", "WAITING_PO", "MONITORING", "DONE", "REGISTERED"];
     const STATUS_META = {
       IN_PROGRESS: { label: "進行中", stroke: "#0f766e", border: "border-teal-200 dark:border-teal-900", text: "text-teal-800 dark:text-teal-200", active: "bg-teal-700 text-white border-teal-700" },
-      PENDING_CONFIRMATION: { label: "(待) 完了確認", stroke: "#9333ea", border: "border-purple-200 dark:border-purple-900", text: "text-purple-800 dark:text-purple-200", active: "bg-purple-700 text-white border-purple-700" },
+      WAITING_REVIEW: { label: "待機(Rev)", stroke: "#2563eb", border: "border-blue-200 dark:border-blue-900", text: "text-blue-800 dark:text-blue-200", active: "bg-blue-600 text-white border-blue-600" },
+      WAITING_PO: { label: "待機(Po)", stroke: "#9333ea", border: "border-purple-200 dark:border-purple-900", text: "text-purple-800 dark:text-purple-200", active: "bg-purple-700 text-white border-purple-700" },
+      MONITORING: { label: "モニタ", stroke: "#0891b2", border: "border-cyan-200 dark:border-cyan-900", text: "text-cyan-800 dark:text-cyan-200", active: "bg-cyan-700 text-white border-cyan-700" },
       STALLED: { label: "⚠️ 停止検出", stroke: "#dc2626", border: "border-red-300 dark:border-red-700", text: "text-red-900 dark:text-red-100", active: "bg-red-600 text-white border-red-600" },
       DONE: { label: "完了", stroke: "#f97316", border: "border-orange-200 dark:border-orange-900", text: "text-orange-800 dark:text-orange-200", active: "bg-orange-600 text-white border-orange-600" },
-      QUEUED: { label: "未着手", stroke: "#2563eb", border: "border-blue-200 dark:border-blue-900", text: "text-blue-800 dark:text-blue-200", active: "bg-blue-600 text-white border-blue-600" },
-      BLOCKED: { label: "停止中", stroke: "#e11d48", border: "border-rose-200 dark:border-rose-900", text: "text-rose-800 dark:text-rose-200", active: "bg-rose-600 text-white border-rose-600" },
-      LOCAL_DONE: { label: "反映待ち", stroke: "#7c3aed", border: "border-violet-200 dark:border-violet-900", text: "text-violet-800 dark:text-violet-200", active: "bg-violet-600 text-white border-violet-600" },
+      REGISTERED: { label: "登録", stroke: "#d97706", border: "border-amber-200 dark:border-amber-900", text: "text-amber-800 dark:text-amber-200", active: "bg-amber-600 text-white border-amber-600" },
       OTHER: { label: "その他", stroke: "#64748b", border: "border-slate-200 dark:border-slate-700", text: "text-slate-700 dark:text-slate-200", active: "bg-slate-700 text-white border-slate-700" }
     };
     const FILTER_STORAGE_KEY = "dev-system:t-progress:filters:v2";
 
     const statusKey = (status) => {
+      if (status && typeof status === "object") return pwaStatusKey(status);
       const key = String(status || "").toUpperCase();
       if (["DONE", "COMPLETED", "PUSHED", "DEPLOYED", "APPLIED"].includes(key)) return "DONE";
-      if (key === "PENDING_CONFIRMATION") return "PENDING_CONFIRMATION";
-      if (["LOCAL_DONE", "COMMITTED"].includes(key)) return "LOCAL_DONE";
+      if (["PENDING_CONFIRMATION", "LOCAL_DONE", "COMMITTED", "WAITING_REVIEW"].includes(key)) return "WAITING_REVIEW";
+      if (["WAITING_PO", "PO_PENDING", "BLOCKED"].includes(key)) return "WAITING_PO";
+      if (key === "MONITORING") return "MONITORING";
       if (["IN_PROGRESS", "RUNNING"].includes(key)) return "IN_PROGRESS";
-      if (key === "QUEUED") return "QUEUED";
-      if (key === "BLOCKED") return "BLOCKED";
+      if (["QUEUED", "REGISTERED", "NOT_STARTED"].includes(key)) return "REGISTERED";
       // DA112-REV_C OPS H1 fix: STALLED row を視覚区別するため独立 key
       if (key === "STALLED") return "STALLED";
       return "OTHER";
@@ -652,8 +710,8 @@
     };
 
     const actorLabel = (task) => {
-      const ownerAi = cleanActorTag(task.owner_ai);
-      if (ownerAi) return ownerAi;
+      const assigned = String(task.assigned_agent || "").trim();
+      if (assigned) return assigned;
       const doneBy = String(task.done_by || "").trim();
       if (doneBy) return doneBy.replace(/^\[|\]$/g, "");
       const text = `${task.owner || ""} ${task.work_done || ""} ${task.test_methods || ""} ${task.review_personas || ""}`;
@@ -664,11 +722,55 @@
     };
 
     const quickActorLabel = (task) => {
-      const ownerAi = cleanActorTag(task.owner_ai);
-      if (ownerAi) return ownerAi;
-      if (String(task.done_by || "").trim()) return actorLabel(task);
-      if (!isComplete(task)) return "-";
-      return actorLabel(task);
+      const assigned = String(task.assigned_agent || "").trim();
+      return assigned || "";
+    };
+
+    const queueLabel = (task) => {
+      const explicit = String(task.queue_label || "").trim();
+      if (explicit) return explicit;
+      const key = pwaStatusKey(task);
+      if (key === "IN_PROGRESS") return "実行中";
+      if (key === "WAITING_REVIEW") return "完了済み";
+      if (key === "WAITING_PO") return "PO判断待ち";
+      if (key === "MONITORING") return "監視中";
+      if (key === "REGISTERED" && task.assigned_agent && task.queue_position) return String(task.queue_position);
+      return "";
+    };
+
+    const formatPhase4Value = (value) => {
+      if (Array.isArray(value)) return value.length ? value.join(", ") : "";
+      if (value === true) return "あり";
+      if (value === false) return "なし";
+      return String(value || "").trim();
+    };
+
+    const fieldText = (task, fields, fallback = "-") => {
+      for (const field of fields) {
+        const value = formatPhase4Value(task && task[field]);
+        if (value) return value;
+      }
+      return fallback;
+    };
+
+    const renderPhase4DetailFields = (card, task) => {
+      const set = (selector, value) => {
+        const node = card.querySelector(selector);
+        if (node) node.textContent = formatPhase4Value(value) || "-";
+      };
+      const deps = task && (task.depends_on || (task.graph && task.graph.depends_on));
+      set(".detail-queue", queueLabel(task));
+      set(".detail-next-action", fieldText(task, ["next_action", "blocked_on", "remaining_steps"]));
+      set(".detail-po-waiting", pwaStatusKey(task) === "WAITING_PO" || task.po_waiting ? "あり" : "なし");
+      set(".detail-monitor-until", fieldText(task, ["monitor_until"]));
+      set(".detail-monitor-reason", fieldText(task, ["monitor_reason"]));
+      set(".detail-exit-condition", fieldText(task, ["exit_condition"]));
+      set(".detail-target-app", fieldText(task, ["target_app"]));
+      set(".detail-target-repo", fieldText(task, ["target_repo"]));
+      set(".detail-evidence-commit", fieldText(task, ["evidence_commit", "merge_commit"]));
+      set(".detail-pr-url", fieldText(task, ["pr_url"]));
+      set(".detail-writeback-status", fieldText(task, ["writeback_status"]));
+      if (deps && !task.depends_on) task.depends_on = deps;
     };
 
     const timelineText = (task, generatedAt) => {
@@ -742,7 +844,7 @@
 
     const statusKeysForTasks = (tasks) => {
       const keys = new Set(BASE_STATUS_KEYS);
-      for (const task of tasks) keys.add(statusKey(task.status));
+      for (const task of tasks) keys.add(statusKey(task));
       return STATUS_ORDER.filter((key) => keys.has(key));
     };
 
@@ -789,7 +891,7 @@
     const statusCounts = (tasks) => {
       const counts = Object.fromEntries(statusKeysForTasks(tasks).map((key) => [key, 0]));
       for (const task of tasks) {
-        const key = statusKey(task.status);
+        const key = statusKey(task);
         counts[key] = (counts[key] || 0) + 1;
       }
       return counts;
@@ -900,7 +1002,7 @@
           const created = ymdFromValue(task.created_at || task.created || task.updated) || ymd;
           if (created > ymd) continue;
           const completed = ymdFromValue(task.completed_at);
-          let key = statusKey(task.status);
+          let key = statusKey(task);
           if (isComplete(task)) key = !completed || completed <= ymd ? "DONE" : "IN_PROGRESS";
           counts[key] = (counts[key] || 0) + 1;
         }
@@ -921,7 +1023,7 @@
       svg.textContent = "";
       const filteredTasks = tasks.filter(taskMatchesTarget);
       const selectedKeys = statusKeysForTasks(filteredTasks).filter((key) => selectedStatusKeys.has(key));
-      const visibleTasks = filteredTasks.filter((task) => selectedStatusKeys.has(statusKey(task.status)));
+      const visibleTasks = filteredTasks.filter((task) => selectedStatusKeys.has(statusKey(task)));
       if (!visibleTasks.length || !selectedKeys.length) {
         svg.hidden = true;
         empty.hidden = false;
@@ -1068,7 +1170,7 @@
           complete: isComplete(task) ? "true" : "false",
           completedAt: String(task.completed_at || "").slice(0, 10),
           targets: targetParts(task).join("\t"),
-          statusKey: statusKey(task.status)
+          statusKey: statusKey(task)
         };
         const navigate = () => navigateToTask(task);
         const onKey = (event) => {
@@ -1109,10 +1211,10 @@
         const tdStatus = document.createElement("td");
         tdStatus.className = "whitespace-nowrap px-4 py-3 text-slate-700 dark:text-slate-200";
         const badge = document.createElement("span");
-        badge.className = statusClass(task.status);
-        badge.textContent = statusLabel(task.status);
+        badge.className = statusClass(task.pwa_status_key || task.status);
+        badge.textContent = pwaStatusLabel(task);
         badge.setAttribute("data-status-v2", statusV2Label(task));
-        badge.setAttribute("aria-label", `${statusLabel(task.status)} / v2: ${statusV2Label(task)}`);
+        badge.setAttribute("aria-label", `${pwaStatusLabel(task)} / v2: ${statusV2Label(task)}`);
         tdStatus.appendChild(badge);
         tr1.appendChild(tdStatus);
 
@@ -1122,9 +1224,14 @@
         tdActor.textContent = quickActorLabel(task);
         tr1.appendChild(tdActor);
 
+        const tdQueue = document.createElement("td");
+        tdQueue.className = "whitespace-nowrap px-4 py-3 text-slate-700 dark:text-slate-200";
+        tdQueue.textContent = queueLabel(task);
+        tr1.appendChild(tdQueue);
+
         // 上段右側 (完了率 + 完了見込み を 1 セルにまとめて 3 列分使う) — meta 行の残り 3 cols を埋める
-        // 既存 column 数 = 7 (T番号 / 親タスク / ステータス / 担当AI / 実現したいこと / 完了率 / 完了見込み)。
-        // T番号 rowspan=2 / 親タスク / ステータス / 担当AI を上段に置くと残り 3 col。
+        // 既存 column 数 = 8 (T番号 / 親タスク / ステータス / 担当AI / キュー / 実現したいこと / 完了率 / 完了見込み)。
+        // T番号 rowspan=2 / 親タスク / ステータス / 担当AI / キュー を上段に置くと残り 3 col。
         // 完了率 / 完了見込み は 上段に置き、 残り 1 cell は空白で埋める (= layout 維持)。
         const tdProgressText = document.createElement("td");
         tdProgressText.className = "whitespace-nowrap px-4 py-3 text-slate-700 dark:text-slate-200";
@@ -1156,7 +1263,7 @@
         longPressHook(tr2);
 
         const tdIntent = document.createElement("td");
-        tdIntent.colSpan = 6; // 親タスク / ステータス / 担当AI / (旧 実現したいこと、 DA121-OPS_C でラベル削除) / 完了率 / 完了見込み = 6 col
+        tdIntent.colSpan = 7; // 親タスク / ステータス / 担当AI / キュー / (旧 実現したいこと) / 完了率 / 完了見込み = 7 col
         tdIntent.className = "px-4 pb-3 pt-0 leading-6 text-slate-800 dark:text-slate-100 task-row-intent-cell";
         const intentInner = document.createElement("div");
         intentInner.className = "flex flex-col gap-1";
@@ -1247,7 +1354,7 @@
     };
 
     const ensureTaskVisibleForNavigation = (task) => {
-      const key = statusKey(task.status);
+      const key = statusKey(task);
       if (!selectedStatusKeys.has(key)) {
         selectedStatusKeys.add(key);
         renderStatusControls(currentTasks);
@@ -1311,13 +1418,13 @@
         card.dataset.complete = isComplete(task) ? "true" : "false";
         card.dataset.completedAt = String(task.completed_at || "").slice(0, 10);
         card.dataset.targets = targetParts(task).join("\t");
-        card.dataset.statusKey = statusKey(task.status);
+        card.dataset.statusKey = statusKey(task);
 
         card.querySelector(".t-id").textContent = task.t_id || "-";
         setParentTaskNode(card.querySelector(".parent-task-chip"), task, { compact: true });
         const statusNode = card.querySelector(".status");
-        statusNode.textContent = statusLabel(task.status);
-        statusNode.className = `status ${statusClass(task.status)}`;
+        statusNode.textContent = pwaStatusLabel(task);
+        statusNode.className = `status ${statusClass(task.pwa_status_key || task.status)}`;
         card.querySelector(".progress-text").textContent = `${progress}%`;
         card.querySelector(".progress-bar").style.width = `${progress}%`;
         card.querySelector(".timeline").textContent = timelineText(task, generatedAt);
@@ -1392,7 +1499,7 @@
 
     // task management v2 (DA114-REV_C P1 UI): PO 判断ボード レンダリング
     // (停) PO 判断 status の task をページトップに集約、 クリックで詳細カードへスクロール。
-    const isPoDecisionTask = (task) => statusV2Key(task) === "BLOCKED_PO";
+    const isPoDecisionTask = (task) => pwaStatusKey(task) === "WAITING_PO" || statusV2Key(task) === "BLOCKED_PO";
     const poQuestionFor = (task) => {
       // 質問文は task.po_question / next_action / blocked_on / goal の順で fallback。
       const fields = [task.po_question, task.next_action, task.blocked_on, cleanText(task.goal, task)];
@@ -1482,9 +1589,10 @@
       else if (/IMPL/i.test(tag)) kind = "Impl";
       else if (/OPS/i.test(tag)) kind = "OPS";
       card.querySelector(".detail-kind").textContent = kind;
-      card.querySelector(".detail-status").textContent = statusV2Label(task);
+      card.querySelector(".detail-status").textContent = pwaStatusLabel(task);
       card.querySelector(".detail-agent").textContent = quickActorLabel(task) || "-";
       card.querySelector(".detail-intent").textContent = safeIntentSummary(quickSummary(task)) || "-";
+      renderPhase4DetailFields(card, task);
       // 依存 (depends_on)
       const depsBox = card.querySelector(".detail-deps-box");
       const depsP = card.querySelector(".detail-deps");
