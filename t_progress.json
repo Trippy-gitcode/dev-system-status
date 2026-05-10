@@ -1,13 +1,12 @@
 {
-  "generated_at": "2026-05-10T02:32:37Z",
+  "generated_at": "2026-05-10T02:35:42Z",
   "source": "instructions/session_progress.md#Mission Queue",
   "mission_queue_file": "instructions/session_progress.md",
   "task_detail_file": "instructions/in_flight_topics.md",
   "past_log_file": "instructions/session_progress.md#Mission Queue DONE rows",
-  "active_task_count": 39,
-  "completed_task_count": 164,
+  "active_task_count": 38,
+  "completed_task_count": 165,
   "active_task_ids": [
-    "TASK-DAIS-PHASE2-5-PO-DOCTRINE-CONTENT-FILL",
     "TASK-DAIS-PHASE1-T2-PWS-PCC-CSS-NAV-FIX",
     "TASK-DAIS-PHASE0-MISSION-QUEUE-LOCK-FIX",
     "TASK-DAIS-PHASE2-T7-ASSIGNMENT-EXCEPTION-NOTIFY",
@@ -48,6 +47,7 @@
     "TASK-MAIS-AI-MANGA-PUBLISHER-APP-DEVELOPMENT"
   ],
   "completed_task_ids": [
+    "TASK-DAIS-PHASE2-5-PO-DOCTRINE-CONTENT-FILL",
     "TASK-DAIS-PHASE2-5-PO-DOCTRINE-SKELETON",
     "TASK-DAIS-PHASE0-T16-STATUS-TRANSITION-ATOMIC",
     "TASK-DAIS-PHASE0-T15-HOOK-TTL-MARKER-REDESIGN",
@@ -214,38 +214,6 @@
     "TASK-CLAUDE-RESUME-T0-T7-HANDOFF"
   ],
   "tasks": [
-    {
-      "t_id": "DA161-IMP_P",
-      "mission_id": "TASK-DAIS-PHASE2-5-PO-DOCTRINE-CONTENT-FILL",
-      "status": "LOCAL_DONE",
-      "owner": "[Claude:IMPL]",
-      "owner_ai": "[Claude:IMPL]",
-      "target_app": "Dais / 全App",
-      "goal": "docs/po_doctrine.md が dev-system-adv/supervisor_kickoff.md「## 1. 品質方針」以降の確定版コンテンツで埋まり、 1 品質方針 / 2 設計方針 / 3 ブランドDNA / 4 コスト方針 / 5 太ペルソナ / 6 命名規約 / 7 CLI起動の実現方法 + 更新履歴 が PO 確定文面のまま 配置済。 Supervisor (DA160 next_action) が SSoT として参照可能な状態。",
-      "goal_steps": "1) supervisor_kickoff.md「## 1. 品質方針」以降を転記し docs/po_doctrine.md skeleton placeholder を上書き。 2) 7 section + 更新履歴 が確定版コンテンツで揃うことを確認。 3) DA160 TASK detail の verification_evidence から placeholder grep を撤去し changed_files に docs/status/* 3 ファイルを追加。 4) Mission Queue / TASK detail / counter / allocations を更新。 5) phase0 quality gate PASS。 6) commit + push。",
-      "work_done": "local_done_by=[Claude:IMPL]; po_doctrine.md content fill + DA160 metadata fix; 7 sections + 用語 + 更新履歴 + 参照 = 10 ## sections; 0 TODO placeholders; phase0 quality gate PASS; pushed commit e074dcb; official DONE requires push/deploy",
-      "work_steps": "skeleton 上書き + DA160 metadata fix + DA161 Mission row + TASK detail 登録 + counter/allocations 反映済。 phase0 gate 検証 + commit + push 残。",
-      "test_methods": "TEST_METHOD:STATIC_DOC",
-      "review_personas": "REVIEW_PERSONA:SPEC_REVIEWER REVIEW_PERSONA:PO_DECISION",
-      "verification_evidence": "test -f docs/po_doctrine.md PASS; grep -c '^## ' docs/po_doctrine.md >= 7; grep -q 'live as the protagonist of your own life' docs/po_doctrine.md PASS; grep -c '\\[TODO: ADV 壁打ちで埋める\\]' docs/po_doctrine.md == 0; sh scripts/devs_phase0_quality_gate.sh PASS.",
-      "updated_refs": "instructions/session_progress.md §ミッションキュー / instructions/in_flight_topics.md §TASK-DAIS-PHASE2-5-PO-DOCTRINE-CONTENT-FILL",
-      "remaining_steps": "phase0 quality gate 実行 / commit / push / Mission Queue Git Page projection 同期 確認。",
-      "blocked_on": "none",
-      "next_action": "phase0 quality gate を実行し PASS を確認 → commit + push。 Supervisor 統合実装は DA161 完了後に DA162 以降で着手する方針。",
-      "created_at": "",
-      "completed_at": "2026-05-10",
-      "progress_percent": 90,
-      "eta": "2026-05-10",
-      "graph": {
-        "depends_on": "[TASK-DAIS-PHASE2-5-PO-DOCTRINE-SKELETON]",
-        "parent_of": "",
-        "parallel_with": "",
-        "verdict_input_from": "",
-        "critical_input_from": "",
-        "clarification_input_from": ""
-      },
-      "parent_child_suggest": []
-    },
     {
       "t_id": "DA159-FIX_P",
       "mission_id": "TASK-DAIS-PHASE1-T2-PWS-PCC-CSS-NAV-FIX",
@@ -1454,6 +1422,38 @@
       "eta": "2026-05-08",
       "graph": {
         "depends_on": "[]",
+        "parent_of": "",
+        "parallel_with": "",
+        "verdict_input_from": "",
+        "critical_input_from": "",
+        "clarification_input_from": ""
+      },
+      "parent_child_suggest": []
+    },
+    {
+      "t_id": "DA161-IMP_P",
+      "mission_id": "TASK-DAIS-PHASE2-5-PO-DOCTRINE-CONTENT-FILL",
+      "status": "DONE",
+      "owner": "[Claude:IMPL]",
+      "owner_ai": "[subagent:REVIEW]",
+      "target_app": "Dais / 全App",
+      "goal": "docs/po_doctrine.md が dev-system-adv/supervisor_kickoff.md「## 1. 品質方針」以降の確定版コンテンツで埋まり、 1 品質方針 / 2 設計方針 / 3 ブランドDNA / 4 コスト方針 / 5 太ペルソナ / 6 命名規約 / 7 CLI起動の実現方法 + 更新履歴 が PO 確定文面のまま 配置済。 Supervisor (DA160 next_action) が SSoT として参照可能な状態。",
+      "goal_steps": "1) supervisor_kickoff.md「## 1. 品質方針」以降を転記し docs/po_doctrine.md skeleton placeholder を上書き。 2) 7 section + 更新履歴 が確定版コンテンツで揃うことを確認。 3) DA160 TASK detail の verification_evidence から placeholder grep を撤去し changed_files に docs/status/* 3 ファイルを追加。 4) Mission Queue / TASK detail / counter / allocations を更新。 5) phase0 quality gate PASS。 6) commit + push。",
+      "work_done": "done_by=[subagent:REVIEW]; po_doctrine.md content fill landed on main via PR #3; pushed_evidence=PR #3 squash-merged to main as 2c834dc; DA161 content fill commits (e074dcb + 7eaf251) reachable from origin/main; subagent:REVIEW APPROVE 2026-05-10",
+      "work_steps": "skeleton 上書き + DA160 metadata fix + DA161 Mission row + TASK detail 登録 + counter/allocations 反映済。 phase0 gate 検証 + commit + push 残。",
+      "test_methods": "TEST_METHOD:STATIC_DOC",
+      "review_personas": "REVIEW_PERSONA:SPEC_REVIEWER REVIEW_PERSONA:PO_DECISION",
+      "verification_evidence": "test -f docs/po_doctrine.md PASS; grep -c '^## ' docs/po_doctrine.md >= 7; grep -q 'live as the protagonist of your own life' docs/po_doctrine.md PASS; grep -c '\\[TODO: ADV 壁打ちで埋める\\]' docs/po_doctrine.md == 0; sh scripts/devs_phase0_quality_gate.sh PASS.",
+      "updated_refs": "instructions/session_progress.md §ミッションキュー / instructions/in_flight_topics.md §TASK-DAIS-PHASE2-5-PO-DOCTRINE-CONTENT-FILL",
+      "remaining_steps": "none",
+      "blocked_on": "none",
+      "next_action": "none",
+      "created_at": "",
+      "completed_at": "2026-05-10",
+      "progress_percent": 100,
+      "eta": "2026-05-10",
+      "graph": {
+        "depends_on": "[TASK-DAIS-PHASE2-5-PO-DOCTRINE-SKELETON]",
         "parent_of": "",
         "parallel_with": "",
         "verdict_input_from": "",
