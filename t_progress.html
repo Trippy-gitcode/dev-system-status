@@ -50,10 +50,6 @@
           <h2 class="text-lg font-extrabold text-slate-900 dark:text-white">進捗サマリー</h2>
           <p class="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">日付別に完了と完了以外を比較</p>
         </div>
-        <div class="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
-          <span>対象</span>
-          <div id="summary-target-filter-dial" class="flex flex-wrap gap-1"></div>
-        </div>
       </div>
       <div id="status-counts" class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5"></div>
       <div class="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-[#f8fafc] dark:border-slate-800 dark:bg-slate-950/40">
@@ -71,10 +67,6 @@
             <div id="quick-status-filter-dial" class="flex flex-wrap gap-1"></div>
           </div>
           <div class="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
-            <span>対象</span>
-            <div id="target-filter-dial" class="flex flex-wrap gap-1"></div>
-          </div>
-          <div class="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
             <span>完了日</span>
             <div id="completed-date-dial" class="flex flex-wrap gap-1"></div>
           </div>
@@ -87,7 +79,7 @@
           <thead class="bg-[#eaf1f8] text-xs font-extrabold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
             <tr>
               <th class="whitespace-nowrap px-4 py-3">T番号</th>
-              <th class="whitespace-nowrap px-4 py-3">対象</th>
+              <th class="whitespace-nowrap px-4 py-3">親タスク</th>
               <th class="whitespace-nowrap px-4 py-3">ステータス</th>
               <th class="whitespace-nowrap px-4 py-3">担当AI</th>
               <th class="min-w-80 px-4 py-3" aria-hidden="true"></th>
@@ -117,7 +109,7 @@
         <button type="button" id="detail-close" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-extrabold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800">閉じる</button>
       </header>
       <div class="grid gap-3 px-4 py-4 text-[14px] sm:grid-cols-2">
-        <div><span class="text-xs font-extrabold text-slate-500 dark:text-slate-400">対象</span><p class="detail-target font-semibold text-slate-900 dark:text-slate-100">-</p></div>
+        <div><span class="text-xs font-extrabold text-slate-500 dark:text-slate-400">親タスク</span><p class="detail-parent font-semibold text-slate-900 dark:text-slate-100">-</p></div>
         <div><span class="text-xs font-extrabold text-slate-500 dark:text-slate-400">種類</span><p class="detail-kind font-semibold text-slate-900 dark:text-slate-100">-</p></div>
         <div><span class="text-xs font-extrabold text-slate-500 dark:text-slate-400">状態</span><p class="detail-status font-semibold text-slate-900 dark:text-slate-100">-</p></div>
         <div><span class="text-xs font-extrabold text-slate-500 dark:text-slate-400">担当 AI</span><p class="detail-agent font-semibold text-slate-900 dark:text-slate-100">-</p></div>
@@ -163,7 +155,7 @@
       <div class="flex flex-col gap-3 bg-[#f8fafc] px-4 py-4 dark:bg-slate-900/70 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex items-center gap-3">
           <div class="t-id text-2xl font-black text-mint"></div>
-          <span class="target rounded-full bg-teal-50 px-3 py-1 text-xs font-extrabold text-teal-800 ring-1 ring-teal-100 dark:bg-teal-950 dark:text-teal-200 dark:ring-teal-900"></span>
+          <span class="parent-task-chip rounded-full bg-sky-50 px-3 py-1 text-xs font-extrabold text-sky ring-1 ring-sky/20 dark:bg-slate-800 dark:text-sky"></span>
         </div>
         <div class="min-w-0 sm:w-60">
           <div class="mb-2 flex items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-300">
@@ -692,6 +684,56 @@
       return `task-card-${rawId.replace(/[^A-Za-z0-9_-]+/g, "-")}`;
     };
 
+    const normalizeParentTaskId = (value) => {
+      const cleaned = String(value || "").replace(/`/g, "").trim();
+      if (!cleaned || cleaned === "[]" || /^(null|none|なし|-+)$/i.test(cleaned)) return "";
+      return cleaned;
+    };
+
+    const parentTaskIdFor = (task) => normalizeParentTaskId(
+      task && (task.parent_task_id || (task.graph && task.graph.parent_id))
+    );
+
+    const taskByMissionId = (missionId) => {
+      const id = normalizeParentTaskId(missionId);
+      if (!id) return null;
+      return currentTasks.find((task) => task.mission_id === id) || null;
+    };
+
+    const parentTaskLabel = (parentId, parentTask) => {
+      if (parentTask && parentTask.t_id) return parentTask.t_id;
+      return String(parentId || "").replace(/^TASK-/, "") || "-";
+    };
+
+    const setParentTaskNode = (node, task, options = {}) => {
+      if (!node) return;
+      node.textContent = "";
+      const parentId = parentTaskIdFor(task);
+      if (!parentId) {
+        node.textContent = "-";
+        return;
+      }
+      const parentTask = taskByMissionId(parentId);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = options.compact
+        ? "parent-task-button rounded-full border border-sky/30 bg-sky-50 px-2.5 py-1 text-xs font-extrabold text-sky hover:bg-sky-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky dark:border-sky/40 dark:bg-slate-900 dark:text-sky"
+        : "parent-task-button inline-flex rounded-md border border-sky/30 bg-sky-50 px-2.5 py-1 text-sm font-extrabold text-sky hover:bg-sky-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky dark:border-sky/40 dark:bg-slate-900 dark:text-sky";
+      button.textContent = parentTaskLabel(parentId, parentTask);
+      button.title = parentTask ? parentId : `${parentId} (一覧にない親タスク)`;
+      button.setAttribute("aria-label", parentTask ? `親タスク ${button.textContent} へ移動` : `親タスク ${parentId}`);
+      if (parentTask) {
+        button.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          navigateToTask(parentTask);
+        });
+      } else {
+        button.disabled = true;
+      }
+      node.appendChild(button);
+    };
+
     let selectedCompletedDate = "";
     let selectedTarget = "";
     let selectedStatusKeys = new Set(BASE_STATUS_KEYS);
@@ -713,7 +755,7 @@
     const loadFilterState = () => {
       try {
         const saved = JSON.parse(localStorage.getItem(FILTER_STORAGE_KEY) || "{}");
-        selectedTarget = typeof saved.target === "string" ? saved.target : "";
+        selectedTarget = "";
         selectedCompletedDate = typeof saved.completedDate === "string" ? saved.completedDate : "";
         if (Array.isArray(saved.statuses)) selectedStatusKeys = new Set(saved.statuses);
       } catch {
@@ -725,7 +767,6 @@
 
     const saveFilterState = () => {
       const value = {
-        target: selectedTarget,
         completedDate: selectedCompletedDate,
         statuses: [...selectedStatusKeys]
       };
@@ -1017,7 +1058,7 @@
 
     // task management v2 (DA114-REV_C P1 UI、 docs/task_management_v2.md §3.1):
     // 全タスク行を 2 行構成 (two-row / task-row-2line) でレンダリング。
-    // 上段 = T番号 (rowspan=2 縦結合) + 対象 / ステータス / 担当 AI / 完了率 / 完了見込み
+    // 上段 = T番号 (rowspan=2 縦結合) + 親タスク / ステータス / 担当 AI / 完了率 / 完了見込み
     // 下段 = T番号セル (rowspan で抜ける) + 実現したいこと (colspan=5)
     const renderQuickRows = (node, tasks, generatedAt) => {
       node.textContent = "";
@@ -1058,11 +1099,11 @@
         tdTid.textContent = task.t_id || "-";
         tr1.appendChild(tdTid);
 
-        // 対象
-        const tdTarget = document.createElement("td");
-        tdTarget.className = "whitespace-nowrap px-4 py-3 text-xs font-extrabold text-slate-600 dark:text-slate-300";
-        tdTarget.textContent = cleanText(task.target_app, task) || "-";
-        tr1.appendChild(tdTarget);
+        // 親タスク
+        const tdParent = document.createElement("td");
+        tdParent.className = "whitespace-nowrap px-4 py-3 text-xs font-extrabold text-slate-600 dark:text-slate-300";
+        setParentTaskNode(tdParent, task, { compact: true });
+        tr1.appendChild(tdParent);
 
         // ステータス (badge、 v2 label を併記、 旧 label は data-* に保持)
         const tdStatus = document.createElement("td");
@@ -1082,8 +1123,8 @@
         tr1.appendChild(tdActor);
 
         // 上段右側 (完了率 + 完了見込み を 1 セルにまとめて 3 列分使う) — meta 行の残り 3 cols を埋める
-        // 既存 column 数 = 7 (T番号 / 対象 / ステータス / 担当AI / 実現したいこと / 完了率 / 完了見込み)。
-        // T番号 rowspan=2 / 対象 / ステータス / 担当AI を上段に置くと残り 3 col。
+        // 既存 column 数 = 7 (T番号 / 親タスク / ステータス / 担当AI / 実現したいこと / 完了率 / 完了見込み)。
+        // T番号 rowspan=2 / 親タスク / ステータス / 担当AI を上段に置くと残り 3 col。
         // 完了率 / 完了見込み は 上段に置き、 残り 1 cell は空白で埋める (= layout 維持)。
         const tdProgressText = document.createElement("td");
         tdProgressText.className = "whitespace-nowrap px-4 py-3 text-slate-700 dark:text-slate-200";
@@ -1115,7 +1156,7 @@
         longPressHook(tr2);
 
         const tdIntent = document.createElement("td");
-        tdIntent.colSpan = 6; // 対象 / ステータス / 担当AI / (旧 実現したいこと、 DA121-OPS_C でラベル削除) / 完了率 / 完了見込み = 6 col
+        tdIntent.colSpan = 6; // 親タスク / ステータス / 担当AI / (旧 実現したいこと、 DA121-OPS_C でラベル削除) / 完了率 / 完了見込み = 6 col
         tdIntent.className = "px-4 pb-3 pt-0 leading-6 text-slate-800 dark:text-slate-100 task-row-intent-cell";
         const intentInner = document.createElement("div");
         intentInner.className = "flex flex-col gap-1";
@@ -1273,7 +1314,7 @@
         card.dataset.statusKey = statusKey(task.status);
 
         card.querySelector(".t-id").textContent = task.t_id || "-";
-        card.querySelector(".target").textContent = cleanText(task.target_app, task) || "-";
+        setParentTaskNode(card.querySelector(".parent-task-chip"), task, { compact: true });
         const statusNode = card.querySelector(".status");
         statusNode.textContent = statusLabel(task.status);
         statusNode.className = `status ${statusClass(task.status)}`;
@@ -1433,7 +1474,7 @@
       currentDetailTask = task;
       card.hidden = false;
       card.querySelector(".detail-tid").textContent = task.t_id || "T-";
-      card.querySelector(".detail-target").textContent = cleanText(task.target_app, task) || "-";
+      setParentTaskNode(card.querySelector(".detail-parent"), task);
       // 種類 (Spec / Impl / OPS) を assignee_tag から推論 (= P2 で kind field 直接書込予定)
       const tag = `${task.owner || ""} ${task.owner_ai || ""} ${task.work_steps || ""}`;
       let kind = "-";
