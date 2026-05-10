@@ -1,13 +1,12 @@
 {
-  "generated_at": "2026-05-10T03:40:25Z",
+  "generated_at": "2026-05-10T03:41:18Z",
   "source": "instructions/session_progress.md#Mission Queue",
   "mission_queue_file": "instructions/session_progress.md",
   "task_detail_file": "instructions/in_flight_topics.md",
   "past_log_file": "instructions/session_progress.md#Mission Queue DONE rows",
-  "active_task_count": 19,
-  "completed_task_count": 185,
+  "active_task_count": 18,
+  "completed_task_count": 186,
   "active_task_ids": [
-    "TASK-DAIS-MAIN-SUPERVISOR-A1-IMPLEMENTATION",
     "TASK-DAIS-TASK-MANAGEMENT-V2-AND-STATUS-CHANGE-LOG",
     "TASK-DAIS-PWA-ONE-SITE-ASSIGN",
     "TASK-lais-F1-TASK-MGMT",
@@ -28,6 +27,7 @@
     "TASK-MAIS-AI-MANGA-PUBLISHER-APP-DEVELOPMENT"
   ],
   "completed_task_ids": [
+    "TASK-DAIS-MAIN-SUPERVISOR-A1-IMPLEMENTATION",
     "TASK-DAIS-PHASE2-5-PO-DOCTRINE-CONTENT-FILL",
     "TASK-DAIS-PHASE2-5-PO-DOCTRINE-SKELETON",
     "TASK-DAIS-PHASE1-T2-PWS-PCC-CSS-NAV-FIX",
@@ -215,38 +215,6 @@
     "TASK-CLAUDE-RESUME-T0-T7-HANDOFF"
   ],
   "tasks": [
-    {
-      "t_id": "DA162-OPS_P",
-      "mission_id": "TASK-DAIS-MAIN-SUPERVISOR-A1-IMPLEMENTATION",
-      "status": "LOCAL_DONE",
-      "owner": "[Codex:OPS]",
-      "owner_ai": "[Codex:OPS]",
-      "target_app": "Dais / 全App",
-      "goal": "Main Supervisor Phase A1 が observation-only で4 CLI状態を5分周期相当に収集し、`docs/status/supervisor_summary.json` / `docs/status/supervisor_log.jsonl` / `docs/status/supervisor_summary_YYYY-MM-DD.md` に永続化できる状態。",
-      "goal_steps": "origin/main 現行状態から専用branchを作成 / DA162採番 / 既存 `scripts/devs_supervisor_loop.sh` を使う薄いwrapperを追加 / 4 CLI監視・summary/log/daily outputを実装 / 5回polling smokeを実行 / Phase A1完了報告を短く出せる evidence を残す。",
-      "work_done": "local_done_by=[Codex:OPS]; Main Supervisor Phase A1本体実装。PO判断で外部AIクロスレビューskip、tests PASS + 5 polling smoke PASS。official DONE requires push/deploy",
-      "work_steps": "2026-05-10 Codex:OPS — PO判断により外部AIクロスレビューskip、origin/mainから `codex/DA162-OPS_P/supervisor-a1` を作成し DA162-OPS_P を採番。`scripts/devs_main_supervisor_a1.sh` / `tests/test_da162_main_supervisor_a1.sh` を追加し、`scripts/devs_supervisor_digest.sh` の incident log link を実path参照へ修正。unit / base regression / 5 polling smoke PASS。",
-      "test_methods": "TEST_METHOD:UNIT TEST_METHOD:STATIC_DOC TEST_METHOD:SMOKE",
-      "review_personas": "REVIEW_PERSONA:OPS_REVIEWER REVIEW_PERSONA:SPEC_REVIEWER REVIEW_PERSONA:QA_REVIEWER",
-      "verification_evidence": "PO-DIRECTIVE-025: external AI cross-review skipped by PO decision; `sh tests/test_da162_main_supervisor_a1.sh` PASS=11 FAIL=0; `sh tests/test_p2_t1_supervisor_base.sh` PASS=13 FAIL=0; `sh scripts/devs_main_supervisor_a1.sh --poll-count 5 --interval-sec 0 --incident-log docs/status/supervisor_incident_log.jsonl` PASS and `docs/status/supervisor_log.jsonl` has 5 lines; `docs/status/supervisor_summary.json` has 4 monitored CLI slots.",
-      "updated_refs": "instructions/session_progress.md §ミッションキュー / instructions/in_flight_topics.md §TASK-DAIS-MAIN-SUPERVISOR-A1-IMPLEMENTATION",
-      "remaining_steps": "SSoT projection -> gates -> commit -> push.",
-      "blocked_on": "none",
-      "next_action": "Git Page projection / DoD / Mission Queue / pre-push gate確認後、commit + push。",
-      "created_at": "",
-      "completed_at": "2026-05-10",
-      "progress_percent": 90,
-      "eta": "2026-05-10",
-      "graph": {
-        "depends_on": "TASK-DAIS-PHASE2-T1-SUPERVISOR-BASE, TASK-DAIS-PHASE2-5-PO-DOCTRINE-CONTENT-FILL",
-        "parent_of": "",
-        "parallel_with": "",
-        "verdict_input_from": "",
-        "critical_input_from": "",
-        "clarification_input_from": ""
-      },
-      "parent_child_suggest": []
-    },
     {
       "t_id": "DA114-REV_C",
       "mission_id": "TASK-DAIS-TASK-MANAGEMENT-V2-AND-STATUS-CHANGE-LOG",
@@ -815,6 +783,38 @@
       "eta": "2026-05-08",
       "graph": {
         "depends_on": "[]",
+        "parent_of": "",
+        "parallel_with": "",
+        "verdict_input_from": "",
+        "critical_input_from": "",
+        "clarification_input_from": ""
+      },
+      "parent_child_suggest": []
+    },
+    {
+      "t_id": "DA162-OPS_P",
+      "mission_id": "TASK-DAIS-MAIN-SUPERVISOR-A1-IMPLEMENTATION",
+      "status": "DONE",
+      "owner": "[Codex:OPS]",
+      "owner_ai": "[PO:DECISION]",
+      "target_app": "Dais / 全App",
+      "goal": "Main Supervisor Phase A1 が observation-only で4 CLI状態を5分周期相当に収集し、`docs/status/supervisor_summary.json` / `docs/status/supervisor_log.jsonl` / `docs/status/supervisor_summary_YYYY-MM-DD.md` に永続化できる状態。",
+      "goal_steps": "origin/main 現行状態から専用branchを作成 / DA162採番 / 既存 `scripts/devs_supervisor_loop.sh` を使う薄いwrapperを追加 / 4 CLI監視・summary/log/daily outputを実装 / 5回polling smokeを実行 / Phase A1完了報告を短く出せる evidence を残す。",
+      "work_done": "done_by=[PO:DECISION]; DA162 Main Supervisor Phase A1 merged with PO-approved external review skip; pushed_evidence=squash merge commit 394138c is reachable from origin/main; PO approved external AI cross-review skip; PR #4 CI checks lint-and-healthcheck, devs-self-quality-gate, and phase0-quality all SUCCESS; DA162 tests and pre-push gate PASS",
+      "work_steps": "2026-05-10 Codex:OPS — PO判断により外部AIクロスレビューskip、origin/mainから `codex/DA162-OPS_P/supervisor-a1` を作成し DA162-OPS_P を採番。`scripts/devs_main_supervisor_a1.sh` / `tests/test_da162_main_supervisor_a1.sh` を追加し、`scripts/devs_supervisor_digest.sh` の incident log link を実path参照へ修正。unit / base regression / 5 polling smoke PASS。",
+      "test_methods": "TEST_METHOD:UNIT TEST_METHOD:STATIC_DOC TEST_METHOD:SMOKE",
+      "review_personas": "REVIEW_PERSONA:OPS_REVIEWER REVIEW_PERSONA:SPEC_REVIEWER REVIEW_PERSONA:QA_REVIEWER",
+      "verification_evidence": "PO-DIRECTIVE-025: external AI cross-review skipped by PO decision; `sh tests/test_da162_main_supervisor_a1.sh` PASS=11 FAIL=0; `sh tests/test_p2_t1_supervisor_base.sh` PASS=13 FAIL=0; `sh scripts/devs_main_supervisor_a1.sh --poll-count 5 --interval-sec 0 --incident-log docs/status/supervisor_incident_log.jsonl` PASS and `docs/status/supervisor_log.jsonl` has 5 lines; `docs/status/supervisor_summary.json` has 4 monitored CLI slots.",
+      "updated_refs": "instructions/session_progress.md §ミッションキュー / instructions/in_flight_topics.md §TASK-DAIS-MAIN-SUPERVISOR-A1-IMPLEMENTATION",
+      "remaining_steps": "none",
+      "blocked_on": "none",
+      "next_action": "none",
+      "created_at": "",
+      "completed_at": "2026-05-10",
+      "progress_percent": 100,
+      "eta": "2026-05-10",
+      "graph": {
+        "depends_on": "TASK-DAIS-PHASE2-T1-SUPERVISOR-BASE, TASK-DAIS-PHASE2-5-PO-DOCTRINE-CONTENT-FILL",
         "parent_of": "",
         "parallel_with": "",
         "verdict_input_from": "",
