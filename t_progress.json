@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-10T06:50:09Z",
+  "generated_at": "2026-05-10T06:52:21Z",
   "source": "instructions/session_progress.md#Mission Queue",
   "mission_queue_file": "instructions/session_progress.md",
   "task_detail_file": "instructions/in_flight_topics.md",
@@ -939,7 +939,7 @@
       "work_steps": "2026-05-10 Codex:OPS — PO指摘「旧式の対象Appは使わず、T番号DA/LA/MAでフィルタリング」を受け、DA170-FIX_Pを採番して専用worktreeで着手。PWSのfilter stateとDOM datasetをApp prefix由来に置換し、旧target_app filter tokenを削除。",
       "test_methods": "TEST_METHOD:UNIT TEST_METHOD:MISSION_SYNC TEST_METHOD:BROWSER_RENDER",
       "review_personas": "REVIEW_PERSONA:UI_REVIEWER REVIEW_PERSONA:OPS_REVIEWER REVIEW_PERSONA:PO_DECISION",
-      "verification_evidence": "PO-DIRECTIVE-026: external AI cross-review skipped by PO decision; sh tests/test_da170_pws_app_filter_by_tid.sh PASS=25 FAIL=0; sh tests/test_da163_pws_parent_task_column.sh PASS=21 FAIL=0; sh tests/test_t_progress_html_v2_ui.sh PASS=29 FAIL=0; sh tests/test_gitpage_progress_chart_date_split_stacks.sh PASS=13 FAIL=0; sh scripts/devs_git_page_mission_sync_check.sh --write && --check PASS; sh scripts/devs_definition_of_done_check.sh PASS; sh scripts/devs_mission_queue_check.sh PASS; sh scripts/devs_status_transition_atomic.sh --to LOCAL_DONE --allow-dirty-ssot --no-push PASS.",
+      "verification_evidence": "PO-DIRECTIVE-026: external AI cross-review skipped by PO decision; sh tests/test_da170_pws_app_filter_by_tid.sh PASS=25 FAIL=0; sh tests/test_da163_pws_parent_task_column.sh PASS=21 FAIL=0; sh tests/test_t_progress_html_v2_ui.sh PASS=29 FAIL=0; sh tests/test_gitpage_progress_chart_date_split_stacks.sh PASS=13 FAIL=0; sh scripts/devs_git_page_mission_sync_check.sh --write && --check PASS; sh scripts/devs_definition_of_done_check.sh PASS; sh scripts/devs_mission_queue_check.sh PASS; pre-commit/pre-push gates PASS; PR #8 merged to origin/main at 50355a2; sh scripts/devs_mission_queue_official_done.sh done_by=[PO:DECISION] PASS; public status sync PASS.",
       "updated_refs": "instructions/session_progress.md §ミッションキュー / instructions/in_flight_topics.md §TASK-DAIS-PWS-APP-FILTER-BY-TID",
       "remaining_steps": "none",
       "blocked_on": "none",

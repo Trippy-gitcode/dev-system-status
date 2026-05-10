@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-05-10T06:50:09Z",
+  "generated_at": "2026-05-10T06:52:21Z",
   "source": "instructions/agent_assignments/*.json",
   "agents": {
     "CC_0": {
