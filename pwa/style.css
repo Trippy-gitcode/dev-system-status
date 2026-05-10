@@ -1376,3 +1376,216 @@ body {
     padding: 12px;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────
+ * P1-T2 / DA149-INF_P parent-child chain visualization
+ *
+ * DA159-FIX_P hot-fix: docs/pwa/parent-child-chain.js references 28
+ * .pcc-* classes but the original DA149 merge to main did not ship the
+ * accompanying CSS rules, so the page rendered as unstyled DOM. This
+ * block restores the visual contract documented in
+ * docs/phase1_parent_child_chain.md (status color tiers / tree indent /
+ * cycle warning / BLOCKED-cause display / mobile breakpoint).
+ * ───────────────────────────────────────────────────────────────────── */
+
+.pcc-main {
+  display: grid;
+  gap: var(--gap-md, 16px);
+  padding: var(--gap-md, 16px);
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.pcc-app-filter,
+.pcc-filter,
+.pcc-refresh {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--bg-soft, #f6f7f9);
+  border-radius: 8px;
+}
+
+.pcc-tree-root {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.pcc-children {
+  list-style: none;
+  margin: 0 0 0 24px;
+  padding: 4px 0 4px 12px;
+  border-left: 2px solid var(--border, #d8dcdf);
+  display: grid;
+  gap: 6px;
+}
+
+.pcc-node {
+  display: grid;
+  gap: 6px;
+}
+
+.pcc-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--border, #d8dcdf);
+  border-radius: 6px;
+  background: var(--bg-card, #ffffff);
+}
+
+.pcc-id {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-weight: 600;
+  color: var(--accent, #2962ff);
+}
+
+.pcc-mission {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  color: var(--fg-muted, #6c757d);
+}
+
+.pcc-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  word-break: break-word;
+  color: var(--fg, #111);
+}
+
+.pcc-status,
+.pcc-status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  background: var(--bg-soft, #f0f1f3);
+  color: var(--fg, #111);
+  border: 1px solid var(--border, #d8dcdf);
+}
+
+/* Status color tiers — reused by the .status-* classes from P1-T1. */
+.pcc-status-badge.status-queued      { background: #eef2f7; color: #34495e; border-color: #c8d4e2; }
+.pcc-status-badge.status-in-progress,
+.pcc-status-badge.status-in_progress { background: #e7f3ff; color: #0a4f9b; border-color: #9ec5ef; }
+.pcc-status-badge.status-local-done,
+.pcc-status-badge.status-local_done,
+.pcc-status-badge.status-pending-confirmation,
+.pcc-status-badge.status-pending_confirmation { background: #fff7d6; color: #7a5b00; border-color: #ecd58c; }
+.pcc-status-badge.status-done,
+.pcc-status-badge.status-completed,
+.pcc-status-badge.status-deployed    { background: #e0f5e9; color: #1f6e3a; border-color: #95d5af; }
+.pcc-status-badge.status-blocked,
+.pcc-status-badge.pcc-blocked        { background: #fde7e7; color: #a41420; border-color: #f1a4a8; }
+
+.pcc-deps {
+  margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  color: var(--fg-muted, #6c757d);
+  font-size: 0.85rem;
+}
+
+.pcc-dep {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  padding: 1px 6px;
+  background: var(--bg-soft, #f0f1f3);
+  border-radius: 4px;
+}
+
+.pcc-dep.pcc-unmet {
+  color: #a41420;
+  background: #fde7e7;
+}
+
+.pcc-block-reason {
+  margin: 4px 0 0;
+  padding: 6px 10px;
+  border-left: 3px solid #f1a4a8;
+  background: #fdf3f3;
+  color: #a41420;
+  font-size: 0.85rem;
+  border-radius: 0 6px 6px 0;
+}
+
+.pcc-cycle-warning {
+  padding: 8px 12px;
+  border-left: 4px solid #f0c14b;
+  background: #fff7d6;
+  color: #7a5b00;
+  font-weight: 600;
+  border-radius: 0 8px 8px 0;
+}
+
+.pcc-cycle-marker,
+.pcc-row.pcc-in-cycle {
+  outline: 2px dashed #f0c14b;
+  outline-offset: 2px;
+}
+
+.pcc-cycle-marker::before {
+  content: "⚠ ";
+  color: #c98a00;
+}
+
+.pcc-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--fg-muted, #6c757d);
+  background: var(--bg-soft, #f6f7f9);
+  border-radius: 8px;
+}
+
+/* Per-status KPI chips at the top of the page (counts only). */
+.pcc-kpi-total,
+.pcc-kpi-queued,
+.pcc-kpi-in-progress,
+.pcc-kpi-blocked,
+.pcc-kpi-cycles {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--bg-soft, #f0f1f3);
+  font-size: 0.85rem;
+}
+
+.pcc-kpi-blocked  { background: #fde7e7; color: #a41420; }
+.pcc-kpi-cycles   { background: #fff7d6; color: #7a5b00; }
+.pcc-kpi-in-progress { background: #e7f3ff; color: #0a4f9b; }
+
+/* Mobile @ 640px: stack tree as indented cards with tap-friendly sizing. */
+@media (max-width: 640px) {
+  .pcc-main {
+    padding: 12px;
+    gap: 12px;
+  }
+  .pcc-children {
+    margin-left: 12px;
+    padding-left: 8px;
+  }
+  .pcc-row {
+    padding: 8px 10px;
+  }
+  .pcc-mission {
+    font-size: 0.78rem;
+  }
+  .pcc-app-filter,
+  .pcc-filter,
+  .pcc-refresh {
+    padding: 6px 8px;
+    font-size: 0.85rem;
+  }
+}
