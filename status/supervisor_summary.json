@@ -1,0 +1,324 @@
+{
+  "generated_at": "2026-05-10T03:04:46Z",
+  "git": {
+    "ahead": 0,
+    "behind": 0,
+    "branch": "codex/DA162-OPS_P/supervisor-a1",
+    "head": "af3a9c992ddc1400e47349c6109c474ccefc646a",
+    "head_matches_origin_main": true,
+    "head_short": "af3a9c9",
+    "origin_main": "af3a9c992ddc1400e47349c6109c474ccefc646a",
+    "origin_main_short": "af3a9c9"
+  },
+  "in_flight": {
+    "section_count": 204,
+    "source": "instructions/in_flight_topics.md",
+    "status_counts": {
+      "blocked": 1,
+      "completed": 167,
+      "in_progress": 5,
+      "local_done": 19,
+      "queued": 12
+    }
+  },
+  "mission_queue": {
+    "active_count": 37,
+    "row_count": 204,
+    "source": "instructions/session_progress.md",
+    "status_counts": {
+      "BLOCKED": 1,
+      "DONE": 167,
+      "IN_PROGRESS": 5,
+      "LOCAL_DONE": 20,
+      "QUEUED": 11
+    },
+    "top_active": [
+      {
+        "depends_on": "[TASK-DAIS-PHASE2-T1-SUPERVISOR-BASE, TASK-DAIS-PHASE2-5-PO-DOCTRINE-CONTENT-FILL]",
+        "due": "2026-05-10",
+        "mission_id": "TASK-DAIS-MAIN-SUPERVISOR-A1-IMPLEMENTATION",
+        "note": "claimed_by=[Codex:OPS]; Main Supervisor Phase A1本体実装。PO判断で外部AIクロスレビューskip、Codex internal review + gateで進行。",
+        "owner": "[Codex:OPS]",
+        "status": "IN_PROGRESS",
+        "t_id": "DA162-OPS_P"
+      },
+      {
+        "depends_on": "[TASK-DAIS-PHASE2-T6-AUTO-PICKUP]",
+        "due": "2026-05-17",
+        "mission_id": "TASK-DAIS-PHASE2-T7-ASSIGNMENT-EXCEPTION-NOTIFY",
+        "note": "local_done_by=[Claude:IMPL]; P2-T7 assignment exception PO notification — emit/snooze/mute/history with frequency throttle + emergency severity; tests 7 PASS + phase0 gate PASS. (renumbered from DA156-OPS_P during Wave 4 batch merge to avoid ID overlap with renumbered P3-T4)",
+        "owner": "[Claude:IMPL]",
+        "status": "LOCAL_DONE",
+        "t_id": "DA157-OPS_P"
+      },
+      {
+        "depends_on": "[TASK-DAIS-PHASE3-T2-PO-DECISION-AGGREGATION]",
+        "due": "2026-05-17",
+        "mission_id": "TASK-DAIS-PHASE3-T4-EMERGENCY-NOTIFICATION",
+        "note": "local_done_by=[Claude:IMPL]; P3-T4 emergency PWA push notification — emergency-only, deeplink, dedup within 1h, snooze, service worker push handler; tests 12 PASS + phase0 gate PASS. (renumbered from DA153-OPS_P due to mode-suffix collision with P2-T3)",
+        "owner": "[Claude:IMPL]",
+        "status": "LOCAL_DONE",
+        "t_id": "DA156-OPS_P"
+      },
+      {
+        "depends_on": "[TASK-DAIS-PHASE2-T1-SUPERVISOR-BASE]",
+        "due": "2026-05-17",
+        "mission_id": "TASK-DAIS-PHASE2-T3-OVERNIGHT-OPERATION",
+        "note": "local_done_by=[Claude:IMPL]; P2-T3 overnight operation watcher — heartbeat-stale + restart-proposal + 8h+ blocker escalation + kill-switch; observation-only; tests 14 PASS + phase0 gate PASS. (renumbered from DA153-OPS_P during Wave 4 batch merge to remove mode-suffix collision)",
+        "owner": "[Claude:IMPL]",
+        "status": "LOCAL_DONE",
+        "t_id": "DA155-OPS_P"
+      },
+      {
+        "depends_on": "[TASK-DAIS-PHASE2-T1-SUPERVISOR-BASE]",
+        "due": "2026-05-17",
+        "mission_id": "TASK-DAIS-PHASE2-T4-MORNING-DIGEST-FORMAT",
+        "note": "local_done_by=[Claude:IMPL]; P2-T4 morning digest format — fixed 5-section order + per-section budget + priority sort + supervisor renderer integration; tests 12 PASS + phase0 gate PASS. (renumbered from DA153-DOC_P during Wave 4 batch merge to remove mode-suffix collision)",
+        "owner": "[Claude:IMPL]",
+        "status": "LOCAL_DONE",
+        "t_id": "DA154-DOC_P"
+      },
+      {
+        "depends_on": "[TASK-DAIS-PHASE1-T1-PWS-ACTIVE-SESSIONS, TASK-DAIS-PHASE0-T5-BRANCH-PR-WORKFLOW]",
+        "due": "2026-05-17",
+        "mission_id": "TASK-DAIS-PHASE1-T4-PWS-PR-INTEGRATION",
+        "note": "local_done_by=[Claude:IMPL]; P1-T4 PWS GitHub PR integration — gh CLI fetcher + TASK-* mapping + CI status badge + stale warning; tests 49 PASS + phase0 gate PASS.",
+        "owner": "[Claude:IMPL]",
+        "status": "LOCAL_DONE",
+        "t_id": "DA153-INF_P"
+      },
+      {
+        "depends_on": "[TASK-DAIS-PHASE3-T1-PO-MESSAGE-FORMAT, TASK-DAIS-PHASE2-T1-SUPERVISOR-BASE]",
+        "due": "2026-05-17",
+        "mission_id": "TASK-DAIS-PHASE3-T2-PO-DECISION-AGGREGATION",
+        "note": "local_done_by=[Claude:IMPL]; P3-T2 PO decision aggregation — collect/priority-queue/escalate/dedup with category by urgency grouping; tests 11 PASS + phase0 gate PASS. (renumbered from DA150-OPS_P due to mode-suffix collision with P2-T2)",
+        "owner": "[Claude:IMPL]",
+        "status": "LOCAL_DONE",
+        "t_id": "DA152-OPS_P"
+      },
+      {
+        "depends_on": "[TASK-DAIS-PHASE2-T5-CAPABILITY-MATRIX, TASK-DAIS-PHASE0-T5-BRANCH-PR-WORKFLOW]",
+        "due": "2026-05-17",
+        "mission_id": "TASK-DAIS-PHASE2-T6-AUTO-PICKUP",
+        "note": "local_done_by=[Claude:IMPL]; P2-T6 auto-pickup — match/claim/simulate via Capability Matrix + dep satisfaction + self-review refusal; lock-serialized; JSONL log; tests 7 PASS + phase0 gate PASS.",
+        "owner": "[Claude:IMPL]",
+        "status": "LOCAL_DONE",
+        "t_id": "DA151-OPS_P"
+      },
+      {
+        "depends_on": "[TASK-DAIS-PHASE2-T1-SUPERVISOR-BASE]",
+        "due": "2026-05-17",
+        "mission_id": "TASK-DAIS-PHASE2-T2-OBJECTIVE-BLOCKER-RESOLVE",
+        "note": "local_done_by=[Claude:IMPL]; P2-T2 objective blocker auto-resolve — detect/resolve with rollback-safe atomic actions; PO-judgment cases refused; tests 8 PASS + phase0 gate PASS.",
+        "owner": "[Claude:IMPL]",
+        "status": "LOCAL_DONE",
+        "t_id": "DA150-OPS_P"
+      },
+      {
+        "depends_on": "[TASK-DAIS-PHASE1-T1-PWS-ACTIVE-SESSIONS]",
+        "due": "2026-05-17",
+        "mission_id": "TASK-DAIS-PHASE1-T3-PWS-APP-FILTER",
+        "note": "local_done_by=[Claude:IMPL]; P1-T3 PWS app filter — DA/LA/MA per-app view, URL ?app= persistence + mobile breakpoint; tests 29 PASS + phase0 gate PASS.",
+        "owner": "[Claude:IMPL]",
+        "status": "LOCAL_DONE",
+        "t_id": "DA150-INF_P"
+      }
+    ]
+  },
+  "monitored_cli": [
+    {
+      "expected_app": "Dais",
+      "heartbeat": {
+        "age_seconds": 122365,
+        "agent": "claude",
+        "branch": "main",
+        "current_task_id": "",
+        "last_heartbeat": "2026-05-08T17:05:21Z",
+        "match_score": 4,
+        "status": "stale",
+        "worktree_path": "/Users/futoshi/Desktop/dev-system/.claude/worktrees/serene-heyrovsky-dcc42b"
+      },
+      "heartbeat_status": "stale",
+      "key": "dev_claude_code",
+      "label": "Dev Claude Code",
+      "related_active_task_count": 18,
+      "related_active_tasks": [
+        {
+          "mission_id": "TASK-DAIS-PHASE2-T7-ASSIGNMENT-EXCEPTION-NOTIFY",
+          "owner": "[Claude:IMPL]",
+          "status": "LOCAL_DONE",
+          "t_id": "DA157-OPS_P"
+        },
+        {
+          "mission_id": "TASK-DAIS-PHASE3-T4-EMERGENCY-NOTIFICATION",
+          "owner": "[Claude:IMPL]",
+          "status": "LOCAL_DONE",
+          "t_id": "DA156-OPS_P"
+        },
+        {
+          "mission_id": "TASK-DAIS-PHASE2-T3-OVERNIGHT-OPERATION",
+          "owner": "[Claude:IMPL]",
+          "status": "LOCAL_DONE",
+          "t_id": "DA155-OPS_P"
+        },
+        {
+          "mission_id": "TASK-DAIS-PHASE2-T4-MORNING-DIGEST-FORMAT",
+          "owner": "[Claude:IMPL]",
+          "status": "LOCAL_DONE",
+          "t_id": "DA154-DOC_P"
+        },
+        {
+          "mission_id": "TASK-DAIS-PHASE1-T4-PWS-PR-INTEGRATION",
+          "owner": "[Claude:IMPL]",
+          "status": "LOCAL_DONE",
+          "t_id": "DA153-INF_P"
+        },
+        {
+          "mission_id": "TASK-DAIS-PHASE3-T2-PO-DECISION-AGGREGATION",
+          "owner": "[Claude:IMPL]",
+          "status": "LOCAL_DONE",
+          "t_id": "DA152-OPS_P"
+        },
+        {
+          "mission_id": "TASK-DAIS-PHASE2-T6-AUTO-PICKUP",
+          "owner": "[Claude:IMPL]",
+          "status": "LOCAL_DONE",
+          "t_id": "DA151-OPS_P"
+        },
+        {
+          "mission_id": "TASK-DAIS-PHASE2-T2-OBJECTIVE-BLOCKER-RESOLVE",
+          "owner": "[Claude:IMPL]",
+          "status": "LOCAL_DONE",
+          "t_id": "DA150-OPS_P"
+        }
+      ]
+    },
+    {
+      "expected_app": "Dais",
+      "heartbeat": null,
+      "heartbeat_status": "missing",
+      "key": "dev_codex",
+      "label": "Dev Codex",
+      "related_active_task_count": 1,
+      "related_active_tasks": [
+        {
+          "mission_id": "TASK-DAIS-MAIN-SUPERVISOR-A1-IMPLEMENTATION",
+          "owner": "[Codex:OPS]",
+          "status": "IN_PROGRESS",
+          "t_id": "DA162-OPS_P"
+        }
+      ]
+    },
+    {
+      "expected_app": "Lais",
+      "heartbeat": null,
+      "heartbeat_status": "missing",
+      "key": "codex_lais",
+      "label": "Codex Lais",
+      "related_active_task_count": 0,
+      "related_active_tasks": []
+    },
+    {
+      "expected_app": "Mais",
+      "heartbeat": {
+        "age_seconds": 138859,
+        "agent": "subagent",
+        "branch": "codex/mais-studio-status",
+        "current_task_id": "TASK-DAIS-ACTIVE-AGENT-REGISTRY",
+        "last_heartbeat": "2026-05-08T12:30:27Z",
+        "match_score": 5,
+        "status": "stale",
+        "worktree_path": "/Users/futoshi/Desktop/dev-system"
+      },
+      "heartbeat_status": "stale",
+      "key": "codex_mais",
+      "label": "Codex Mais",
+      "related_active_task_count": 10,
+      "related_active_tasks": [
+        {
+          "mission_id": "TASK-MAIS-POST-GO-OPERATIONS-MONITORING",
+          "owner": "[Claude:OPS] / [Codex:REVIEW]",
+          "status": "QUEUED",
+          "t_id": "MA010-REV_C"
+        },
+        {
+          "mission_id": "TASK-MAIS-POST-GO-PRODUCTION-DEPLOYMENT",
+          "owner": "[Claude:OPS] / [Codex:REVIEW]",
+          "status": "QUEUED",
+          "t_id": "MA009-REV_C"
+        },
+        {
+          "mission_id": "TASK-MAIS-MIGRATION-QUALITY-TEST",
+          "owner": "[Claude:IMPL] / [Codex:REVIEW]",
+          "status": "QUEUED",
+          "t_id": "MA008-REV_C"
+        },
+        {
+          "mission_id": "TASK-MAIS-ARTIFACT-MIGRATION-IMPLEMENTATION",
+          "owner": "[Claude:IMPL] / [Codex:REVIEW]",
+          "status": "QUEUED",
+          "t_id": "MA007-REV_C"
+        },
+        {
+          "mission_id": "TASK-MAIS-STUDIO-UX-MIGRATION-DESIGN",
+          "owner": "[Claude:IMPL] / [Codex:REVIEW]",
+          "status": "QUEUED",
+          "t_id": "MA006-REV_C"
+        },
+        {
+          "mission_id": "TASK-MAIS-FUNCTION-HOOK-MAP",
+          "owner": "[Codex:SPEC] / [Claude:IMPL]",
+          "status": "QUEUED",
+          "t_id": "MA005-SPC_C"
+        },
+        {
+          "mission_id": "TASK-MAIS-DATA-SECURITY-AND-SECRETS-SPEC",
+          "owner": "[Codex:SPEC] / [Claude:IMPL]",
+          "status": "QUEUED",
+          "t_id": "MA004-SPC_C"
+        },
+        {
+          "mission_id": "TASK-MAIS-GENERATED-REPO-SPECIFICATION",
+          "owner": "[Codex:SPEC] / [Claude:IMPL]",
+          "status": "QUEUED",
+          "t_id": "MA003-SPC_C"
+        }
+      ]
+    }
+  ],
+  "po_doctrine": {
+    "path": "docs/po_doctrine.md",
+    "present": true
+  },
+  "pull_requests": {
+    "available": true,
+    "head": "codex/DA162-OPS_P/supervisor-a1",
+    "items": [],
+    "source": "gh"
+  },
+  "schema_version": "1.0",
+  "signals": {
+    "incident_tail_count": 30,
+    "incident_tail_types": {
+      "commit_observed": 6,
+      "digest_generated": 5,
+      "push_observed": 6,
+      "supervisor_self_check": 4,
+      "task_status_change": 9
+    },
+    "status_tail_count": 10
+  },
+  "sources": {
+    "heartbeats": "docs/status/agent_heartbeats.json",
+    "incident_log": "docs/status/supervisor_incident_log.jsonl",
+    "registry": "docs/status/agent_registry.json",
+    "status_log": "docs/status/task_status_change_log.jsonl"
+  },
+  "supervisor": {
+    "id": "main-supervisor-a1",
+    "mode": "observation-only",
+    "phase": "A1",
+    "poll_index": 5,
+    "requested_poll_count": 5
+  }
+}

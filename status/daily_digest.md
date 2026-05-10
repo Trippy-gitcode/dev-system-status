@@ -1,17 +1,28 @@
 # Supervisor Daily Digest
 
-- generated_at: 2026-05-09T19:18:23Z
-- since: 2026-05-08T19:18:23Z
-- total_events_window: 0
-- self_check_count: 0
+- generated_at: 2026-05-10T03:04:45Z
+- since: 2026-05-09T03:04:45Z
+- total_events_window: 52
+- self_check_count: 5
 
 ## Completed
 
-- (no DONE / LOCAL_DONE transitions in window)
+- `TASK-DAIS-PHASE2-5-PO-DOCTRINE-SKELETON` (DA160-SPC_P) -> **DONE** by [subagent:REVIEW] at 2026-05-10T02:32:36Z
+- `TASK-DAIS-PHASE2-5-PO-DOCTRINE-CONTENT-FILL` (DA161-IMP_P) -> **DONE** by [subagent:REVIEW] at 2026-05-10T02:35:40Z
+- `TASK-DAIS-PHASE0-MISSION-QUEUE-LOCK-FIX` (DA158-FIX_P) -> **DONE** by [Codex:REVIEW] at 2026-05-10T02:54:25Z
+- `TASK-DAIS-PHASE1-T2-PWS-PCC-CSS-NAV-FIX` (DA159-FIX_P) -> **DONE** by [Codex:REVIEW] at 2026-05-10T02:57:46Z
 
 ## Detected events
 
-- (no actionable events in window)
+- [mission_queue_drift] 2026-05-10T03:04:39Z previous_row_count=207 current_row_count=204 delta=-3
+- [heartbeat_stale] 2026-05-10T03:04:39Z agent=unknown last_heartbeat=2026-05-10T01:37:33Z age_sec=5226.700343 threshold_sec=3600
+- [claim_acquired] 2026-05-10T03:04:39Z mission_id=TASK-DAIS-MAIN-SUPERVISOR-A1-IMPLEMENTATION t_id=DA162-OPS_P owner=[Codex:OPS] status=IN_PROGRESS
+- [claim_released] 2026-05-10T03:04:39Z mission_id=TASK-DAIS-BATCH-MERGE-CHERRY-PICK-COVERAGE-CHECK t_id=DA165-FIX_P previous_owner=[PO:DECISION] / [Codex:REVIEW] previous_status=QUEUED current_status=MISSING
+- [claim_released] 2026-05-10T03:04:39Z mission_id=TASK-DAIS-CROSS-WORKTREE-COUNTER-SYNC t_id=DA162-FIX_P previous_owner=[PO:DECISION] / [Codex:REVIEW] previous_status=QUEUED current_status=MISSING
+- [claim_released] 2026-05-10T03:04:39Z mission_id=TASK-DAIS-MAIN-PUSH-PROTECTION-SAME-REF-FIX t_id=DA161-FIX_P previous_owner=[PO:DECISION] / [Codex:REVIEW] previous_status=QUEUED current_status=MISSING
+- [claim_released] 2026-05-10T03:04:39Z mission_id=TASK-DAIS-STATUS-TRANSITION-STAGING-WARNING-FIX t_id=DA164-FIX_P previous_owner=[PO:DECISION] / [Codex:REVIEW] previous_status=QUEUED current_status=MISSING
+- [claim_released] 2026-05-10T03:04:39Z mission_id=TASK-DAIS-SUBAGENT-MISSION-VALIDATOR-KEYWORD-FIX t_id=DA163-FIX_P previous_owner=[PO:DECISION] / [Codex:REVIEW] previous_status=QUEUED current_status=MISSING
+- ... and 12 more events (see docs/status/supervisor_incident_log.jsonl)
 
 ## PO judgement waiting
 
@@ -24,11 +35,13 @@
 | claude | 2026-05-08T17:05:21Z | 1d | main |  |
 | subagent | 2026-05-08T12:30:27Z | 1d | codex/mais-studio-status | TASK-DAIS-ACTIVE-AGENT-REGISTRY |
 | test-agent | 2026-05-08T09:20:06Z | 1d | main |  |
-| unknown | 2026-05-09T19:14:32Z | 3m | claude/DA153-DOC_P/p2-t4-morning-digest-format |  |
+| unknown | 2026-05-10T01:37:33Z | 1h | claude/DA161-IMP_P/po-doctrine-content-fill |  |
 
 ## Recommended actions
 
 - 1 task(s) awaiting PO decision; review the PO judgement waiting section.
+- 1 heartbeat_stale event(s); investigate stalled agents (PO no action required if ADV reaper handles).
+- Mission Queue row count drift detected 1 time(s); confirm intentional rotation.
 
 ---
 
